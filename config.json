@@ -1,0 +1,7 @@
+{
+    "Driver": "postgres",
+    "ConnectString": "postgres://postgres:123456@localhost:5432/common?sslmode=disable",
+    "BaidubceAddress": "https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic?access_token=24.89e545a55e7425d87864341b99429dd8.2592000.1581213789.282335-17903904",
+    "AccessToken": "24.89e545a55e7425d87864341b99429dd8.2592000.1581213789.282335-17903904",
+    "AllowCORS": true
+}
