@@ -8,8 +8,15 @@ import (
 )
 
 var (
-	Db            string //数据库连接
-	WebConfig     config.Config
+	//Db 数据库连接
+	Db string
+
+	//WebConfig 数据库连接
+	WebConfig config.Config
+
+	//TaskWaitGroup 任务
 	TaskWaitGroup = new(sync.WaitGroup)
-	LOG           *datelogger.DateLogger
+
+	//LOG 日志
+	LOG *datelogger.DateLogger
 )

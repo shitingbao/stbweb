@@ -13,3 +13,7 @@ func GetUniqueFileName() string {
 	name = strings.Replace(name, ":", "", -1)
 	return name
 }
+
+func Test() {
+	redirectStderr()
+}

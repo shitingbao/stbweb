@@ -1,9 +1,8 @@
 package main
 
-import (
-	"linux_test_golang/loader"
-)
+import "stbweb/core"
 
 func main() {
-	loader.AutoLoader()
+	// loader.AutoLoader()
+	core.Test()
 }
