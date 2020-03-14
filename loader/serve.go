@@ -2,7 +2,6 @@ package loader
 
 import (
 	"linux_test_golang/core"
-	"linux_test_golang/lib/config"
 	"linux_test_golang/lib/formopera"
 	"linux_test_golang/lib/images"
 	"linux_test_golang/lib/imagetowordapi"
@@ -14,8 +13,6 @@ import (
 
 //AutoLoader 启动项
 func AutoLoader() {
-
-	core.WebConfig = config.ReadConfig("./config.json") //配置准备
 
 	log.Println("star listen 8088")
 	go func() {
