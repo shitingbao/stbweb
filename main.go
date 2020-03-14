@@ -1,8 +1,7 @@
 package main
 
-import "stbweb/core"
+import "stbweb/loader"
 
 func main() {
-	// loader.AutoLoader()
-	core.Test()
+	loader.AutoLoader()
 }
