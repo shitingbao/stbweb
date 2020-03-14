@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"stbweb/lib/config"
+	"stbweb/lib/ws"
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
@@ -26,13 +27,18 @@ var (
 
 	//LOG 日志
 	LOG *datelogger.DateLogger
+	//ChatHub 公共聊天频道的hub对象
+	ChatHub *ws.Hub
+
+	//CtrlHub 发送控制消息的hub对象
+	CtrlHub *ws.Hub
 )
 
 func checkConfig() {
 	WebConfig = config.ReadConfig("./config.json") //配置准备
 }
 
-//初始化日志文件，如果已经初始化则跳过
+//初始化日志文件，如果已经初始化则跳过,并获取配置参数
 func checkLog() {
 	if LOG == nil {
 		checkConfig()
@@ -68,7 +74,9 @@ func checkLog() {
 }
 
 //Initinal 函数初始化日志及数据库链接，以及以后的消息频道
-func Initinal() {
+func Initinal(chatHub, ctrlHub *ws.Hub) {
+	ChatHub = chatHub
+	CtrlHub = ctrlHub
 	checkLog()
 	if err := openx(WebConfig.Driver, WebConfig.ConnectString); err != nil {
 		LOG.Printf("open database drive %s ,connection string:%s\n", WebConfig.Driver, WebConfig.ConnectString)

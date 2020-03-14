@@ -14,10 +14,11 @@ import (
 //AutoLoader 启动项
 func AutoLoader() {
 
-	log.Println("star listen 8088")
 	go func() {
 		log.Println(http.ListenAndServe(":8088", nil))
 	}()
+	chatHub, ctrlHub := initChatWebsocket()
+	core.Initinal(chatHub, ctrlHub)
 	http.HandleFunc("/images", loadering) //设置访问的路由
 
 	lend := make(chan bool)

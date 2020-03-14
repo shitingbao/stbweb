@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -32,10 +33,16 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+//Message 管道中的消息
+type Message struct {
+	Data     []byte
+	DateTime time.Time
+}
+
 //NewHub 分配一个新的Hub，使用前先获取这个hub对象
 func NewHub(onEvent OnMessageFunc) *Hub {
 	return &Hub{
-		Broadcast:  make(chan []byte),      //包含要想向前台传递的数据，内部使用chan通道传输
+		Broadcast:  make(chan Message),     //包含要想向前台传递的数据，内部使用chan通道传输
 		register:   make(chan *Client),     //有新的连接，将放入这里
 		unregister: make(chan *Client),     //断开连接加入这
 		clients:    make(map[*Client]bool), //包含所有的client连接信息
@@ -66,7 +73,7 @@ type Hub struct {
 	clients map[*Client]bool
 
 	//Broadcast 公告消息队列
-	Broadcast chan []byte
+	Broadcast chan Message
 	//OnMessage 当收到任意一个客户端发送到消息时触发
 	OnMessage OnMessageFunc
 
@@ -162,9 +169,13 @@ func (h *Hub) Run() {
 				log.Println("当前连接减少，", "总连接数为：", len(h.clients))
 			}
 		case message := <-h.Broadcast: //将数据发给连接中的send，用来发送
+			data, err := json.Marshal(message)
+			if err != nil {
+				log.Panic(err)
+			}
 			for client := range h.clients { //clients中保存了所有的客户端连接，循环所有连接给与要发送的数据
 				select {
-				case client.send <- message: //将需要发送的数据放入send中，在write函数中实际发送
+				case client.send <- data: //将需要发送的数据放入send中，在write函数中实际发送
 				default:
 					//如果这个client不通,message无法进行发送，说明这个client已经关闭，接下来就去除对应client列表中的client，
 					//虽然在unregister中已经做了这个操作，但是防止某些非正常断开连接的操作的影响
