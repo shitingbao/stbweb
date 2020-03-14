@@ -1,14 +1,14 @@
 package loader
 
 import (
-	"linux_test_golang/core"
-	"linux_test_golang/lib/formopera"
-	"linux_test_golang/lib/images"
-	"linux_test_golang/lib/imagetowordapi"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"stbweb/core"
+	"stbweb/lib/formopera"
+	"stbweb/lib/images"
+	imagetowordapi "stbweb/lib/imagetowordAPI"
 )
 
 //AutoLoader 启动项
