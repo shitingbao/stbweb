@@ -13,13 +13,7 @@ import (
 
 //AutoLoader 启动项
 func AutoLoader() {
-
-	go func() {
-		log.Println(http.ListenAndServe(":8088", nil))
-	}()
-	chatHub, ctrlHub := initChatWebsocket()
-	core.Initinal(chatHub, ctrlHub)
-	http.HandleFunc("/images", loadering) //设置访问的路由
+	serve()
 
 	lend := make(chan bool)
 	c := make(chan os.Signal, 1)
@@ -36,7 +30,15 @@ func AutoLoader() {
 		}
 	}()
 	<-lend
+}
 
+func serve() {
+	go func() {
+		log.Println(http.ListenAndServe(":8088", nil))
+	}()
+	chatHub, ctrlHub := initChatWebsocket()
+	core.Initinal(chatHub, ctrlHub)
+	http.HandleFunc("/images", loadering) //设置访问的路由
 }
 
 func loadering(w http.ResponseWriter, r *http.Request) {
