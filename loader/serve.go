@@ -38,7 +38,8 @@ func serve() {
 	}()
 	chatHub, ctrlHub := initChatWebsocket()
 	core.Initinal(chatHub, ctrlHub)
-	http.HandleFunc("/images", loadering) //设置访问的路由
+	// http.HandleFunc("/", httpProcess) //设置访问的路由
+	http.Handle("/", http.HandlerFunc(httpProcess))
 }
 
 func loadering(w http.ResponseWriter, r *http.Request) {
