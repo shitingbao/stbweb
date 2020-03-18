@@ -1,0 +1,83 @@
+package core
+
+import (
+	"net/http"
+)
+
+//Controlle 保存所有定义的业务结构
+var (
+	controlles     = map[string]*Controlle{}
+	controlleNames = []string{}
+)
+
+//Controlle 控制器结构
+type Controlle struct {
+	ControlleName string
+	AppControlle  interface{}
+}
+
+//ElementHandleArgs http请求类型
+type ElementHandleArgs struct {
+	// Render   *render.Render
+	Req *http.Request
+	Res http.ResponseWriter
+}
+
+//BillGetEvent 工作元素
+type BillGetEvent interface {
+	Get(arge *ElementHandleArgs)
+}
+
+//BillPostEvent 工作元素
+type BillPostEvent interface {
+	Post(arge *ElementHandleArgs)
+}
+
+//NewElementHandleArgs 反馈一个工作元素类型
+func NewElementHandleArgs(w http.ResponseWriter, r *http.Request) *ElementHandleArgs {
+	return &ElementHandleArgs{
+		Req: r,
+		Res: w,
+	}
+}
+
+//RegisterFun 注册一个功能
+func RegisterFun(name string, ctr interface{}) {
+	if name == "" || ctr == nil {
+		LOG.Panic("app register err........")
+	}
+	register(&Controlle{
+		ControlleName: name,
+		AppControlle:  ctr,
+	})
+}
+func register(ctr *Controlle) {
+	controlleNames = append(controlleNames, ctr.ControlleName)
+	controlles[ctr.ControlleName] = ctr
+}
+
+//Handle 执行一个工作元素
+func (c *Controlle) Handle(arge *ElementHandleArgs) {
+	switch arge.Req.Method {
+	case "GET":
+		f, ok := c.AppControlle.(BillGetEvent)
+		if !ok {
+			LOG.Error("get BillGetEvent change error")
+		}
+		f.Get(arge)
+	case "POST":
+		f, ok := c.AppControlle.(BillPostEvent)
+		if !ok {
+			LOG.Error("post BillPostEvent change error")
+		}
+		f.Post(arge)
+	}
+}
+
+//URL中放入工作元素和一些检查的标识（_S这些安全检查），local host：//8088/input?_s=asgaoilo168hdhD4
+//以工作元素名称做对照，找到对应实现get的对应结构对象
+//将该对象断言为统一请求结构体内部（Element，就是都实现了get的interface）
+//执行Element的get方法
+
+//init中的工作，将所有实现了get的方法放入总controlle中注册，他是一个map，根据请求的工作元素用来对照查找
+//使用时，新定义对应结构体，注册如全局controlle中，并实现对应方法（get，post）
