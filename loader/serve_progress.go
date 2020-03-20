@@ -20,25 +20,7 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		w.Write(nil)
 		return
 	}
-
 	core.ElementHandle(w, r, paths[0])
-	// control := r.Header.Get("dbweb-api")
-	// log.Println("control:", control)
-	// if r.Method == "GET" && control == "rest" {
-	// 	arge := core.NewElementHandleArgs(w, r)
-	// 	var ats interface{}
-	// 	ats = new(appRest) //这里一定得使用new新建对象
-
-	// 	f, ok := ats.(core.BillGetEvent)
-	// 	log.Println("ok-tt:", ok)
-	// 	if !ok {
-	// 		log.Println("no ok")
-	// 	}
-	// 	f.Get(arge)
-	// } else {
-	// 	log.Println("nothing")
-	// }
-
 }
 func parsePaths(u *url.URL) ([]string, error) {
 	paths := []string{}

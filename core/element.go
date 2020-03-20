@@ -16,8 +16,11 @@ func (e *Element) Handle(arge *ElementHandleArgs) {
 
 //ElementLoad 初始化element
 func ElementLoad(elementName string) *Element {
-	//问题是这里的属性内容怎么获取
-	//这里的这个elementName名称，和后面的请求的apiname没有关系，只是一个工作元素的名称，为后期他的属性内容做标识铺垫
+	//这里应该使用yaml文件
+	//从yaml文件中，使用elementName去对照取出对应所有该数据元素的对象内容
+	//对象内容包括name，controllerName
+	//然后name等基本属性就直接赋值给反馈的数据元素，获取的controllerName作为key，去全局controlles中找出本次请求对应的结构对象
+	//这里缺少了yaml对照信息获取这一步
 	return &Element{
 		Name:    elementName,
 		Control: controlles[elementName],
@@ -25,6 +28,7 @@ func ElementLoad(elementName string) *Element {
 }
 
 //ElementHandle 处理一个http请求，确定一个element
+//这里最后一个参数，对应的是元素名称，很重要，因为设计到路由内容和对应的方法，这里需要仔细考虑
 func ElementHandle(w http.ResponseWriter, r *http.Request, elementName string) {
 
 	ele := ElementLoad(elementName)

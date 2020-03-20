@@ -51,22 +51,22 @@ func loadering(w http.ResponseWriter, r *http.Request) {
 
 	imgurl, err := formopera.GetFromOnceImage(r)
 	if err != nil {
-		core.SendJSON(w, core.SendMap{"err": err.Error()})
+		core.SendJSON(w, http.StatusOK, core.SendMap{"err": err.Error()})
 		return
 	}
 	log.Println("imgurl:", imgurl)
 	base64, err := images.ImageToBase64(imgurl)
 	if err != nil {
-		core.SendJSON(w, core.SendMap{"err": err.Error()})
+		core.SendJSON(w, http.StatusOK, core.SendMap{"err": err.Error()})
 		return
 	}
 	imagesBase64 := []string{}
 	imagesBase64 = append(imagesBase64, base64)
 	res, err := imagetowordapi.GetImageWord(imagesBase64)
 	if err != nil {
-		core.SendJSON(w, core.SendMap{"err": err.Error()})
+		core.SendJSON(w, http.StatusOK, core.SendMap{"err": err.Error()})
 		return
 	}
 	log.Println("res:", res)
-	core.SendJSON(w, core.SendMap{"data": res})
+	core.SendJSON(w, http.StatusOK, core.SendMap{"data": res})
 }

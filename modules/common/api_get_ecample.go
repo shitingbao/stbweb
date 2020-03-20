@@ -8,10 +8,10 @@ import (
 type appExample struct{}
 
 func init() {
-	core.RegisterFun("", new(appExample))
+	core.RegisterFun("example", new(appExample))
 }
 func (ap *appExample) Get(arge *core.ElementHandleArgs) {
-	if arge.APIInterceptionGet("", nil, appExamplef) {
+	if arge.APIInterceptionGet("example", nil, appExamplef) {
 		return
 	}
 }
