@@ -15,6 +15,7 @@ type Config struct {
 	AllowCORS       bool   //是否允许本地跨域
 	LogLevel        string //log等级
 	Port            string //监听端口
+	AllowOrigin     string //允许跨域地址
 }
 
 //ReadConfig 读取本地config,传入config地址路径，反馈配置对象

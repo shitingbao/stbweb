@@ -1,6 +1,11 @@
 package core
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+
+	log "github.com/Sirupsen/logrus"
+)
 
 //Element 工作元素
 type Element struct {
@@ -30,7 +35,28 @@ func ElementLoad(elementName string) *Element {
 //ElementHandle 处理一个http请求，确定一个element
 //这里最后一个参数，对应的是元素名称，很重要，因为设计到路由内容和对应的方法，这里需要仔细考虑
 func ElementHandle(w http.ResponseWriter, r *http.Request, elementName string) {
+	//不能放下层进行判断，因为需要在认证检查之前返回
+	if r.Method == "OPTIONS" {
+		if WebConfig.AllowCORS {
+			allowOrigin := WebConfig.AllowOrigin
+			if len(allowOrigin) == 0 {
+				allowOrigin = "http://localhost:4200"
+			}
+			w.Header().Set("Access-Control-Allow-Origin", allowOrigin) //设置允许跨域的请求地址
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
+			w.Header().Set("Access-Control-Allow-Headers", fmt.Sprintf(
+				"%s,Origin, X-Requested-With, Content-Type, Accept, Connection, User-Agent, Cookie",
+				WebAPIHanderName)) //这里可以增加对应handle
+		}
+		LOG.WithFields(log.Fields{
+			"url":       r.URL.String(),
+			"allowCORS": WebConfig.AllowCORS,
+		}).Warn("options")
 
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 	ele := ElementLoad(elementName)
 	arge := NewElementHandleArgs(w, r, ele)
 
