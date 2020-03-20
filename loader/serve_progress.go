@@ -25,7 +25,7 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 	core.LOG.WithFields(log.Fields{
 		"paths": paths,
 	}).Info("paths")
-	core.ElementHandle(w, r, paths[1])
+	core.ElementHandle(w, r, paths[0]) //待定，工作元素的名称获取是否来源于路由
 }
 func parsePaths(u *url.URL) ([]string, error) {
 	paths := []string{}

@@ -36,10 +36,10 @@ func AutoLoader() {
 
 func serve() {
 	go func() {
-		core.LOG.Info(http.ListenAndServe(fmt.Sprintf(":%s", core.WebConfig.Port), nil))
 		core.LOG.WithFields(log.Fields{
 			"port": core.WebConfig.Port,
 		}).Info("open prof")
+		core.LOG.Info(http.ListenAndServe(fmt.Sprintf(":%s", core.WebConfig.Port), nil))
 	}()
 	chatHub, ctrlHub := initChatWebsocket()
 	core.Initinal(chatHub, ctrlHub)

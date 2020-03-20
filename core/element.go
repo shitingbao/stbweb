@@ -40,7 +40,7 @@ func ElementHandle(w http.ResponseWriter, r *http.Request, elementName string) {
 		if WebConfig.AllowCORS {
 			allowOrigin := WebConfig.AllowOrigin
 			if len(allowOrigin) == 0 {
-				allowOrigin = "http://localhost:4200"
+				allowOrigin = "*" //待定，跨域允许的指定地址
 			}
 			w.Header().Set("Access-Control-Allow-Origin", allowOrigin) //设置允许跨域的请求地址
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
