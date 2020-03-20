@@ -34,6 +34,9 @@ var (
 	CtrlHub *ws.Hub
 )
 
+func init() {
+	checkLog()
+}
 func checkConfig() {
 	WebConfig = config.ReadConfig("./config.json") //配置准备
 }
@@ -77,9 +80,8 @@ func checkLog() {
 func Initinal(chatHub, ctrlHub *ws.Hub) {
 	ChatHub = chatHub
 	CtrlHub = ctrlHub
-	checkLog()
 	if err := openx(WebConfig.Driver, WebConfig.ConnectString); err != nil {
-		LOG.Printf("open database drive %s ,connection string:%s\n", WebConfig.Driver, WebConfig.ConnectString)
+		LOG.Printf("open database error drive %s ,connection string:%s\n", WebConfig.Driver, WebConfig.ConnectString)
 	}
 	return
 }

@@ -1,7 +1,7 @@
 package loader
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -9,6 +9,8 @@ import (
 	"stbweb/lib/formopera"
 	"stbweb/lib/images"
 	imagetowordapi "stbweb/lib/imagetowordAPI"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 //AutoLoader 启动项
@@ -20,11 +22,11 @@ func AutoLoader() {
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		for range c {
-			log.Println("received ctrl+c,wait back job finished...")
+			core.LOG.Info("received ctrl+c,wait back job finished...")
 			core.TaskWaitGroup.Wait()
-			log.Println("all back job finished,now shutdown http server...")
+			core.LOG.Info("all back job finished,now shutdown http server...")
 			// Shutdown()
-			log.Println("success shutdown")
+			core.LOG.Info("success shutdown")
 			lend <- true
 			break
 		}
@@ -34,7 +36,10 @@ func AutoLoader() {
 
 func serve() {
 	go func() {
-		log.Println(http.ListenAndServe(":8088", nil))
+		core.LOG.Info(http.ListenAndServe(fmt.Sprintf(":%s", core.WebConfig.Port), nil))
+		core.LOG.WithFields(log.Fields{
+			"port": core.WebConfig.Port,
+		}).Info("open prof")
 	}()
 	chatHub, ctrlHub := initChatWebsocket()
 	core.Initinal(chatHub, ctrlHub)

@@ -5,11 +5,13 @@ import (
 	"net/url"
 	"stbweb/core"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 func httpProcess(w http.ResponseWriter, r *http.Request) {
 	if r.URL.String() == "/" {
-		//待定，可以反馈静态资源或者文档地址
+		core.SendJSON(w, http.StatusOK, core.SendMap{"url": "nothing"})
 		return
 	}
 	paths, err := parsePaths(r.URL)
@@ -20,7 +22,10 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		w.Write(nil)
 		return
 	}
-	core.ElementHandle(w, r, paths[0])
+	core.LOG.WithFields(log.Fields{
+		"paths": paths,
+	}).Info("paths")
+	core.ElementHandle(w, r, paths[1])
 }
 func parsePaths(u *url.URL) ([]string, error) {
 	paths := []string{}
