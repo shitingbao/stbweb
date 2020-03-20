@@ -7,14 +7,6 @@ import (
 	"strings"
 )
 
-// type appRest struct{}
-
-// func (ap *appRest) Get(arge *core.ElementHandleArgs) {
-// 	log.Println("this is apprest")
-// 	arge.Res.Write([]byte("this is apprest"))
-// 	return
-// }
-
 func httpProcess(w http.ResponseWriter, r *http.Request) {
 	if r.URL.String() == "/" {
 		//待定，可以反馈静态资源或者文档地址

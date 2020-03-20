@@ -19,8 +19,9 @@ type Controlle struct {
 //ElementHandleArgs http请求类型
 type ElementHandleArgs struct {
 	// Render   *render.Render
-	Req *http.Request
-	Res http.ResponseWriter
+	Req     *http.Request
+	Res     http.ResponseWriter
+	Element *Element
 }
 
 //BillGetEvent 工作元素
@@ -34,14 +35,15 @@ type BillPostEvent interface {
 }
 
 //NewElementHandleArgs 反馈一个工作元素类型
-func NewElementHandleArgs(w http.ResponseWriter, r *http.Request) *ElementHandleArgs {
+func NewElementHandleArgs(w http.ResponseWriter, r *http.Request, ele *Element) *ElementHandleArgs {
 	return &ElementHandleArgs{
-		Req: r,
-		Res: w,
+		Req:     r,
+		Res:     w,
+		Element: ele,
 	}
 }
 
-//RegisterFun 注册一个功能
+//RegisterFun 注册一个功能,第二个参数为对应结构，应该使用new关键字新开辟对象，防止断言出错
 func RegisterFun(name string, ctr interface{}) {
 	if name == "" || ctr == nil {
 		LOG.Panic("app register err........")
