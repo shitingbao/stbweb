@@ -10,7 +10,7 @@ import (
 type SendMap map[string]interface{}
 
 //SendJSON 将数据传递到json转码，并传到前端
-func SendJSON(w http.ResponseWriter, statuscode int, data SendMap) {
+func SendJSON(w http.ResponseWriter, statuscode int, data interface{}) {
 
 	bt, err := json.Marshal(data)
 	if err != nil {

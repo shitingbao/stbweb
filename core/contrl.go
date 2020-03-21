@@ -2,6 +2,8 @@ package core
 
 import (
 	"net/http"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 //Controlle 保存所有定义的业务结构
@@ -59,15 +61,26 @@ func register(ctr *Controlle) {
 }
 
 //Handle 执行一个工作元素
+//这里需要用到recover，因为如果业务类中只定义了get或者post其中一个，然后请求中地址对了，方法错了，这里就会异常
 func (c *Controlle) Handle(arge *ElementHandleArgs) {
 	switch arge.Req.Method {
 	case "GET":
+		defer func() {
+			if err := recover(); err != nil {
+				LOG.WithFields(log.Fields{"api-get": c.ControlleName}).Panic("api")
+			}
+		}()
 		f, ok := c.AppControlle.(BillGetEvent)
 		if !ok {
 			LOG.Error("get BillGetEvent change error")
 		}
 		f.Get(arge)
 	case "POST":
+		defer func() {
+			if err := recover(); err != nil {
+				LOG.WithFields(log.Fields{"api-post": c.ControlleName}).Panic("api")
+			}
+		}()
 		f, ok := c.AppControlle.(BillPostEvent)
 		if !ok {
 			LOG.Error("post BillPostEvent change error")

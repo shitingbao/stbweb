@@ -4,14 +4,14 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
-	syslog "log"
+	"log"
 	"os"
 	"path/filepath"
 	"stbweb/lib/config"
 	"stbweb/lib/ws"
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 	"github.com/shitingbao/datelogger"
 )
 
@@ -42,12 +42,13 @@ func checkConfig() {
 }
 
 //初始化日志文件，如果已经初始化则跳过,并获取配置参数
+//重定向日志输出的文件
 func checkLog() {
 	if LOG == nil {
 		checkConfig()
 		str, err := os.Executable()
 		if err != nil {
-			log.Panic(err)
+			logrus.Panic(err)
 		}
 		workDir := filepath.Dir(str)
 		flog, err := os.OpenFile(filepath.Join(workDir, "log.txt"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -61,15 +62,15 @@ func checkLog() {
 			panic(fmt.Errorf("error opening file: %v", err))
 		}
 		redirectStderr(ferr)
-		syslog.SetFlags(syslog.LstdFlags | syslog.Llongfile)
-		log.SetOutput(io.MultiWriter(os.Stdout, flog))
-		lvl, err := log.ParseLevel(WebConfig.LogLevel)
+		log.SetFlags(log.LstdFlags | log.Llongfile)
+		logrus.SetOutput(io.MultiWriter(os.Stdout, flog))
+		lvl, err := logrus.ParseLevel(WebConfig.LogLevel)
 		if err != nil {
 			panic(err)
 		}
-		log.SetLevel(lvl)
-		log.WithFields(log.Fields{"set-level": lvl.String()}).Info("initlog")
-		log.SetFormatter(&log.TextFormatter{
+		logrus.SetLevel(lvl)
+		logrus.WithFields(logrus.Fields{"set-level": lvl.String()}).Info("initlog")
+		logrus.SetFormatter(&logrus.TextFormatter{
 			TimestampFormat: "20060102T150405",
 		})
 		LOG = &datelogger.DateLogger{Path: filepath.Join(workDir, "log"), Level: lvl}

@@ -30,19 +30,21 @@ func (e *ElementHandleArgs) APIInterceptionGet(methodName string, param interfac
 }
 
 //APIInterceptionPost 拦截api请求，统一处理
+//内部需要判断比get多一个body内容不为空和接收类型不为空的判断
 func (e *ElementHandleArgs) APIInterceptionPost(methodName string, param interface{},
 	cb func(pa interface{}, content *ElementHandleArgs) error) bool {
 	//名称对应判断
 	if methodName != e.apiName() {
 		return false
 	}
-	if e.Req.ContentLength > 0 && param != nil {
-		defer e.Req.Body.Close()
-		if err := json.NewDecoder(e.Req.Body).Decode(param); err != nil {
-			LOG.WithFields(logrus.Fields{"methodName": methodName, "elementName": e.Element.Name}).Error("api")
-			SendJSON(e.Res, http.StatusBadRequest, SendMap{"msg": err})
-			return false
-		}
+	if e.Req.ContentLength <= 0 || param == nil {
+		return false
+	}
+	defer e.Req.Body.Close()
+	if err := json.NewDecoder(e.Req.Body).Decode(param); err != nil {
+		LOG.WithFields(logrus.Fields{"methodName": methodName, "elementName": e.Element.Name}).Error("api")
+		SendJSON(e.Res, http.StatusBadRequest, SendMap{"msg": err})
+		return false
 	}
 	if err := cb(param, e); err != nil {
 		LOG.WithFields(logrus.Fields{

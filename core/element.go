@@ -14,8 +14,13 @@ type Element struct {
 }
 
 //Handle 执行一个工作元素
-func (e *Element) Handle(arge *ElementHandleArgs) {
-	e.Control.Handle(arge)
+//这里需要先判断是否有对应的controller，防止为空异常
+func (e *Element) Handle(p *ElementHandleArgs) {
+	if e.Control == nil {
+		SendJSON(p.Res, http.StatusOK, "nothing")
+		return
+	}
+	e.Control.Handle(p)
 
 }
 

@@ -5,8 +5,6 @@ import (
 	"net/url"
 	"stbweb/core"
 	"strings"
-
-	log "github.com/Sirupsen/logrus"
 )
 
 func httpProcess(w http.ResponseWriter, r *http.Request) {
@@ -22,9 +20,9 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		w.Write(nil)
 		return
 	}
-	core.LOG.WithFields(log.Fields{
-		"paths": paths,
-	}).Info("paths")
+	// core.LOG.WithFields(log.Fields{
+	// 	"paths": paths,
+	// }).Info("paths")
 	core.ElementHandle(w, r, paths[0]) //待定，工作元素的名称获取是否来源于路由
 }
 func parsePaths(u *url.URL) ([]string, error) {
