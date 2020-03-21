@@ -3,12 +3,18 @@ package imagetowordapi
 import (
 	"encoding/json"
 	"io/ioutil"
-	"linux_test_golang/core"
 	"net/http"
 	"net/url"
+	"stbweb/core"
+	"time"
+
+	log "github.com/Sirupsen/logrus"
 )
 
-var accessTokenURL = "https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=WhGsmv5uTul6WUVdqmQjAbv3&client_secret=owaOpOjMUVt3zXIweepNQPIpgEDxSeTt"
+var (
+	accessTokenURL = "https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=WhGsmv5uTul6WUVdqmQjAbv3&client_secret=owaOpOjMUVt3zXIweepNQPIpgEDxSeTt"
+	// access_token   = "24.89e545a55e7425d87864341b99429dd8.2592000.1581213789.282335-17903904"
+)
 
 //accessTokenType 获取access_token的类型，只有expires_in和access_token有用，其他可以忽略
 type accessTokenType struct {
@@ -65,26 +71,22 @@ type imageObject struct {
 //https://ai.baidu.com/docs#/OCR-API-GeneralBasic/top
 //注意：这里的数据不能使用上面那种imageObject形式在body中放json，只能用表单数据提交（下面这种），亲测无效
 func getImageWord(imageBase64 []string) (AcceptResultWord, error) {
-
+	checkTokenEffect()
 	client := &http.Client{}
-
-	res, err := client.PostForm(core.WebConfig.BaidubceAddress, url.Values{
+	res, err := client.PostForm(core.WebConfig.BaidubceAddress+"?access_token="+core.WebConfig.AccessToken, url.Values{
 		"image": imageBase64,
 	})
 	if err != nil {
 		return AcceptResultWord{}, err
-
 	}
 	defer res.Body.Close()
 	resData := AcceptResultWord{}
 	resdatabyte, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return AcceptResultWord{}, err
-
 	}
 	if err := json.Unmarshal(resdatabyte, &resData); err != nil {
 		return AcceptResultWord{}, err
-
 	}
 	return resData, nil
 }
@@ -92,4 +94,30 @@ func getImageWord(imageBase64 []string) (AcceptResultWord, error) {
 //GetImageWord 输入images base64格式数组，反馈解析内容和err，反馈的解析内容中包含对应word数组
 func GetImageWord(imageBase64 []string) (AcceptResultWord, error) {
 	return getImageWord(imageBase64)
+}
+
+//judge30Date 日期是否在30天之内，是返回true
+func judge30Date(date string) bool {
+	historyTime, err := time.Parse("2006-01-02 15:04:05", date)
+	if err != nil {
+		return false
+	}
+	if time.Now().AddDate(0, 0, -30).After(historyTime) {
+		return false
+	}
+	return true
+}
+
+//checkTokenEffect 检查百度接口的token是否过期，如过期，请求新token并保存
+func checkTokenEffect() {
+	if judge30Date(core.WebConfig.AccessTokenDate) {
+		return
+	}
+	at, err := getAccessToken()
+	if err != nil {
+		core.LOG.WithFields(log.Fields{"baidu-word-token": err}).Panic("get baidu api err") //出错就直接异常
+	}
+	core.WebConfig.AccessToken = at.AccessToken
+
+	core.WebConfig.SaveConfig()
 }

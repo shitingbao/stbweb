@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"os"
 )
 
 //Config 配置内容
@@ -16,6 +17,7 @@ type Config struct {
 	LogLevel        string //log等级
 	Port            string //监听端口
 	AllowOrigin     string //允许跨域地址
+	AccessTokenDate string //文字识别接口token的有效期，自动写入，不需要手动修改
 }
 
 //ReadConfig 读取本地config,传入config地址路径，反馈配置对象
@@ -32,4 +34,14 @@ func ReadConfig(filename string) *Config {
 		log.Panic(err)
 	}
 	return config
+}
+
+//SaveConfig 重新保存配置进入config
+func (cg *Config) SaveConfig() {
+	f, err := os.Create("config.json")
+	if err != nil {
+		log.Panic(err)
+	}
+	json.NewEncoder(f).Encode(cg)
+	defer f.Close()
 }
