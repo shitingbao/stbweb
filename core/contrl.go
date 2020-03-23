@@ -61,7 +61,7 @@ func register(ctr *Controlle) {
 }
 
 //Handle 执行一个工作元素
-//这里需要用到recover，因为如果业务类中只定义了get或者post其中一个，然后请求中地址对了，方法错了，这里就会异常
+//这里需要用到recover，因为如果业务类中只定义了get或者post其中一个，然后请求中地址对了，方法错了，这里就会异常,返回404，但是这里会输出panic
 func (c *Controlle) Handle(arge *ElementHandleArgs) {
 	switch arge.Req.Method {
 	case "GET":

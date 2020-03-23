@@ -13,13 +13,15 @@ type accessPost struct {
 	Name string
 }
 
+//localhost:3001/example
+//header web-api : example
 func init() {
-	core.RegisterFun("example", new(AppExample))
+	core.RegisterFun("example", new(AppExample)) //example 为url中匹配的工作元素名称
 }
 
 //Get 业务处理,get请求的例子
 func (ap *AppExample) Get(arge *core.ElementHandleArgs) {
-	if arge.APIInterceptionGet("example", nil, appExamplef) {
+	if arge.APIInterceptionGet("example", nil, appExamplef) { //example 为 header中web-api匹配的审核执行名称
 		return
 	}
 }

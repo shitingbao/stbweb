@@ -68,11 +68,12 @@ func checkLog() {
 		if err != nil {
 			panic(err)
 		}
+		logrus.SetFormatter(&logrus.TextFormatter{
+			TimestampFormat: "2006-01-02 15:04:05",
+		})
 		logrus.SetLevel(lvl)
 		logrus.WithFields(logrus.Fields{"set-level": lvl.String()}).Info("initlog")
-		logrus.SetFormatter(&logrus.TextFormatter{
-			TimestampFormat: "20060102T150405",
-		})
+
 		LOG = &datelogger.DateLogger{Path: filepath.Join(workDir, "log"), Level: lvl}
 	}
 }
