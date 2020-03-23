@@ -54,7 +54,7 @@ func loadering(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Headers", "Action, Module")
 	}
 
-	imgurl, err := formopera.GetFromOnceImage(r)
+	imgurl, err := formopera.GetFromOnceImage("file", r)
 	if err != nil {
 		core.SendJSON(w, http.StatusOK, core.SendMap{"err": err.Error()})
 		return

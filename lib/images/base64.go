@@ -76,6 +76,19 @@ func ImageToBase64(url string) (string, error) {
 	return imgBase64Str, nil
 }
 
+//ImageHandtoBase64 传入一个*file对象，返回base64字符串
+func ImageHandtoBase64(f *os.File) (string, error) {
+	finfo, err := f.Stat()
+	if err != nil {
+		return "", err
+	}
+	buf := make([]byte, finfo.Size())
+	fRead := bufio.NewReader(f)
+	fRead.Read(buf)
+	imageBase64 := base64.StdEncoding.EncodeToString(buf)
+	return imageBase64, nil
+}
+
 //dataTofile 将数据写入记录文档中
 func dataTofile(data string) error {
 	f, err := os.Create("./assets/" + core.GetUniqueFileName() + ".txt")

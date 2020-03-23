@@ -3,6 +3,7 @@ package formopera
 import (
 	"fmt"
 	"linux_test_golang/lib/images"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 )
@@ -40,32 +41,38 @@ func getFormBodyVal(r *http.Request) {
 }
 
 //GetFromOnceImage 解析出表单内的图片
-//单张图片内容解析
-func GetFromOnceImage(r *http.Request) (string, error) {
+//单张图片内容解析，这里是指定获取文件对象名称为name的图片，这里的name不是文件名，而是和前端对应的那个name属性名
+func GetFromOnceImage(name string, r *http.Request) (string, error) {
 	r.ParseMultipartForm(20 << 20)
 	//也需要调用ParseMultipartForm
-	file, _, err := r.FormFile("file")
+	file, _, err := r.FormFile(name)
 	if err != nil {
 		return "", err
 	}
-
 	defer file.Close()
-
 	return images.ByteToImage(file)
 }
 
-//getFormEvenFile 便利获取所有文件内容
-func getFormEvenFile(r *http.Request) {
+//getAllFormFiles 便利获取所有文件内容,返回所有fileshand
+func getAllFormFiles(r *http.Request) []*multipart.FileHeader {
+	files := []*multipart.FileHeader{}
 	r.ParseMultipartForm(20 << 20)
 	//获取表单中的文件
 	//多个同时接受
 	for _, v := range r.MultipartForm.File {
 		for _, f := range v {
-			fil, err := f.Open()
-			if err != nil {
-				return
-			}
-			defer fil.Close()
+			// fil, err := f.Open()
+			// if err != nil {
+			// 	return
+			// }
+			// defer fil.Close()
+			files = append(files, f)
 		}
 	}
+	return files
+}
+
+//GetAllFormFiles 便利获取所有文件内容,返回所有fileshand
+func GetAllFormFiles(r *http.Request) []*multipart.FileHeader {
+	return getAllFormFiles(r)
 }
