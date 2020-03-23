@@ -5,6 +5,7 @@ import (
 	"stbweb/core"
 	"stbweb/lib/formopera"
 	"stbweb/lib/images"
+	imagetowordapi "stbweb/lib/imagetowordAPI"
 )
 
 //ImageWord 业务类
@@ -20,6 +21,7 @@ func init() {
 
 //Post 图片转文字
 func (im *ImageWord) Post(p *core.ElementHandleArgs) {
+	imageURLs := []string{}
 	fileHands := formopera.GetAllFormFiles(p.Req)
 	for _, v := range fileHands {
 		file, err := v.Open()
@@ -32,10 +34,25 @@ func (im *ImageWord) Post(p *core.ElementHandleArgs) {
 			core.SendJSON(p.Res, http.StatusInternalServerError, err.Error())
 			return
 		}
-		core.LOG.Info(imageURL)
+		imageURLs = append(imageURLs, imageURL)
 		file.Close()
 	}
-	core.SendJSON(p.Res, http.StatusOK, "success")
+	imagesBase64 := []string{}
+	for _, v := range imageURLs {
+		base64, err := images.ImageToBase64(v)
+		if err != nil {
+			core.SendJSON(p.Res, http.StatusOK, core.SendMap{"err": err.Error()})
+			return
+		}
+		imagesBase64 = append(imagesBase64, base64)
+	}
+	core.LOG.Info(len(imagesBase64))
+	res, err := imagetowordapi.GetImageWord(imagesBase64)
+	if err != nil {
+		core.SendJSON(p.Res, http.StatusOK, err.Error())
+		return
+	}
+	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"data": res})
 }
 
 func imagesOpera(pa interface{}, p *core.ElementHandleArgs) error {

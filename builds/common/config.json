@@ -1,10 +1,11 @@
 {
     "Driver": "postgres",
-    "Port": "3001",
     "ConnectString": "postgres://postgres:123456@localhost:5432/common?sslmode=disable",
     "BaidubceAddress": "https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic",
-    "AccessToken": "24.89e545a55e7425d87864341b99429dd8.2592000.1581213789.282335-17903904",
-    "AccessTokenDate": "2020-2-27 12:12:12",
+    "AccessToken": "24.0f6b09368cf90747bd246594cb81e87e.2592000.1587540459.282335-17903904",
     "AllowCORS": true,
-    "AllowOrigin": "http://localhost:4200"
+    "LogLevel": "debug",
+    "Port": "3001",
+    "AllowOrigin": "http://localhost:4200",
+    "AccessTokenDate": "2020-02-27 12:12:12"
 }
