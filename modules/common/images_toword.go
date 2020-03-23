@@ -20,9 +20,6 @@ func init() {
 
 //Post 图片转文字
 func (im *ImageWord) Post(p *core.ElementHandleArgs) {
-	// if p.APIInterceptionPost("imageword", new(image), imagesOpera) {
-	// 	return
-	// }
 	fileHands := formopera.GetAllFormFiles(p.Req)
 	for _, v := range fileHands {
 		file, err := v.Open()
