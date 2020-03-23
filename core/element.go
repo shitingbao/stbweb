@@ -16,12 +16,11 @@ type Element struct {
 //Handle 执行一个工作元素
 //这里需要先判断是否有对应的controller，防止为空异常
 func (e *Element) Handle(p *ElementHandleArgs) {
-	if e.Control == nil {
-		SendJSON(p.Res, http.StatusOK, "nothing")
+	if !p.isAPI() || e.Control == nil {
+		SendJSON(p.Res, http.StatusNotFound, nil)
 		return
 	}
 	e.Control.Handle(p)
-
 }
 
 //ElementLoad 初始化element

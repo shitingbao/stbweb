@@ -36,6 +36,14 @@ type BillPostEvent interface {
 	Post(arge *ElementHandleArgs)
 }
 
+//isAPI 是否是api请求，是返回true
+func (e *ElementHandleArgs) isAPI() bool {
+	if len(e.Req.Header.Get(WebAPIHanderName)) > 0 {
+		return true
+	}
+	return false
+}
+
 //NewElementHandleArgs 反馈一个工作元素类型
 func NewElementHandleArgs(w http.ResponseWriter, r *http.Request, ele *Element) *ElementHandleArgs {
 	return &ElementHandleArgs{
@@ -63,6 +71,7 @@ func register(ctr *Controlle) {
 //Handle 执行一个工作元素
 //这里需要用到recover，因为如果业务类中只定义了get或者post其中一个，然后请求中地址对了，方法错了，这里就会异常,返回404，但是这里会输出panic
 func (c *Controlle) Handle(arge *ElementHandleArgs) {
+
 	switch arge.Req.Method {
 	case "GET":
 		defer func() {
