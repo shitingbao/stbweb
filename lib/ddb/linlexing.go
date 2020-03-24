@@ -19,7 +19,7 @@ type DB interface {
 //TxDB 一个能返回DriverName 的TxDB,并且所有的sql统一使用?作为参数占位符
 type TxDB interface {
 	common.TxDB
-	Beginx() (Txer, error)
+	// Beginx() (Txer, error)
 	DriverName() string
 	ConnectString() string
 	Ping() error
@@ -61,18 +61,19 @@ func (d *db) ConnectString() string {
 func (d *db) Begin() (*sql.Tx, error) {
 	return d.db.Begin()
 }
-func (d *db) Beginx() (Txer, error) {
-	t, err := d.db.Begin()
-	if err != nil {
-		return nil, err
-	}
-	rev := &tx{
-		driverName:    d.DriverName(),
-		tx:            t,
-		connectString: d.ConnectString(),
-	}
-	return rev, nil
-}
+
+// func (d *db) Beginx() (Txer, error) {
+// 	t, err := d.db.Begin()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	rev := &tx{
+// 		driverName:    d.DriverName(),
+// 		tx:            t,
+// 		connectString: d.ConnectString(),
+// 	}
+// 	return rev, nil
+// }
 func (d *db) Exec(query string, args ...interface{}) (sql.Result, error) {
 	//无参数不用转换
 	if len(args) > 0 {

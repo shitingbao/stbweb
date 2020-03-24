@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"stbweb/lib/config"
+	"stbweb/lib/ddb"
 	"stbweb/lib/ws"
 	"sync"
 
@@ -83,14 +84,15 @@ func Initinal(chatHub, ctrlHub *ws.Hub) {
 	ChatHub = chatHub
 	CtrlHub = ctrlHub
 	if err := openx(WebConfig.Driver, WebConfig.ConnectString); err != nil {
-		LOG.Printf("open database error drive %s ,connection string:%s\n", WebConfig.Driver, WebConfig.ConnectString)
+		LOG.WithFields(logrus.Fields{"Driver": WebConfig.Driver, "ConnectString": WebConfig.ConnectString}).Panic("database")
+		// LOG.Printf("open database error drive %s ,connection string:%s\n", WebConfig.Driver, WebConfig.ConnectString)
 	}
 	return
 }
 
 //Openx 打开一个数据库连接，返回一个包装过的DB对象，其能返回DriverName
 func openx(driverName, dataSourceName string) error {
-	d, err := sql.Open(driverName, dataSourceName)
+	d, err := ddb.Open(driverName, dataSourceName)
 	if err != nil {
 		return err
 	}
