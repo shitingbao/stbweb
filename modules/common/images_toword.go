@@ -37,22 +37,24 @@ func (im *ImageWord) Post(p *core.ElementHandleArgs) {
 		imageURLs = append(imageURLs, imageURL)
 		file.Close()
 	}
-	imagesBase64 := []string{}
+	result := []imagetowordapi.AcceptResultWord{}
 	for _, v := range imageURLs {
+		imagesBase64 := []string{}
 		base64, err := images.ImageToBase64(v)
 		if err != nil {
 			core.SendJSON(p.Res, http.StatusOK, core.SendMap{"err": err.Error()})
 			return
 		}
 		imagesBase64 = append(imagesBase64, base64)
+		res, err := imagetowordapi.GetImageWord(imagesBase64)
+		if err != nil {
+			core.SendJSON(p.Res, http.StatusOK, err.Error())
+			return
+		}
+		result = append(result, res)
 	}
-	core.LOG.Info(len(imagesBase64))
-	res, err := imagetowordapi.GetImageWord(imagesBase64)
-	if err != nil {
-		core.SendJSON(p.Res, http.StatusOK, err.Error())
-		return
-	}
-	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"data": res})
+
+	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"data": result})
 }
 
 func imagesOpera(pa interface{}, p *core.ElementHandleArgs) error {

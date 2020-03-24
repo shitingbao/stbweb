@@ -70,6 +70,7 @@ type imageObject struct {
 //getImageWord 发送表单数据,返回word，需要一个query值和表单中放入image64数据，大小不能超过4M,具体返回和参数去参考api文档
 //https://ai.baidu.com/docs#/OCR-API-GeneralBasic/top
 //注意：这里的数据不能使用上面那种imageObject形式在body中放json，只能用表单数据提交（下面这种），亲测无效
+//每次一张图片
 func getImageWord(imageBase64 []string) (AcceptResultWord, error) {
 	checkTokenEffect()
 	client := &http.Client{}
