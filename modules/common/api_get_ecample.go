@@ -1,8 +1,11 @@
+//这个模块用来测试和例子展示
+
 package common
 
 import (
 	"net/http"
 	"stbweb/core"
+	"stbweb/lib/excel"
 )
 
 //AppExample 业务类
@@ -21,12 +24,19 @@ func init() {
 
 //Get 业务处理,get请求的例子
 func (ap *AppExample) Get(arge *core.ElementHandleArgs) {
-	if arge.APIInterceptionGet("example", nil, appExamplef) { //example 为 header中web-api匹配的审核执行名称
+	if arge.APIInterceptionGet("example", nil, appExamplef) || arge.APIInterceptionGet("export", nil, export) { //example 为 header中web-api匹配的审核执行名称
 		return
 	}
 }
+func export(pa interface{}, content *core.ElementHandleArgs) error {
+	// core.SendJSON(content.Res, http.StatusOK, core.SendMap{"msg": "this is example get"})
+	excel.Export()
+	return nil
+}
+
 func appExamplef(pa interface{}, content *core.ElementHandleArgs) error {
 	core.SendJSON(content.Res, http.StatusOK, core.SendMap{"msg": "this is example get"})
+	// excel.Export()
 	return nil
 }
 

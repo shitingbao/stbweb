@@ -9,7 +9,7 @@ import (
 
 var (
 	//WebAPIHanderName hander中存放api名称
-	WebAPIHanderName = "dbweb-api"
+	WebAPIHanderName = "stbweb-api"
 )
 
 //APIInterceptionGet 拦截api请求，统一处理
