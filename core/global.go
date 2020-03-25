@@ -58,6 +58,9 @@ func checkLog() {
 		}
 		//将所有的panic信息输出到err文件中，而不是控制台，因为控制台有行数限制
 		//https://stackoverflow.com/questions/34772012/capturing-panic-in-golang
+		//直接使用logrus输出，将输出在当前的log.txt文件中
+		//使用LOG对象输出，将输出在log目录下的每日日志当中，详细看对应文件句柄对照
+		//panic将输出在err文件中，期间调用底层panic重定向方法
 		ferr, err := os.OpenFile(filepath.Join(workDir, "err.txt"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			panic(fmt.Errorf("error opening file: %v", err))

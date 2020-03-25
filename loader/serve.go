@@ -6,11 +6,8 @@ import (
 	"os"
 	"os/signal"
 	"stbweb/core"
-	"stbweb/lib/formopera"
-	"stbweb/lib/images"
-	imagetowordapi "stbweb/lib/imagetowordAPI"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
 )
 
 //AutoLoader 启动项
@@ -36,7 +33,7 @@ func AutoLoader() {
 
 func serve() {
 	go func() {
-		core.LOG.WithFields(log.Fields{
+		core.LOG.WithFields(logrus.Fields{
 			"port": core.WebConfig.Port,
 		}).Info("open prof")
 		core.LOG.Info(http.ListenAndServe(fmt.Sprintf(":%s", core.WebConfig.Port), nil))
@@ -45,33 +42,4 @@ func serve() {
 	core.Initinal(chatHub, ctrlHub)
 	// http.HandleFunc("/", httpProcess) //设置访问的路由
 	http.Handle("/", http.HandlerFunc(httpProcess))
-}
-
-func loadering(w http.ResponseWriter, r *http.Request) {
-	if core.WebConfig.AllowCORS {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Action, Module")
-	}
-
-	imgurl, err := formopera.GetFromOnceImage("file", r)
-	if err != nil {
-		core.SendJSON(w, http.StatusOK, core.SendMap{"err": err.Error()})
-		return
-	}
-	log.Println("imgurl:", imgurl)
-	base64, err := images.ImageToBase64(imgurl)
-	if err != nil {
-		core.SendJSON(w, http.StatusOK, core.SendMap{"err": err.Error()})
-		return
-	}
-	imagesBase64 := []string{}
-	imagesBase64 = append(imagesBase64, base64)
-	res, err := imagetowordapi.GetImageWord(imagesBase64)
-	if err != nil {
-		core.SendJSON(w, http.StatusOK, core.SendMap{"err": err.Error()})
-		return
-	}
-	log.Println("res:", res)
-	core.SendJSON(w, http.StatusOK, core.SendMap{"data": res})
 }
