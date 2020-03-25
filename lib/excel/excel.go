@@ -89,6 +89,7 @@ func (e *excel) createExcel() {
 //CreateExcel 创建一个excel
 //name为文件名，不需要后缀
 //后续参数为每个页面的数据，每一个rowData参数对应一个sheet页面,内部数据就是sheet的数据
+//列名称就是map的key值
 //example: CreateExcel("example",data1,data2)
 //执行后生成文件名称为example.xlsx,内部有两个sheet页，sheet1数据内容为dat1，sheet2数据内容为dat2
 func CreateExcel(name string, rowData ...[]map[string]string) {
