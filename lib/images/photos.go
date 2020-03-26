@@ -5,13 +5,14 @@ import (
 	"mime/multipart"
 	"os"
 	"path"
+	"stbweb/core"
 
 	"github.com/pborman/uuid"
 )
 
 var (
-	//文件保存的位置
-	fileDir = "./file"
+	//文件保存的位置,使用默认路径
+	fileDir = core.DefaultFilePath
 )
 
 //ByteToImage 转为图片暂存

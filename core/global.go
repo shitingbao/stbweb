@@ -18,7 +18,7 @@ import (
 
 var (
 	//DefaultFilePath 输出默认路径
-	DefaultFilePath = "./file"
+	DefaultFilePath = "./assets"
 
 	//Ddb 数据库连接
 	Ddb *sql.DB
@@ -89,6 +89,7 @@ func checkLog() {
 func Initinal(chatHub, ctrlHub *ws.Hub) {
 	ChatHub = chatHub
 	CtrlHub = ctrlHub
+	pathExists()
 	if err := openx(WebConfig.Driver, WebConfig.ConnectString); err != nil {
 		LOG.WithFields(logrus.Fields{"Driver": WebConfig.Driver, "ConnectString": WebConfig.ConnectString}).Panic("database")
 		// LOG.Printf("open database error drive %s ,connection string:%s\n", WebConfig.Driver, WebConfig.ConnectString)
@@ -104,4 +105,17 @@ func openx(driverName, dataSourceName string) error {
 	}
 	Ddb = d
 	return nil
+}
+
+//pathExists 判断是否存在默认路径，不存在则生成
+func pathExists() {
+	_, err := os.Stat(DefaultFilePath)
+	if err != nil {
+		LOG.WithFields(logrus.Fields{"msg": err.Error()}).Error("DefaultFilePath")
+	}
+	if os.IsNotExist(err) {
+		if err := os.MkdirAll(DefaultFilePath, os.ModePerm); err != nil {
+			LOG.WithFields(logrus.Fields{"msg": err.Error()}).Error("DefaultFilePath")
+		}
+	}
 }
