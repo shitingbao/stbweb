@@ -1,8 +1,10 @@
+//Package excel 中默认1900-1-1日期为1，还有一个闰年的bug需要注意，实际使用过程中再进行调试
+//日期时间转换为数值或常规后，整数部分表示距1900-1-1的天数，小数部分表示小时数。
+//如2010-4-24 9:25:12 = 40292.3925，距1900-1-1 0:00 40290天0.3925小时。
 package excel
 
 import (
 	"errors"
-	"fmt"
 	"path"
 	"stbweb/core"
 	"strconv"
@@ -40,7 +42,7 @@ func getExcelAllCell(fileURL string) error {
 	return nil
 }
 
-//getExcelRows 使用360解析，时间不完美
+//getExcelRows 使用360解析，时间不完美，需要用到时间的地方尽量使用文本
 func getExcelRows(excelURL, sheet string) ([][]string, error) {
 	xlsx, err := excelize.OpenFile(excelURL)
 	if err != nil {
@@ -52,14 +54,6 @@ func getExcelRows(excelURL, sheet string) ([][]string, error) {
 		return nil, err
 	}
 	return rows, nil
-	for _, row := range rows {
-		for _, colCell := range row {
-			res := make(map[string]string)
-			res[""] = colCell
-			fmt.Print(colCell, "\t")
-		}
-	}
-	return nil, nil
 }
 
 //createExcel 新建一个excel
@@ -87,7 +81,8 @@ func (e *excel) createExcel() error {
 					tcell.Value = key
 				}
 				cell := row.AddCell()
-				cell.Value = val
+				cell.SetString(val)
+				// cell.Value = val
 			}
 		}
 	}
@@ -125,7 +120,6 @@ func CreateExcel(name string, rowData ...[]map[string]string) error {
 //ExportParse 导出
 //filename 为文件路径
 //sheet为对应excel内部每个sheet的名称，如Sheet1,Sheet2......
-//isTitle 标记第一行是否是标题
 func ExportParse(filename, sheet string) ([][]string, error) {
 	// getExcelRows("./file/stb.xlsx", "Sheet1")
 	if filename == "" || sheet == "" {

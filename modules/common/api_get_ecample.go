@@ -56,7 +56,7 @@ func excelExport(pa interface{}, content *core.ElementHandleArgs) error {
 }
 
 func excelparse(pa interface{}, content *core.ElementHandleArgs) error {
-	res, err := excel.ExportParse("./file/stb.xlsx", "Sheet1")
+	res, err := excel.ExportParse("./assets/stb.xlsx", "Sheet2")
 	if err != nil {
 		return err
 	}
