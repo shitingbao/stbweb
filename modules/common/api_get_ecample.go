@@ -24,13 +24,29 @@ func init() {
 
 //Get 业务处理,get请求的例子
 func (ap *AppExample) Get(arge *core.ElementHandleArgs) {
-	if arge.APIInterceptionGet("example", nil, appExamplef) || arge.APIInterceptionGet("export", nil, export) { //example 为 header中web-api匹配的审核执行名称
+	if arge.APIInterceptionGet("example", nil, appExamplef) || arge.APIInterceptionGet("excel", nil, excelExport) { //example 为 header中web-api匹配的审核执行名称
 		return
 	}
 }
-func export(pa interface{}, content *core.ElementHandleArgs) error {
-	// core.SendJSON(content.Res, http.StatusOK, core.SendMap{"msg": "this is example get"})
-	excel.Export()
+func excelExport(pa interface{}, content *core.ElementHandleArgs) error {
+	rowData := []map[string]string{}
+	da := make(map[string]string)
+	da["one"] = "one"
+	da["Two"] = "two"
+	da["三"] = "三"
+	da["4"] = "4"
+	da["date"] = "1994-08-01"
+	rowData = append(rowData, da)
+	rowDatat := []map[string]string{}
+	dc := make(map[string]string)
+	dc["asdf"] = "asdf"
+	dc["asdf"] = "asdf"
+	dc["三"] = "三"
+	dc["4"] = "4"
+	dc["date"] = "1994-08-01"
+	rowDatat = append(rowDatat, dc)
+	excel.CreateExcel("file/stb", rowData, rowDatat)
+	core.SendJSON(content.Res, http.StatusOK, core.SendMap{"msg": "this is excel get"})
 	return nil
 }
 

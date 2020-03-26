@@ -61,22 +61,28 @@ func getExcelRows(excelURL string) error {
 func (e *excel) createExcel() {
 	file := xlsx.NewFile()
 	for i, v := range e.SheetDatas {
-		sheetName := "Sheet" + strconv.Itoa(i)
+		sheetName := "Sheet" + strconv.Itoa(i+1)
 		// Create a new sheet.
 		sheet, err := file.AddSheet(sheetName)
 		if err != nil {
 			return
 		}
 		for idv, dv := range v.Rows {
+			var trow *xlsx.Row
+			if idv == 0 { //第一行数据需要另外新增一行作为标题
+				trow = sheet.AddRow()
+				trow.SetHeightCM(1) //设置每行的高度
+			}
+
 			row := sheet.AddRow()
-			row.SetHeightCM(1) //设置每行的高度
-			for key, val := range dv {
-				cell := row.AddCell()
+			row.SetHeightCM(1)         //设置每行的高度
+			for key, val := range dv { //这里必须在一个for内部，不然key和val对应不上
 				if idv == 0 {
-					cell.Value = key
-				} else {
-					cell.Value = val
+					tcell := trow.AddCell()
+					tcell.Value = key
 				}
+				cell := row.AddCell()
+				cell.Value = val
 			}
 		}
 	}
