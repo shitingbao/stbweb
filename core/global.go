@@ -17,6 +17,9 @@ import (
 )
 
 var (
+	//DefaultFilePath 输出默认路径
+	DefaultFilePath = "./file"
+
 	//Ddb 数据库连接
 	Ddb *sql.DB
 

@@ -2,6 +2,7 @@ package excel
 
 import (
 	"fmt"
+	"path"
 	"stbweb/core"
 	"strconv"
 
@@ -39,13 +40,13 @@ func getExcelAllCell(fileURL string) error {
 }
 
 //getExcelRows 使用360解析，时间不完美
-func getExcelRows(excelURL string) error {
+func getExcelRows(excelURL, sheet string) error {
 	xlsx, err := excelize.OpenFile(excelURL)
 	if err != nil {
 		return err
 	}
 
-	rows, err := xlsx.GetRows("Sheet1")
+	rows, err := xlsx.GetRows(sheet)
 	if err != nil {
 		return err
 	}
@@ -58,14 +59,14 @@ func getExcelRows(excelURL string) error {
 }
 
 //createExcel 新建一个excel
-func (e *excel) createExcel() {
+func (e *excel) createExcel() error {
 	file := xlsx.NewFile()
 	for i, v := range e.SheetDatas {
 		sheetName := "Sheet" + strconv.Itoa(i+1)
 		// Create a new sheet.
 		sheet, err := file.AddSheet(sheetName)
 		if err != nil {
-			return
+			return err
 		}
 		for idv, dv := range v.Rows {
 			var trow *xlsx.Row
@@ -86,10 +87,12 @@ func (e *excel) createExcel() {
 			}
 		}
 	}
-
-	if err := file.Save(e.FileName + ".xlsx"); err != nil {
+	fname := e.FileName + ".xlsx"
+	if err := file.Save(path.Join(core.DefaultFilePath, fname)); err != nil {
 		core.LOG.WithFields(logrus.Fields{"excel": err}).Error("file")
+		return err
 	}
+	return nil
 }
 
 //CreateExcel 创建一个excel
@@ -98,7 +101,7 @@ func (e *excel) createExcel() {
 //列名称就是map的key值
 //example: CreateExcel("example",data1,data2)
 //执行后生成文件名称为example.xlsx,内部有两个sheet页，sheet1数据内容为dat1，sheet2数据内容为dat2
-func CreateExcel(name string, rowData ...[]map[string]string) {
+func CreateExcel(name string, rowData ...[]map[string]string) error {
 	sheetDatas := []sheetData{}
 	for _, v := range rowData {
 		sd := sheetData{}
@@ -109,10 +112,13 @@ func CreateExcel(name string, rowData ...[]map[string]string) {
 		FileName:   name,
 		SheetDatas: sheetDatas,
 	}
-	el.createExcel()
+	if err := el.createExcel(); err != nil {
+		return err
+	}
+	return nil
 }
 
-// Export 导出
-func Export() {
-	getExcelRows("./file/export.xlsx")
+//ExportParse 导出
+func ExportParse() {
+	getExcelRows("./file/stb.xlsx", "Sheet1")
 }

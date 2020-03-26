@@ -24,7 +24,9 @@ func init() {
 
 //Get 业务处理,get请求的例子
 func (ap *AppExample) Get(arge *core.ElementHandleArgs) {
-	if arge.APIInterceptionGet("example", nil, appExamplef) || arge.APIInterceptionGet("excel", nil, excelExport) { //example 为 header中web-api匹配的审核执行名称
+	if arge.APIInterceptionGet("example", nil, appExamplef) || //example 为 header中web-api匹配的审核执行名称
+		arge.APIInterceptionGet("excel", nil, excelExport) ||
+		arge.APIInterceptionGet("excelparse", nil, excelparse) {
 		return
 	}
 }
@@ -45,14 +47,20 @@ func excelExport(pa interface{}, content *core.ElementHandleArgs) error {
 	dc["4"] = "4"
 	dc["date"] = "1994-08-01"
 	rowDatat = append(rowDatat, dc)
-	excel.CreateExcel("file/stb", rowData, rowDatat)
+	if err := excel.CreateExcel("stb", rowData, rowDatat); err != nil {
+		core.SendJSON(content.Res, http.StatusOK, core.SendMap{"msg": err.Error()})
+		return err
+	}
 	core.SendJSON(content.Res, http.StatusOK, core.SendMap{"msg": "this is excel get"})
 	return nil
 }
 
+func excelparse(pa interface{}, content *core.ElementHandleArgs) error {
+	excel.ExportParse()
+	return nil
+}
 func appExamplef(pa interface{}, content *core.ElementHandleArgs) error {
 	core.SendJSON(content.Res, http.StatusOK, core.SendMap{"msg": "this is example get"})
-	// excel.Export()
 	return nil
 }
 

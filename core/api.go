@@ -2,7 +2,6 @@ package core
 
 import (
 	"encoding/json"
-	"net/http"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -24,7 +23,7 @@ func (e *ElementHandleArgs) APIInterceptionGet(methodName string, param interfac
 			"elename": e.Element.Name,
 			"method":  methodName,
 		}).Error(err)
-		SendJSON(e.Res, http.StatusBadRequest, SendMap{"msg": err})
+		// SendJSON(e.Res, http.StatusBadRequest, SendMap{"msg": err})
 	}
 	return true
 }
@@ -43,7 +42,7 @@ func (e *ElementHandleArgs) APIInterceptionPost(methodName string, param interfa
 	defer e.Req.Body.Close()
 	if err := json.NewDecoder(e.Req.Body).Decode(param); err != nil {
 		LOG.WithFields(logrus.Fields{"methodName": methodName, "elementName": e.Element.Name}).Error("api")
-		SendJSON(e.Res, http.StatusBadRequest, SendMap{"msg": err})
+		// SendJSON(e.Res, http.StatusBadRequest, SendMap{"msg": err})
 		return false
 	}
 	if err := cb(param, e); err != nil {
@@ -51,7 +50,7 @@ func (e *ElementHandleArgs) APIInterceptionPost(methodName string, param interfa
 			"elename": e.Element.Name,
 			"method":  methodName,
 		}).Error(err)
-		SendJSON(e.Res, http.StatusBadRequest, SendMap{"msg": err})
+		// SendJSON(e.Res, http.StatusBadRequest, SendMap{"msg": err})
 	}
 	return true
 }
