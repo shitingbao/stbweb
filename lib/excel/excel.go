@@ -1,6 +1,7 @@
 package excel
 
 import (
+	"errors"
 	"fmt"
 	"path"
 	"stbweb/core"
@@ -40,22 +41,25 @@ func getExcelAllCell(fileURL string) error {
 }
 
 //getExcelRows 使用360解析，时间不完美
-func getExcelRows(excelURL, sheet string) error {
+func getExcelRows(excelURL, sheet string) ([][]string, error) {
 	xlsx, err := excelize.OpenFile(excelURL)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	rows, err := xlsx.GetRows(sheet)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	return rows, nil
 	for _, row := range rows {
 		for _, colCell := range row {
+			res := make(map[string]string)
+			res[""] = colCell
 			fmt.Print(colCell, "\t")
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 //createExcel 新建一个excel
@@ -119,6 +123,13 @@ func CreateExcel(name string, rowData ...[]map[string]string) error {
 }
 
 //ExportParse 导出
-func ExportParse() {
-	getExcelRows("./file/stb.xlsx", "Sheet1")
+//filename 为文件路径
+//sheet为对应excel内部每个sheet的名称，如Sheet1,Sheet2......
+//isTitle 标记第一行是否是标题
+func ExportParse(filename, sheet string) ([][]string, error) {
+	// getExcelRows("./file/stb.xlsx", "Sheet1")
+	if filename == "" || sheet == "" {
+		return nil, errors.New("ExportParse param is not nil")
+	}
+	return getExcelRows(filename, sheet)
 }
