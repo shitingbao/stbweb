@@ -2,11 +2,11 @@ package formopera
 
 import (
 	"fmt"
-	"linux_test_golang/lib/images"
 	"mime/multipart"
 	"net/http"
 	"net/url"
 	"stbweb/core"
+	"stbweb/lib/images"
 
 	"github.com/Sirupsen/logrus"
 )

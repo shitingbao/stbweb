@@ -30,5 +30,6 @@ func initChatWebsocket() (chatHub, ctrlHub *ws.Hub) {
 	http.HandleFunc("/sockets/ctrl", func(w http.ResponseWriter, r *http.Request) {
 		ws.ServeWs(ctrlHub, w, r)
 	})
+
 	return
 }

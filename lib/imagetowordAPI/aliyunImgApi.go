@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
-	"linux_test_golang/lib/images"
 	"net/http"
+	"stbweb/lib/images"
 )
 
 var appcode = "13c126d6576b4209a8c781db06c0c1c0"                    //appcode,接口身份唯一标识
