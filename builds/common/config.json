@@ -6,6 +6,6 @@
     "AllowCORS": true,
     "LogLevel": "debug",
     "Port": "3001",
-    "AllowOrigin": "localhost:8080",
+    "AllowOrigin": "http://localhost:8080",
     "AccessTokenDate": "2020-02-27 12:12:12"
 }

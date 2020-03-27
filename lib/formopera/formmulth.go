@@ -6,6 +6,9 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"stbweb/core"
+
+	"github.com/Sirupsen/logrus"
 )
 
 //sendForm 发送表单数据,form内的数据，后台用key := r.PostFormValue("key")接收
@@ -59,6 +62,10 @@ func getAllFormFiles(r *http.Request) []*multipart.FileHeader {
 	r.ParseMultipartForm(20 << 20)
 	//获取表单中的文件
 	//多个同时接受
+	if r.MultipartForm == nil {
+		core.LOG.WithFields(logrus.Fields{"form": "nil form"}).Warn("formmulth")
+		return []*multipart.FileHeader{}
+	}
 	for _, v := range r.MultipartForm.File {
 		for _, f := range v {
 			// fil, err := f.Open()
