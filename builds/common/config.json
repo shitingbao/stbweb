@@ -5,7 +5,7 @@
     "AccessToken": "24.0f6b09368cf90747bd246594cb81e87e.2592000.1587540459.282335-17903904",
     "AllowCORS": true,
     "LogLevel": "debug",
-    "Port": "3001",
+    "Port": "3002",
     "AllowOrigin": "http://localhost:8080",
     "AccessTokenDate": "2020-02-27 12:12:12"
 }
