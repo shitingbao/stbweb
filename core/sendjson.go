@@ -27,12 +27,15 @@ func SendJSON(w http.ResponseWriter, statuscode int, data interface{}) {
 	}
 
 	w.Header().Set(ContentType, ContentJSON+";"+defaultCharset)
-	w.Header().Set("Access-Control-Allow-Origin", "*") //设置允许跨域的请求地址
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
-	w.Header().Set("Access-Control-Allow-Headers", fmt.Sprintf(
-		"%s,Origin, X-Requested-With, Content-Type, Accept, Connection, User-Agent, Cookie",
-		WebAPIHanderName)) //这里可以增加对应handle
+	if WebConfig.AllowCORS {
+		w.Header().Set("Access-Control-Allow-Origin", WebConfig.AllowOrigin) //设置允许跨域的请求地址
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", fmt.Sprintf(
+			"%s,Origin, X-Requested-With, Content-Type, Accept, Connection, User-Agent, Cookie",
+			WebAPIHanderName)) //这里可以增加对应handle
+	}
+
 	w.WriteHeader(statuscode)
 	w.Write(bt)
 }
