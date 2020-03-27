@@ -32,12 +32,6 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-	// w.Header().Set("Access-Control-Allow-Origin", "*") //设置允许跨域的请求地址
-	// w.Header().Set("Access-Control-Allow-Credentials", "true")
-	// w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
-	// w.Header().Set("Access-Control-Allow-Headers", fmt.Sprintf(
-	// 	"%s,Origin, X-Requested-With, Content-Type, Accept, Connection, User-Agent, Cookie",
-	// 	core.WebAPIHanderName)) //这里可以增加对应handle
 
 	if r.URL.String() == "/" {
 		core.SendJSON(w, http.StatusOK, core.SendMap{"url": "nothing"})
