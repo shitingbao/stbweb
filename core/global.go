@@ -9,11 +9,12 @@ import (
 	"path/filepath"
 	"stbweb/lib/config"
 	"stbweb/lib/ddb"
-	"stbweb/lib/redis"
+	"stbweb/lib/rediser"
 	"stbweb/lib/ws"
 	"sync"
 
 	"github.com/Sirupsen/logrus"
+	sysRedis "github.com/go-redis/redis"
 	"github.com/shitingbao/datelogger"
 )
 
@@ -37,6 +38,9 @@ var (
 
 	//CtrlHub 发送控制消息的hub对象
 	CtrlHub *ws.Hub
+
+	//Rds redis连接d
+	Rds *sysRedis.Client
 )
 
 func init() {
@@ -109,7 +113,7 @@ func openx(driverName, dataSourceName string) error {
 	return nil
 }
 func openRdis(addr, pwd string, dbevel int) {
-	redis.Open(addr, pwd, dbevel)
+	Rds = rediser.Open(addr, pwd, dbevel)
 }
 
 //pathExists 判断是否存在默认路径，不存在则生成

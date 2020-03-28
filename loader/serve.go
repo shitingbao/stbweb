@@ -47,4 +47,5 @@ func serve() {
 //Shutdown 关闭所有连接
 func Shutdown() {
 	core.Ddb.Close()
+	core.Rds.Close()
 }
