@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"stbweb/lib/config"
 	"stbweb/lib/ddb"
+	"stbweb/lib/redis"
 	"stbweb/lib/ws"
 	"sync"
 
@@ -94,6 +95,7 @@ func Initinal(chatHub, ctrlHub *ws.Hub) {
 		LOG.WithFields(logrus.Fields{"Driver": WebConfig.Driver, "ConnectString": WebConfig.ConnectString}).Panic("database")
 		// LOG.Printf("open database error drive %s ,connection string:%s\n", WebConfig.Driver, WebConfig.ConnectString)
 	}
+	openRdis(WebConfig.RedisAdree, WebConfig.RedisPwd, WebConfig.Redislevel)
 	return
 }
 
@@ -105,6 +107,9 @@ func openx(driverName, dataSourceName string) error {
 	}
 	Ddb = d
 	return nil
+}
+func openRdis(addr, pwd string, dbevel int) {
+	redis.Open(addr, pwd, dbevel)
 }
 
 //pathExists 判断是否存在默认路径，不存在则生成

@@ -18,6 +18,10 @@ type Config struct {
 	Port            string //监听端口
 	AllowOrigin     string //允许跨域地址
 	AccessTokenDate string //文字识别接口token的有效期，自动写入，不需要手动修改
+
+	RedisAdree string //redis连接地址
+	RedisPwd   string //redis连接密码
+	Redislevel int    //redis等级
 }
 
 //ReadConfig 读取本地config,传入config地址路径，反馈配置对象
