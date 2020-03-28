@@ -22,7 +22,7 @@ func AutoLoader() {
 			core.LOG.Info("received ctrl+c,wait back job finished...")
 			core.TaskWaitGroup.Wait()
 			core.LOG.Info("all back job finished,now shutdown http server...")
-			// Shutdown()
+			Shutdown()
 			core.LOG.Info("success shutdown")
 			lend <- true
 			break
@@ -42,4 +42,9 @@ func serve() {
 	core.Initinal(chatHub, ctrlHub)
 	// http.HandleFunc("/", httpProcess) //设置访问的路由
 	http.Handle("/", http.HandlerFunc(httpProcess))
+}
+
+//Shutdown 关闭所有连接
+func Shutdown() {
+	core.Ddb.Close()
 }

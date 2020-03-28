@@ -9,7 +9,7 @@ func open(driver, connect string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	db.Close()
+	// db.Close()
 	return db, nil
 }
 

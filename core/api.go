@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"net/http"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -34,6 +35,7 @@ func (e *ElementHandleArgs) APIInterceptionPost(methodName string, param interfa
 	cb func(pa interface{}, content *ElementHandleArgs) error) bool {
 	//名称对应判断
 	if methodName != e.apiName() {
+		SendJSON(e.Res, http.StatusBadRequest, "Refuse")
 		return false
 	}
 	if e.Req.ContentLength <= 0 || param == nil {
