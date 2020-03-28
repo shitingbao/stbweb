@@ -14,7 +14,7 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
-	sysRedis "github.com/go-redis/redis"
+	"github.com/go-redis/redis"
 	"github.com/shitingbao/datelogger"
 )
 
@@ -40,7 +40,7 @@ var (
 	CtrlHub *ws.Hub
 
 	//Rds redis连接d
-	Rds *sysRedis.Client
+	Rds *redis.Client
 )
 
 func init() {
