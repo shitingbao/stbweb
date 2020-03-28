@@ -114,8 +114,8 @@ func openx(driverName, dataSourceName string) error {
 }
 func openRdis(addr, pwd string, dbevel int) {
 	Rds = rediser.Open(addr, pwd, dbevel)
-	rediser.SetUser(Rds)
-	rediser.GetUser(Rds)
+	rediser.SetUser(Rds, "", "")
+	rediser.GetUser(Rds, "")
 
 }
 
