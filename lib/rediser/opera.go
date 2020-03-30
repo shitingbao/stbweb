@@ -10,6 +10,8 @@ import (
 const (
 	//UserMerber 用户列表 redis的hash的key，保存所有成员的对应信息，需要定时清理
 	UserMerber = "user@list"
+	//每次用户登录后，都会将用户注册进入usermerber,然后再以字符串形式自己存入redis，分两部分，上述列表只存哪些用户，用户信息自己单独存，这两个对应
+	//这样就可以主动检查所用的用户是否在线，不然直接用get不能查到所有用户，而用hget又不能单独设置过期时间
 )
 
 //Open 打开redis连接
@@ -23,11 +25,6 @@ func Open(addr, pwd string, dbevel int) *redis.Client {
 	}
 	logrus.WithFields(logrus.Fields{"connect": addr}).Info("redis")
 	return rds
-}
-
-//Close 关闭
-func Close() {
-
 }
 
 // GetOnlineMember 获取所有在线成员
@@ -61,14 +58,14 @@ func GetUser(rd *redis.Client, userkey string) string {
 	return name
 }
 
-//SetUser 设置用户信息
-func SetUser(rd *redis.Client, userkey, username string) {
+//RegisterUser 设置用户信息
+func RegisterUser(rd *redis.Client, userkey, username string) {
 
 	if err := rd.Set(userkey, username, time.Minute*5).Err(); err != nil { //设置字符串key
 		logrus.WithFields(logrus.Fields{"set": err}).Error("redisErr")
 	}
 	if err := rd.HSet(UserMerber, userkey, username).Err(); err != nil { //设置字符串key
-		logrus.WithFields(logrus.Fields{"setuserlist": err}).Error("redisErr")
+		logrus.WithFields(logrus.Fields{"RegisterUserlist": err}).Error("redisErr")
 	}
 }
 

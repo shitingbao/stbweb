@@ -112,10 +112,9 @@ func openx(driverName, dataSourceName string) error {
 	Ddb = d
 	return nil
 }
+
 func openRdis(addr, pwd string, dbevel int) {
 	Rds = rediser.Open(addr, pwd, dbevel)
-	rediser.SetUser(Rds, "", "")
-	rediser.GetUser(Rds, "")
 }
 
 //pathExists 判断是否存在默认路径，不存在则生成

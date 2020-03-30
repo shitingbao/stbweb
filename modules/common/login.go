@@ -3,6 +3,7 @@ package common
 import (
 	"net/http"
 	"stbweb/core"
+	"stbweb/lib/rediser"
 )
 
 type login struct{}
@@ -33,13 +34,16 @@ type user struct {
 
 func loginAPI(param interface{}, p *core.ElementHandleArgs) error {
 	pa := param.(*loginParam)
-	core.LOG.Info("param:", pa.Name, pa.Pwd)
 	u := user{}
-	// if err := core.Ddb.QueryRow("select * from user where id='1'").Scan(&u).Error(); err != "" {
-	// 	return errors.New(err)
-	// }
-	// core.LOG.Info("user:", pa.Name, pa.Pwd)
-	core.Ddb.QueryRow("select name,password from user where id='1'").Scan(&u.Name, &u.Pwd)
-	core.SendJSON(p.Res, http.StatusOK, pa.Name+":"+pa.Pwd)
+
+	if err := core.Ddb.QueryRow("select password from user where name=?", pa.Name).Scan(&u.Pwd); err != nil {
+		return err
+	}
+	if pa.Pwd == u.Pwd {
+		rediser.RegisterUser(core.Rds, "随机唯一标识码", pa.Name)
+		core.SendJSON(p.Res, http.StatusOK, true)
+		return nil
+	}
+	core.SendJSON(p.Res, http.StatusOK, false)
 	return nil
 }
