@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"stbweb/lib/ws"
-	"time"
 )
 
 //initChatWebsocket 初始化websocket hub，开启消息处理循环
@@ -14,7 +13,7 @@ func initChatWebsocket() (chatHub, ctrlHub *ws.Hub) {
 		if err := json.Unmarshal(data, &msg); err != nil {
 			return err
 		}
-		msg.DateTime = time.Now()
+		// msg.DateTime = time.Now()
 		//原样消息发公告
 		hub.Broadcast <- msg
 		return nil

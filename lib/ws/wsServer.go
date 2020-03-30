@@ -36,7 +36,8 @@ var upgrader = websocket.Upgrader{
 
 //Message 管道中的消息
 type Message struct {
-	Data     []byte
+	User     string
+	Data     string
 	DateTime time.Time
 }
 
