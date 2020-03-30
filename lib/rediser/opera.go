@@ -19,6 +19,7 @@ func Open(addr, pwd string, dbevel int) *redis.Client {
 	_, err := rds.Ping().Result()
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"connect": err}).Error("redis")
+		return nil
 	}
 	logrus.WithFields(logrus.Fields{"connect": addr}).Info("redis")
 	return rds

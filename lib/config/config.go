@@ -22,6 +22,7 @@ type Config struct {
 	RedisAdree string //redis连接地址
 	RedisPwd   string //redis连接密码
 	Redislevel int    //redis等级
+	RedisPort  string //redis端口号
 }
 
 //ReadConfig 读取本地config,传入config地址路径，反馈配置对象
