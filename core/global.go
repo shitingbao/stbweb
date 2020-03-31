@@ -110,6 +110,7 @@ func openx(driverName, dataSourceName string) error {
 		return err
 	}
 	Ddb = d
+	LOG.WithFields(logrus.Fields{"Driver": WebConfig.Driver, "ConnectString": WebConfig.ConnectString}).Info("database")
 	return nil
 }
 

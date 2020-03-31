@@ -56,8 +56,8 @@ type OnMessageFunc func(message []byte, hub *Hub) error
 //可增加一个用户属性，用来区分不同的连接，便于在发送的时候区分发送，不走同一个频道，这样就可以分为全局频道和局部频道
 //需要登录配合，可以将用户登陆时保存在cookie中，在注册client时获取
 type Client struct {
-	hub *Hub
-
+	hub  *Hub
+	name string
 	// The websocket connection.
 	conn *websocket.Conn
 
@@ -187,16 +187,17 @@ func (h *Hub) Run() {
 }
 
 // ServeWs handles websocket requests from the peer.
-func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
+func ServeWs(user string, hub *Hub, w http.ResponseWriter, r *http.Request) {
 	h := http.Header{}
-	h.Add("Sec-WebSocket-Protocol", r.Header.Get("Sec-WebSocket-Protocol")) //带有websocket的Protocol子header需要传入对应header，不然会有1006错误
-	conn, err := upgrader.Upgrade(w, r, h)                                  //返回一个websocket连接
+	pro := r.Header.Get("Sec-WebSocket-Protocol")
+	h.Add("Sec-WebSocket-Protocol", pro)   //带有websocket的Protocol子header需要传入对应header，不然会有1006错误
+	conn, err := upgrader.Upgrade(w, r, h) //返回一个websocket连接
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"connect": err}).Info("websocket")
 		return
 	}
 	//生成一个client，里面包含用户信息连接信息等信息
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+	client := &Client{hub: hub, name: user, conn: conn, send: make(chan []byte, 256)}
 	logrus.WithFields(logrus.Fields{"socket adress": r.URL}).Info("client")
 	client.hub.register <- client //将这个连接放入注册，在run中会加一个
 	go client.writePump()         //新开一个写入，因为有一个用户连接就新开一个，相互不影响，在内部实现心跳包检测连接，详细看函数内部
