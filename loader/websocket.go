@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"stbweb/lib/ws"
+
+	"github.com/Sirupsen/logrus"
 )
 
 //initChatWebsocket 初始化websocket hub，开启消息处理循环
@@ -21,6 +23,10 @@ func initChatWebsocket() (chatHub, ctrlHub *ws.Hub) {
 	go chatHub.Run()
 	//chat 聊天消息
 	http.HandleFunc("/sockets/chat", func(w http.ResponseWriter, r *http.Request) {
+		if sid := r.Header.Get("Sec-WebSocket-Protocol"); len(sid) > 0 {
+			logrus.Info("websocket:", sid)
+		}
+
 		ws.ServeWs(chatHub, w, r)
 	})
 	ctrlHub = ws.NewHub(nil)

@@ -2,14 +2,11 @@ package ws
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/websocket"
-	// log "github.com/Sirupsen/logrus"
-	// "github.com/gorilla/websocket"
 )
 
 const (
@@ -131,11 +128,11 @@ func (c *Client) writePump() {
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
 func (c *Client) readPump() {
-	log.Println("star read message")
+	logrus.Info("star read message")
 	defer func() {
 		c.hub.unregister <- c //读取完毕后注销该client
 		c.conn.Close()
-		log.Println("websocket Close")
+		logrus.Info("websocket Close")
 	}()
 	c.conn.SetReadLimit(maxMessageSize)                                                                        //设置最大读取容量
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))                                                           //设置读取死亡时间
@@ -144,13 +141,13 @@ func (c *Client) readPump() {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				log.Println("websocket.IsUnexpectedCloseError:", err)
+				logrus.WithFields(logrus.Fields{"ReadMessageError": err}).Info("websocket")
 			}
 			break
 		}
 		if c.hub.OnMessage != nil { //执行回调函数
 			if err := c.hub.OnMessage(message, c.hub); err != nil {
-				log.Println(err)
+				logrus.WithFields(logrus.Fields{"ReadOnMessageError": err}).Info("websocket")
 				break
 			}
 		}
@@ -163,17 +160,17 @@ func (h *Hub) Run() {
 		select {
 		case client := <-h.register: //客户端有新的连接就加入一个
 			h.clients[client] = true
-			log.Println("当前连接增加，", "总连接数为：", len(h.clients))
+			logrus.Info("当前连接增加，", "总连接数为：", len(h.clients))
 		case client := <-h.unregister: //客户端断开连接，client会进入unregister中，直接在这里获取，删除一个
 			if _, ok := h.clients[client]; ok { //找到对应需要删除的client
 				delete(h.clients, client) //在map中根据对应value值，使用delete删除对应client
 				close(client.send)        //关闭对应连接
-				log.Println("当前连接减少，", "总连接数为：", len(h.clients))
+				logrus.Info("当前连接减少，", "总连接数为：", len(h.clients))
 			}
 		case message := <-h.Broadcast: //将数据发给连接中的send，用来发送
 			data, err := json.Marshal(message)
 			if err != nil {
-				log.Panic(err)
+				logrus.Panic(err)
 			}
 			for client := range h.clients { //clients中保存了所有的客户端连接，循环所有连接给与要发送的数据
 				select {
@@ -191,10 +188,11 @@ func (h *Hub) Run() {
 
 // ServeWs handles websocket requests from the peer.
 func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
-
-	conn, err := upgrader.Upgrade(w, r, nil) //返回一个websocket连接
+	h := http.Header{}
+	h.Add("Sec-WebSocket-Protocol", r.Header.Get("Sec-WebSocket-Protocol")) //带有websocket的Protocol子header需要传入对应header，不然会有1006错误
+	conn, err := upgrader.Upgrade(w, r, h)                                  //返回一个websocket连接
 	if err != nil {
-		log.Println(err)
+		logrus.WithFields(logrus.Fields{"connect": err}).Info("websocket")
 		return
 	}
 	//生成一个client，里面包含用户信息连接信息等信息
