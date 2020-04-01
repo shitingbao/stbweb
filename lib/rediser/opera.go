@@ -58,7 +58,7 @@ func GetUser(rd *redis.Client, userkey string) string {
 	return name
 }
 
-//RegisterUser 设置用户信息
+//RegisterUser 设置用户信息，userkey就是对应header中的token
 func RegisterUser(rd *redis.Client, userkey, username string) {
 
 	if err := rd.Set(userkey, username, time.Minute*5).Err(); err != nil { //设置字符串key

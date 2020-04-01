@@ -4,43 +4,41 @@ import (
 	"net/http"
 	"stbweb/core"
 	"stbweb/lib/rediser"
+
+	"github.com/pborman/uuid"
 )
 
 type login struct{}
-
-type loginParam struct {
-	Name string
-	Pwd  string
-}
 
 func init() {
 	core.RegisterFun("login", new(login))
 }
 func (l *login) Post(p *core.ElementHandleArgs) {
-	if p.APIInterceptionPost("login", new(loginParam), loginAPI) {
+	if p.APIInterceptionPost("login", new(user), loginAPI) {
 		return
 	}
-
 }
 
 func (l *login) Get(p *core.ElementHandleArgs) {
 
 }
 
-type user struct {
-	Name string
-	Pwd  string
-}
-
 func loginAPI(param interface{}, p *core.ElementHandleArgs) error {
-	pa := param.(*loginParam)
-	u := user{}
-	if err := core.Ddb.QueryRow("select password from user where name=?", pa.Name).Scan(&u.Pwd); err != nil {
-		return err
+	pa := param.(*user)
+	if pa.Name == "" || pa.Pwd == "" {
+		core.SendJSON(p.Res, http.StatusOK, "必填内容不能为空")
+		return nil
 	}
-	if pa.Pwd == u.Pwd {
-		rediser.RegisterUser(core.Rds, "union", pa.Name) //unionb使用加密算法生成
-		core.SendJSON(p.Res, http.StatusOK, "union")
+	if !isExistUser(pa.Name) {
+		core.SendJSON(p.Res, http.StatusOK, "用户不存在")
+		return nil
+	}
+	u := getUser(pa.Name)
+
+	if u.equal(pa.Pwd) {
+		token := uuid.NewUUID().String()
+		rediser.RegisterUser(core.Rds, token, pa.Name)
+		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"token": token, "success": true})
 		return nil
 	}
 	core.SendJSON(p.Res, http.StatusOK, false)
