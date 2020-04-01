@@ -1,11 +1,15 @@
 {
-    "Driver": "postgres",
-    "ConnectString": "postgres://postgres:123456@localhost:5432/common?sslmode=disable",
+    "Driver": "mysql",
+    "ConnectString": "root:4116bbDD#@(47.244.236.195:3306)/stbweb?charset=utf8&parseTime=True&loc=Local",
     "BaidubceAddress": "https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic",
     "AccessToken": "24.0f6b09368cf90747bd246594cb81e87e.2592000.1587540459.282335-17903904",
     "AllowCORS": true,
     "LogLevel": "debug",
-    "Port": "3001",
-    "AllowOrigin": "http://localhost:4200",
-    "AccessTokenDate": "2020-02-27 12:12:12"
+    "Port": "3002",
+    "AllowOrigin": "http://localhost:8080",
+    "AccessTokenDate": "2020-02-27 12:12:12",
+    "RedisAdree": "127.0.0.1",
+    "RedisPort": "6379",
+    "RedisPwd": "",
+    "Redislevel": 0
 }

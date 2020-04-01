@@ -8,7 +8,7 @@ import (
 type register struct{}
 
 func init() {
-	core.RegisterFun("register", new(login))
+	core.RegisterFun("register", new(register))
 }
 
 type registerParam struct {
@@ -35,14 +35,22 @@ func userRegister(param interface{}, p *core.ElementHandleArgs) error {
 		core.SendJSON(p.Res, http.StatusOK, "用户已存在")
 		return nil
 	}
-	sql := "INSERT INTO user(NAME,PASSWORD,avatar,email,phone,salt)VALUES(?,?,?,?,?,?)"
+
 	//两次加密一次解密，双向加单向
 	salt := buildIserSalt(pa.Name)
 	bPwd := buildPas(pa.Password, salt)
-	if _, err := core.Ddb.Exec(sql, pa.Name, string(bPwd), pa.Avatar, pa.Email, pa.Phone, salt); err != nil {
+	stmt, err := core.Ddb.Prepare("INSERT INTO user(NAME,PASSWORD,avatar,email,phone,salt)VALUES(?,?,?,?,?,?)")
+	if err != nil {
 		core.SendJSON(p.Res, http.StatusOK, err.Error())
 		return err
 	}
+
+	_, err = stmt.Exec(pa.Name, string(bPwd), pa.Avatar, pa.Email, pa.Phone, salt)
+	if err != nil {
+		core.SendJSON(p.Res, http.StatusOK, err.Error())
+		return err
+	}
+
 	core.SendJSON(p.Res, http.StatusOK, true)
 	return nil
 }
