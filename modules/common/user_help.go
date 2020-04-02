@@ -16,7 +16,7 @@ import (
 
 type user struct {
 	Name       string
-	Pwd        []byte
+	Pwd        []byte //对应mysql的varbinary,末尾不会填充，不能使用binary，因为不足会使用ox0填充导致取出的时候多18位的0
 	Avatar     string
 	Email      string
 	Phone      string
@@ -64,14 +64,6 @@ func buildIserSalt(user string) string {
 func buildUserPassword(pwdMd5, salt []byte) ([]byte, error) {
 	return scrypt.Key(pwdMd5, salt, 16384, 8, 1, 32)
 }
-
-//md5加密
-// func md5Encode(salt string) {
-// 	data := []byte(salt)
-// 	has := md5.Sum(data)
-// 	md5str1 := fmt.Sprintf("%x", has) //将[]byte转成16进制
-// 	fmt.Println(md5str1)
-// }
 
 //密文验证
 func (u *user) equal(pwd string) bool {
