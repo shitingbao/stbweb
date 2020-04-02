@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"stbweb/core"
 	"stbweb/lib/excel"
+
+	"github.com/Sirupsen/logrus"
 )
 
 //AppExample 业务类
@@ -64,7 +66,11 @@ func excelparse(pa interface{}, content *core.ElementHandleArgs) error {
 	return nil
 }
 func appExamplef(pa interface{}, content *core.ElementHandleArgs) error {
-	core.SendJSON(content.Res, http.StatusOK, core.SendMap{"msg": "this is example get"})
+	u := user{}
+	if err := core.Ddb.QueryRow("SELECT name FROM user where name=?", "stb").Scan(&u.Name); err != nil {
+		core.LOG.WithFields(logrus.Fields{"get user": err}).Error("user")
+	}
+	core.SendJSON(content.Res, http.StatusOK, core.SendMap{"msg": u.Name})
 	return nil
 }
 

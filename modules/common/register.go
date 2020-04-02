@@ -39,18 +39,16 @@ func userRegister(param interface{}, p *core.ElementHandleArgs) error {
 	//两次加密一次解密，双向加单向
 	salt := buildIserSalt(pa.Name)
 	bPwd := buildPas(pa.Password, salt)
-	stmt, err := core.Ddb.Prepare("INSERT INTO user(NAME,PASSWORD,avatar,email,phone,salt)VALUES(?,?,?,?,?,?)")
+	stmt, err := core.Ddb.Prepare("INSERT INTO user(name,password,avatar,email,phone,salt)VALUES(?,?,?,?,?,?)")
 	if err != nil {
 		core.SendJSON(p.Res, http.StatusOK, err.Error())
 		return err
 	}
-
 	_, err = stmt.Exec(pa.Name, string(bPwd), pa.Avatar, pa.Email, pa.Phone, salt)
 	if err != nil {
 		core.SendJSON(p.Res, http.StatusOK, err.Error())
 		return err
 	}
-
 	core.SendJSON(p.Res, http.StatusOK, true)
 	return nil
 }
