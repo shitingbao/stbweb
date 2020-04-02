@@ -23,10 +23,6 @@ func initChatWebsocket() (chatHub, ctrlHub *ws.Hub) {
 	go chatHub.Run()
 	//chat 聊天消息
 	http.HandleFunc("/sockets/chat", func(w http.ResponseWriter, r *http.Request) {
-		// if sid := r.Header.Get("Sec-WebSocket-Protocol"); len(sid) > 0 {
-		// 	logrus.Info("websocket:", sid)
-		// }
-
 		ws.ServeWs(rediser.GetUser(core.Rds, r.Header.Get("Sec-WebSocket-Protocol")), chatHub, w, r)
 	})
 	ctrlHub = ws.NewHub(nil)
