@@ -14,7 +14,7 @@ func init() {
 	core.RegisterFun("login", new(login))
 }
 func (l *login) Post(p *core.ElementHandleArgs) {
-	if p.APIInterceptionPost("login", new(user), loginAPI) {
+	if p.APIInterceptionPost("login", new(apiUser), loginAPI) {
 		return
 	}
 }
@@ -23,8 +23,18 @@ func (l *login) Get(p *core.ElementHandleArgs) {
 
 }
 
+type apiUser struct {
+	Name       string
+	Pwd        string
+	Avatar     string
+	Email      string
+	Phone      string
+	Salt       string
+	UpdateTime string
+}
+
 func loginAPI(param interface{}, p *core.ElementHandleArgs) error {
-	pa := param.(*user)
+	pa := param.(*apiUser)
 	if pa.Name == "" || pa.Pwd == "" {
 		core.SendJSON(p.Res, http.StatusOK, "必填内容不能为空")
 		return nil

@@ -16,7 +16,7 @@ import (
 
 type user struct {
 	Name       string
-	Pwd        string
+	Pwd        []byte
 	Avatar     string
 	Email      string
 	Phone      string
@@ -76,7 +76,7 @@ func buildUserPassword(pwdMd5, salt []byte) ([]byte, error) {
 //密文验证
 func (u *user) equal(pwd string) bool {
 	bPwd := buildPas(pwd, u.Salt)
-	return bytes.Equal(bPwd, []byte(u.Pwd))
+	return bytes.Equal(bPwd, u.Pwd)
 }
 
 //解析前端的hex密码文本，并调用密文生成函数
