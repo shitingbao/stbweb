@@ -49,6 +49,6 @@ func userRegister(param interface{}, p *core.ElementHandleArgs) error {
 		core.SendJSON(p.Res, http.StatusOK, err.Error())
 		return err
 	}
-	core.SendJSON(p.Res, http.StatusOK, true)
+	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true})
 	return nil
 }
