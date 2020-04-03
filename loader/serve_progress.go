@@ -1,34 +1,37 @@
 package loader
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"stbweb/core"
 	"strings"
+
+	"github.com/Sirupsen/logrus"
 )
 
 func httpProcess(w http.ResponseWriter, r *http.Request) {
-	// if r.Method == "OPTIONS" {
-	// 	if core.WebConfig.AllowCORS {
-	// 		// allowOrigin := core.WebConfig.AllowOrigin
-	// 		// if len(allowOrigin) == 0 {
-	// 		// 	allowOrigin = "*" //待定，跨域允许的指定地址
-	// 		// }
-	// 		w.Header().Set("Access-Control-Allow-Origin", "*") //设置允许跨域的请求地址
-	// 		w.Header().Set("Access-Control-Allow-Credentials", "true")
-	// 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
-	// 		w.Header().Set("Access-Control-Allow-Headers", fmt.Sprintf(
-	// 			"%s,Origin, X-Requested-With, Content-Type, Accept, Connection, User-Agent, Cookie",
-	// 			core.WebAPIHanderName)) //这里可以增加对应handle
-	// 	}
-	// 	core.LOG.WithFields(logrus.Fields{
-	// 		"url":       r.URL.String(),
-	// 		"allowCORS": core.WebConfig.AllowCORS,
-	// 	}).Warn("options")
+	if r.Method == "OPTIONS" {
+		if core.WebConfig.AllowCORS {
+			allowOrigin := core.WebConfig.AllowOrigin
+			if len(allowOrigin) == 0 {
+				allowOrigin = "*" //待定，跨域允许的指定地址
+			}
+			w.Header().Set("Access-Control-Allow-Origin", allowOrigin) //设置允许跨域的请求地址
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
+			w.Header().Set("Access-Control-Allow-Headers", fmt.Sprintf(
+				"%s,Origin, X-Requested-With, Content-Type, Accept, Connection, User-Agent, Cookie",
+				core.WebAPIHanderName)) //这里可以增加对应handle
+		}
+		core.LOG.WithFields(logrus.Fields{
+			"url":       r.URL.String(),
+			"allowCORS": core.WebConfig.AllowCORS,
+		}).Warn("options")
 
-	// 	w.WriteHeader(http.StatusOK)
-	// 	return
-	// }
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 
 	if r.URL.String() == "/" {
 		core.SendJSON(w, http.StatusOK, core.SendMap{"url": "nothing"})
