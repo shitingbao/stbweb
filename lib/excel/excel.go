@@ -117,13 +117,17 @@ func CreateExcel(name string, rowData ...[]map[string]string) error {
 	return nil
 }
 
-//ExportParse 导出
+//ExportParse 解析excel文件
 //filename 为文件路径
-//sheet为对应excel内部每个sheet的名称，如Sheet1,Sheet2......
-func ExportParse(filename, sheet string) ([][]string, error) {
+//sheet为对应excel内部每个sheet的名称，如Sheet1或者Sheet2......,默认使用Sheet1，多个参数只取第一个
+func ExportParse(filename string, sheet ...string) ([][]string, error) {
 	// getExcelRows("./file/stb.xlsx", "Sheet1")
-	if filename == "" || sheet == "" {
+	if filename == "" {
 		return nil, errors.New("ExportParse param is not nil")
 	}
-	return getExcelRows(filename, sheet)
+	st := "Sheet1"
+	if len(sheet) > 0 {
+		st = sheet[0]
+	}
+	return getExcelRows(filename, st)
 }

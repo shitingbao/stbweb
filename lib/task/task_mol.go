@@ -45,6 +45,7 @@ func init() {
 //Stop job关闭
 func Stop() {
 	job.Stop()
+	workPool.Release()
 }
 
 func submitPoolFunc(f func()) func() {

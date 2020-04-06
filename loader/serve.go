@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"stbweb/core"
+	"stbweb/lib/task"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -48,4 +49,5 @@ func serve() {
 func Shutdown() {
 	core.Ddb.Close()
 	core.Rds.Close()
+	task.Stop()
 }
