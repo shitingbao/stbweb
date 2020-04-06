@@ -2,8 +2,10 @@ package core
 
 import (
 	"net/http"
+	"stbweb/lib/rediser"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus"
+	"github.com/go-redis/redis"
 )
 
 //Controlle 保存所有定义的业务结构
@@ -20,9 +22,10 @@ type Controlle struct {
 
 //ElementHandleArgs http请求类型
 type ElementHandleArgs struct {
-	// Render   *render.Render
 	Req     *http.Request
 	Res     http.ResponseWriter
+	Red     *redis.Client
+	Usr     string
 	Element *Element
 }
 
@@ -50,6 +53,8 @@ func NewElementHandleArgs(w http.ResponseWriter, r *http.Request, ele *Element) 
 		Req:     r,
 		Res:     w,
 		Element: ele,
+		Red:     Rds,
+		Usr:     rediser.GetUser(Rds, r.Header.Get("token")),
 	}
 }
 
@@ -76,7 +81,7 @@ func (c *Controlle) Handle(arge *ElementHandleArgs) {
 	case "GET":
 		defer func() {
 			if err := recover(); err != nil {
-				LOG.WithFields(log.Fields{"api-get": c.ControlleName}).Panic("api")
+				LOG.WithFields(logrus.Fields{"api-get": c.ControlleName}).Panic("api")
 			}
 		}()
 		f, ok := c.AppControlle.(BillGetEvent)
@@ -87,7 +92,7 @@ func (c *Controlle) Handle(arge *ElementHandleArgs) {
 	case "POST":
 		defer func() {
 			if err := recover(); err != nil {
-				LOG.WithFields(log.Fields{"api-post": c.ControlleName}).Panic("api")
+				LOG.WithFields(logrus.Fields{"api-post": c.ControlleName}).Panic("api")
 			}
 		}()
 		f, ok := c.AppControlle.(BillPostEvent)

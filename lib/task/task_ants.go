@@ -1,4 +1,4 @@
-//加入ants机制一同使用，可以判断任务结束
+//Package task 加入ants机制一同使用，可以判断任务结束
 package task
 
 import (
@@ -12,8 +12,8 @@ import (
 
 const (
 	//测试并行数量
-	runTime = 100
-
+	runTime              = 100
+	defaultBenchAntsSize = 10
 	//BenchAntsSize 同上
 	BenchAntsSize = 200000
 	//DefaultExpiredTime 测试使用默认过期时间
@@ -22,6 +22,22 @@ const (
 
 var sum int32
 
+//NewCommonPool 反馈一个普通的pool
+func NewCommonPool() *ants.Pool {
+	p, _ := ants.NewPool(BenchAntsSize, ants.WithExpiryDuration(DefaultExpiredTime))
+	return p
+}
+
+//NewSameTypePool 反馈一个执行相同方法的pool,f为待执行的方法
+//全局调用使用上不是很方便，使用过程待定
+//暂时使用上述普通pool作为任务逻辑
+func NewSameTypePool(f func(i interface{})) *ants.PoolWithFunc {
+	p, _ := ants.NewPoolWithFunc(defaultBenchAntsSize, f)
+	return p
+}
+
+//以下是单独使用示例
+/////////////////////////////////////////////////////////////////////
 func myFunc(i interface{}) {
 	n := i.(int32)
 	atomic.AddInt32(&sum, n)

@@ -7,10 +7,15 @@ package task
 import (
 	"stbweb/core"
 
+	"github.com/pborman/uuid"
+
 	"github.com/robfig/cron"
 )
 
-var job = cron.New()
+var (
+	job      = cron.New()
+	workPool = NewCommonPool()
+)
 
 //这里的任务应该产生日志，文件日志待定
 
@@ -30,6 +35,7 @@ type Task struct {
 	TaskType string //任务类型
 	Spec     string //定时标记
 	Func     func() //逻辑处理
+	IsSave   bool   //是否保存数据包
 }
 
 func init() {
@@ -41,24 +47,37 @@ func Stop() {
 	job.Stop()
 }
 
-//Run 运行一个task
+func submitPoolFunc(f func()) func() {
+	return func() {
+		workPool.Submit(f)
+	}
+}
+
+//Run 运行一个task,内部将定时job和异步ants结合使用
 func (t *Task) Run() {
 	if core.Rds.HGet(t.User, t.TaskType).Val() != "" { //说明有相同的任务，不在执行
 		return
 	}
 	core.Rds.HSet(t.User, t.TaskType, t.TaskID)
 
-	job.AddFunc(t.Spec, t.Func)
+	job.AddFunc(t.Spec, submitPoolFunc(t.Func))
 }
 
 //NewTaskRun 返回一个任务对象
-func NewTaskRun(id, user, tasktype, spec string, function func()) *Task {
+//user为执行用户名称，tasktype为执行类型，spec为job定时字符串，function为执行的逻辑函数
+func NewTaskRun(user, tasktype, spec string, function func(), issave ...bool) *Task {
+	taskID := uuid.NewUUID().String()
+	sa := true
+	if len(issave) > 0 {
+		sa = issave[0]
+	}
 	return &Task{
-		TaskID:   id,
+		TaskID:   taskID,
 		User:     user,
 		TaskType: tasktype,
 		Spec:     spec,
 		Func:     function,
+		IsSave:   sa,
 	}
 }
 

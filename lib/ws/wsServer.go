@@ -32,6 +32,7 @@ var upgrader = websocket.Upgrader{
 }
 
 //Message 管道中的消息
+//user中为空"",则为全体发送，写入username则为指定发送，包括自己的信息
 type Message struct {
 	User     string
 	Data     string
@@ -173,6 +174,9 @@ func (h *Hub) Run() {
 				logrus.Panic(err)
 			}
 			for client := range h.clients { //clients中保存了所有的客户端连接，循环所有连接给与要发送的数据
+				if message.User != "" && message.User != client.name { //区分信息对自己发送，对指定用户发送，或者对全体发送，分别是自己的user，指定用户的user，或者全体的空字符串
+					continue
+				}
 				select {
 				case client.send <- data: //将需要发送的数据放入send中，在write函数中实际发送
 				default:
