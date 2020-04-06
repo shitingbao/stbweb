@@ -12,6 +12,7 @@ import (
 	"stbweb/lib/rediser"
 	"stbweb/lib/ws"
 	"sync"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
@@ -85,7 +86,6 @@ func checkLog() {
 		})
 		logrus.SetLevel(lvl)
 		logrus.WithFields(logrus.Fields{"set-level": lvl.String()}).Info("initlog")
-
 		LOG = &datelogger.DateLogger{Path: filepath.Join(workDir, "log"), Level: lvl}
 	}
 }
@@ -100,21 +100,34 @@ func Initinal(chatHub, ctrlHub *ws.Hub) {
 		// LOG.Printf("open database error drive %s ,connection string:%s\n", WebConfig.Driver, WebConfig.ConnectString)
 	}
 	openRdis(WebConfig.RedisAdree+":"+WebConfig.RedisPort, WebConfig.RedisPwd, WebConfig.Redislevel)
+	restoreConnect()
 	return
 }
 
 //Openx 打开一个数据库连接，返回一个包装过的DB对象，其能返回DriverName
 func openx(driverName, dataSourceName string) error {
+	defer func() {
+		if err := recover(); err != nil {
+			LOG.Info("open db have err:", err)
+			LOG.Info(driverName, ":", dataSourceName, "--db连接5S后重试。。。。。。")
+		}
+	}()
 	d, err := ddb.Open(driverName, dataSourceName)
 	if err != nil {
 		return err
 	}
 	Ddb = d
-	log.Println("Driver:", WebConfig.Driver, "--ConnectString:", WebConfig.ConnectString) //使用LOG会引起空指针
+	LOG.Println("Driver:", WebConfig.Driver, "--ConnectString:", WebConfig.ConnectString)
 	return nil
 }
 
 func openRdis(addr, pwd string, dbevel int) {
+	defer func() {
+		if err := recover(); err != nil {
+			LOG.Info("open redis have err:", err)
+			LOG.Info(addr, ":", pwd, ":", dbevel, "--redis连接5S后重试。。。。。。")
+		}
+	}()
 	Rds = rediser.Open(addr, pwd, dbevel)
 }
 
@@ -126,7 +139,25 @@ func pathExists() {
 	}
 	if os.IsNotExist(err) {
 		if err := os.MkdirAll(DefaultFilePath, os.ModePerm); err != nil {
-			LOG.WithFields(logrus.Fields{"msg": err.Error()}).Error("DefaultFilePath")
+			LOG.WithFields(logrus.Fields{"msg": err.Error()}).Error("CreateDefaultFilePath")
 		}
 	}
+}
+
+//restoreConnect db连接重启,5s后重启
+func restoreConnect() {
+	ticker := time.NewTicker(5 * time.Second)
+	go func() {
+		for range ticker.C {
+			if Ddb == nil {
+				LOG.Info("DB正在重新连接。。。。。。")
+				openx(WebConfig.Driver, WebConfig.ConnectString)
+			}
+			if Rds == nil {
+				LOG.Info("redis正在重新连接。。。。。。")
+				openRdis(WebConfig.RedisAdree+":"+WebConfig.RedisPort, WebConfig.RedisPwd, WebConfig.Redislevel)
+			}
+		}
+	}()
+	// defer ticker.Stop()
 }
