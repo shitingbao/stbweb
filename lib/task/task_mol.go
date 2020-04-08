@@ -7,6 +7,8 @@ package task
 import (
 	"stbweb/core"
 
+	"github.com/Sirupsen/logrus"
+
 	"github.com/pborman/uuid"
 
 	"github.com/robfig/cron"
@@ -61,7 +63,9 @@ func (t *Task) Run() {
 	}
 	core.Rds.HSet(t.User, t.TaskType, t.TaskID)
 
-	job.AddFunc(t.Spec, submitPoolFunc(t.Func))
+	if _, err := job.AddFunc(t.Spec, submitPoolFunc(t.Func)); err != nil {
+		core.LOG.WithFields(logrus.Fields{"Spec": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
+	}
 }
 
 //NewTask 返回一个任务对象

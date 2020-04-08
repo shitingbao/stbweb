@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	ts := task.NewTask("sys", "clearMember", "0 0/5 * * * ?", clearFun)
+	ts := task.NewTask("sys", "clearMember", "*/5 * * * ?", clearFun) //五分钟执行一次
 	ts.Run()
 }
 
