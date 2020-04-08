@@ -32,12 +32,12 @@ const (
 
 //Task 任务对象
 type Task struct {
-	TaskID   string //任务Id
-	User     string //任务所属user
-	TaskType string //任务类型
-	Spec     string //定时标记
-	Func     func() //逻辑处理
-	IsSave   bool   //是否保存数据包
+	TaskID   string       //任务Id
+	User     string       //任务所属user
+	TaskType string       //任务类型
+	Spec     string       //定时标记
+	Func     func() error //逻辑处理
+	IsSave   bool         //是否保存数据包
 }
 
 func init() {
@@ -50,9 +50,16 @@ func Stop() {
 	workPool.Release()
 }
 
-func submitPoolFunc(f func()) func() {
+//加入过程，拼装成新的方法，提交入pool当中处理
+func submitPoolFunc(user, tp, id string, f func() error) func() {
 	return func() {
-		workPool.Submit(f)
+		workPool.Submit(func() {
+			core.Rds.HSet(user, tp, id)
+			if err := f(); err != nil {
+				core.LOG.WithFields(logrus.Fields{"func": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
+			}
+			core.Rds.HDel(user, tp) //手动设置丢弃,该任务未执行
+		})
 	}
 }
 
@@ -61,17 +68,15 @@ func (t *Task) Run() {
 	if core.Rds.HGet(t.User, t.TaskType).Val() != "" { //说明有相同的任务，不在执行
 		return
 	}
-	core.Rds.HSet(t.User, t.TaskType, t.TaskID)
 
-	if _, err := job.AddFunc(t.Spec, submitPoolFunc(t.Func)); err != nil {
-		core.Rds.HDel(t.User, t.TaskType)                            //手动设置丢弃,该任务未执行
+	if _, err := job.AddFunc(t.Spec, submitPoolFunc(t.User, t.TaskType, t.TaskID, t.Func)); err != nil {
 		core.LOG.WithFields(logrus.Fields{"Spec": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
 	}
 }
 
 //NewTask 返回一个任务对象
 //user为执行用户名称，tasktype为执行类型，spec为job定时字符串，function为执行的逻辑函数
-func NewTask(user, tasktype, spec string, function func(), issave ...bool) *Task {
+func NewTask(user, tasktype, spec string, function func() error, issave ...bool) *Task {
 	taskID := uuid.NewUUID().String()
 	sa := true
 	if len(issave) > 0 {
