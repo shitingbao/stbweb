@@ -49,12 +49,13 @@ func (e *ElementHandleArgs) isAPI() bool {
 
 //NewElementHandleArgs 反馈一个工作元素类型
 func NewElementHandleArgs(w http.ResponseWriter, r *http.Request, ele *Element) *ElementHandleArgs {
+	usr := rediser.GetUser(Rds, r.Header.Get("token"))
 	return &ElementHandleArgs{
 		Req:     r,
 		Res:     w,
 		Element: ele,
 		Red:     Rds,
-		Usr:     rediser.GetUser(Rds, r.Header.Get("token")),
+		Usr:     usr,
 	}
 }
 

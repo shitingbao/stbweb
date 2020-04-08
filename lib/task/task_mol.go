@@ -64,9 +64,9 @@ func (t *Task) Run() {
 	job.AddFunc(t.Spec, submitPoolFunc(t.Func))
 }
 
-//NewTaskRun 返回一个任务对象
+//NewTask 返回一个任务对象
 //user为执行用户名称，tasktype为执行类型，spec为job定时字符串，function为执行的逻辑函数
-func NewTaskRun(user, tasktype, spec string, function func(), issave ...bool) *Task {
+func NewTask(user, tasktype, spec string, function func(), issave ...bool) *Task {
 	taskID := uuid.NewUUID().String()
 	sa := true
 	if len(issave) > 0 {

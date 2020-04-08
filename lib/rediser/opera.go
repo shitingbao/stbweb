@@ -80,3 +80,14 @@ func DelUser(rd *redis.Client, userkey string) {
 		return
 	}
 }
+
+// ClearMember 清理用户,去除总用户列表中不在线的用户
+func ClearMember(rd *redis.Client) {
+	member := rd.HGetAll(UserMerber).Val()
+	for key := range member {
+		usr := rd.Get(key).Val()
+		if usr == "" {
+			rd.HDel(UserMerber, key)
+		}
+	}
+}

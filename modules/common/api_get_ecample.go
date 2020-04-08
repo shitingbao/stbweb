@@ -3,8 +3,10 @@
 package common
 
 import (
+	"log"
 	"net/http"
 	"stbweb/core"
+	"stbweb/lib/task"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -25,9 +27,18 @@ func init() {
 
 //Get 业务处理,get请求的例子
 func (ap *AppExample) Get(arge *core.ElementHandleArgs) {
-	if arge.APIInterceptionGet("example", nil, appExamplef) { //example 为 header中web-api匹配的审核执行名称
+	if arge.APIInterceptionGet("example", nil, appExamplef) || arge.APIInterceptionGet("task", nil, taskExample) { //example 为 header中web-api匹配的审核执行名称
 		return
 	}
+}
+
+func taskExample(pa interface{}, content *core.ElementHandleArgs) error {
+	log.Println("this is start task")
+	ts := task.NewTask("sys", "clearMember", "0/2 * * * * ? ", func() {
+		log.Println("this is task==========")
+	})
+	ts.Run()
+	return nil
 }
 
 func appExamplef(pa interface{}, content *core.ElementHandleArgs) error {
