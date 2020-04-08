@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"stbweb/core"
 	"stbweb/lib/task"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -27,15 +28,36 @@ func init() {
 
 //Get 业务处理,get请求的例子
 func (ap *AppExample) Get(arge *core.ElementHandleArgs) {
-	if arge.APIInterceptionGet("example", nil, appExamplef) || arge.APIInterceptionGet("task", nil, taskExample) { //example 为 header中web-api匹配的审核执行名称
+	if arge.APIInterceptionGet("example", nil, appExamplef) ||
+		arge.APIInterceptionGet("task", nil, taskExample) ||
+		arge.APIInterceptionGet("sql", nil, sqlExample) { //example 为 header中web-api匹配的审核执行名称
 		return
 	}
 }
-
+func sqlExample(pa interface{}, content *core.ElementHandleArgs) error {
+	stmt, err := core.Ddb.Prepare(`INSERT INTO task(
+		task_id, 
+		user,
+		task_type,
+		spec,
+		Is_save,
+		create_time,
+		complete,
+		execution_time) VALUES(?,?,?,?,?,?,?,?)`)
+	if err != nil {
+		return err
+	}
+	if _, err := stmt.Exec("123", "123", "123", "123", true, time.Now(), true, time.Now()); err != nil {
+		return err
+	}
+	core.SendJSON(content.Res, http.StatusOK, true)
+	return nil
+}
 func taskExample(pa interface{}, content *core.ElementHandleArgs) error {
 	log.Println("this is start task")
-	ts := task.NewTask("sys", "clearMember", "0/2 * * * * ? ", func() {
+	ts := task.NewTask("sys", "clearMember", "0/2 * * * * ? ", func() error {
 		log.Println("this is task==========")
+		return nil
 	})
 	ts.Run()
 	return nil

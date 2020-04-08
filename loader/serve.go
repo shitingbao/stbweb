@@ -42,6 +42,7 @@ func serve() {
 	chatHub, ctrlHub := initChatWebsocket()
 	core.Initinal(chatHub, ctrlHub)
 	// http.HandleFunc("/", httpProcess) //设置访问的路由
+	clearInit()
 	http.Handle("/", http.HandlerFunc(httpProcess))
 }
 

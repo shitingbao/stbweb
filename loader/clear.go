@@ -1,4 +1,4 @@
-package common
+package loader
 
 import (
 	"stbweb/core"
@@ -6,11 +6,12 @@ import (
 	"stbweb/lib/task"
 )
 
-func init() {
+func clearInit() {
 	ts := task.NewTask("sys", "clearMember", "*/5 * * * ?", clearFun) //五分钟执行一次
 	ts.Run()
 }
 
-var clearFun = func() {
+var clearFun = func() error {
 	rediser.ClearMember(core.Rds)
+	return nil
 }
