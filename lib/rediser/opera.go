@@ -54,8 +54,14 @@ func GetUser(rd *redis.Client, userkey string) string {
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"getuser": err}).Error("redisErr")
 	}
-
 	return name
+}
+
+//MaintainActivity 重新设置用户活动时间
+func MaintainActivity(rd *redis.Client, userkey string) {
+	if err := rd.Expire(userkey, time.Minute*5).Err(); err != nil { //设置字符串key
+		logrus.WithFields(logrus.Fields{"MaintainActivity": err}).Error("redisErr")
+	}
 }
 
 //RegisterUser 设置用户信息，userkey就是对应header中的token

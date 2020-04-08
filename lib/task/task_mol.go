@@ -64,6 +64,7 @@ func (t *Task) Run() {
 	core.Rds.HSet(t.User, t.TaskType, t.TaskID)
 
 	if _, err := job.AddFunc(t.Spec, submitPoolFunc(t.Func)); err != nil {
+		core.Rds.HDel(t.User, t.TaskType)                            //手动设置丢弃,该任务未执行
 		core.LOG.WithFields(logrus.Fields{"Spec": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
 	}
 }

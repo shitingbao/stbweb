@@ -2,6 +2,7 @@ package core
 
 import (
 	"net/http"
+	"stbweb/lib/rediser"
 )
 
 //Element 工作元素
@@ -36,10 +37,10 @@ func ElementLoad(elementName string) *Element {
 //ElementHandle 处理一个http请求，确定一个element
 //这里最后一个参数，对应的是元素名称，很重要，因为设计到路由内容和对应的方法，这里需要仔细考虑
 func ElementHandle(w http.ResponseWriter, r *http.Request, elementName string) {
-	//不能放下层进行判断，因为需要在认证检查之前返回
+	//这里判断用户活动,重置用户活动时间
+	rediser.MaintainActivity(Rds, r.Header.Get("token"))
 
 	ele := ElementLoad(elementName)
 	arge := NewElementHandleArgs(w, r, ele)
-
 	ele.Handle(arge)
 }
