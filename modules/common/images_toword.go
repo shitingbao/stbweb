@@ -12,7 +12,7 @@ import (
 type ImageWord struct{}
 
 func init() {
-	core.RegisterFun("image", new(ImageWord))
+	core.RegisterFun("image", new(ImageWord), false)
 }
 
 //Post 图片转文字

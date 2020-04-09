@@ -8,7 +8,7 @@ import (
 type register struct{}
 
 func init() {
-	core.RegisterFun("register", new(register))
+	core.RegisterFun("register", new(register), false)
 }
 
 type registerParam struct {
@@ -31,14 +31,14 @@ func userRegister(param interface{}, p *core.ElementHandleArgs) error {
 		core.SendJSON(p.Res, http.StatusOK, "必填内容不能为空")
 		return nil
 	}
-	if isExistUser(pa.Name) {
+	if core.IsExistUser(pa.Name) {
 		core.SendJSON(p.Res, http.StatusOK, "用户已存在")
 		return nil
 	}
 
 	//两次加密一次解密，双向加单向
-	salt := buildIserSalt(pa.Name)
-	bPwd := buildPas(pa.Password, salt)
+	salt := core.BuildIserSalt(pa.Name)
+	bPwd := core.BuildPas(pa.Password, salt)
 	stmt, err := core.Ddb.Prepare("INSERT INTO user(name,password,avatar,email,phone,salt)VALUES(?,?,?,?,?,?)")
 	if err != nil {
 		core.SendJSON(p.Res, http.StatusOK, err.Error())

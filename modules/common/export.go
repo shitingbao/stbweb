@@ -9,7 +9,7 @@ import (
 type export struct{}
 
 func init() {
-	core.RegisterFun("export", new(export))
+	core.RegisterFun("export", new(export), false)
 }
 
 //Get 业务处理,get请求的例子

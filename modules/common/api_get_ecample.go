@@ -23,7 +23,7 @@ type accessPost struct {
 //localhost:3001/example
 //header web-api : example
 func init() {
-	core.RegisterFun("example", new(AppExample)) //example 为url中匹配的工作元素名称
+	core.RegisterFun("example", new(AppExample), false) //example 为url中匹配的工作元素名称
 }
 
 //Get 业务处理,get请求的例子
@@ -64,7 +64,7 @@ func taskExample(pa interface{}, content *core.ElementHandleArgs) error {
 }
 
 func appExamplef(pa interface{}, content *core.ElementHandleArgs) error {
-	u := user{}
+	u := apiUser{}
 	if err := core.Ddb.QueryRow("SELECT name FROM user where name=?", "stb").Scan(&u.Name); err != nil {
 		core.LOG.WithFields(logrus.Fields{"get user": err}).Error("user")
 	}

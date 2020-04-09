@@ -2,7 +2,6 @@ package core
 
 import (
 	"net/http"
-	"stbweb/lib/rediser"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
@@ -11,7 +10,7 @@ import (
 //Controlle 保存所有定义的业务结构
 var (
 	controlles     = map[string]*Controlle{}
-	controlleNames = []string{}
+	controlleNames = map[string]bool{}
 )
 
 //Controlle 控制器结构
@@ -48,8 +47,7 @@ func (e *ElementHandleArgs) isAPI() bool {
 }
 
 //NewElementHandleArgs 反馈一个工作元素类型
-func NewElementHandleArgs(w http.ResponseWriter, r *http.Request, ele *Element) *ElementHandleArgs {
-	usr := rediser.GetUser(Rds, r.Header.Get("token"))
+func NewElementHandleArgs(w http.ResponseWriter, r *http.Request, ele *Element, usr string) *ElementHandleArgs {
 	return &ElementHandleArgs{
 		Req:     r,
 		Res:     w,
@@ -59,18 +57,18 @@ func NewElementHandleArgs(w http.ResponseWriter, r *http.Request, ele *Element) 
 	}
 }
 
-//RegisterFun 注册一个功能,第二个参数为对应结构，应该使用new关键字新开辟对象，防止断言出错
-func RegisterFun(name string, ctr interface{}) {
+//RegisterFun 注册一个功能,第二个参数为对应结构，应该使用new关键字新开辟对象，防止断言出错,第三个参数为是否是外部API，true为需要登录后使用
+func RegisterFun(name string, ctr interface{}, isOut bool) {
 	if name == "" || ctr == nil {
 		LOG.Panic("app register err........")
 	}
 	register(&Controlle{
 		ControlleName: name,
 		AppControlle:  ctr,
-	})
+	}, isOut)
 }
-func register(ctr *Controlle) {
-	controlleNames = append(controlleNames, ctr.ControlleName)
+func register(ctr *Controlle, isOut bool) {
+	controlleNames[ctr.ControlleName] = isOut
 	controlles[ctr.ControlleName] = ctr
 }
 
