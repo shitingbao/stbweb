@@ -117,7 +117,7 @@ func openx(driverName, dataSourceName string) error {
 		return err
 	}
 	Ddb = d
-	LOG.Println("Driver:", WebConfig.Driver, "--ConnectString:", WebConfig.ConnectString)
+	LOG.Info("Driver:", WebConfig.Driver, "--ConnectString:", WebConfig.ConnectString, "  connect success!")
 	return nil
 }
 
@@ -129,6 +129,7 @@ func openRdis(addr, pwd string, dbevel int) {
 		}
 	}()
 	Rds = rediser.Open(addr, pwd, dbevel)
+	LOG.Info("redis:", addr, ":", pwd, ":", dbevel, "  connect success!")
 }
 
 //pathExists 判断是否存在默认路径，不存在则生成

@@ -14,7 +14,7 @@ const (
 	writeWait = 10 * time.Second
 
 	// Time allowed to read the next pong message from the peer.
-	pongWait = 60 * time.Second
+	pongWait = 5 * time.Minute
 
 	// Send pings to peer with this period. Must be less than pongWait.
 	pingPeriod = (pongWait * 9) / 10
@@ -23,13 +23,16 @@ const (
 	maxMessageSize = 512
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
+var (
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+	pongWaitSet = time.Now()
+)
 
 //Message 管道中的消息
 //user中为空"",则为全体发送，写入username则为指定发送，包括自己的信息
@@ -107,6 +110,7 @@ func (c *Client) writePump() {
 
 			w, err := c.conn.NextWriter(websocket.TextMessage) //以io的形式写入数据，参数为数据类型
 			if err != nil {
+				logrus.WithFields(logrus.Fields{"sock write:": err}).Error("websockets")
 				return
 			}
 			w.Write(message) //写入数据，这个函数才是真正的想前台传递数据
@@ -135,9 +139,15 @@ func (c *Client) readPump() {
 		c.conn.Close()
 		logrus.Info("websocket Close")
 	}()
-	c.conn.SetReadLimit(maxMessageSize)                                                                        //设置最大读取容量
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))                                                           //设置读取死亡时间
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil }) //响应事件的设置，收到响应后，重新设置死亡时间
+	c.conn.SetReadLimit(maxMessageSize)
+	pongTime := time.Now().Add(pongWait)
+	pongWaitSet = pongTime           //设置最大读取容量
+	c.conn.SetReadDeadline(pongTime) //设置读取死亡时间
+	c.conn.SetPongHandler(func(string) error {
+		t := time.Now().Add(time.Now().Sub(pongWaitSet))
+		c.conn.SetReadDeadline(t)
+		return nil
+	}) //响应事件的设置，收到响应后，重新设置死亡时间
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
@@ -174,9 +184,9 @@ func (h *Hub) Run() {
 				logrus.Panic(err)
 			}
 			for client := range h.clients { //clients中保存了所有的客户端连接，循环所有连接给与要发送的数据
-				if message.User != "" && message.User != client.name { //区分信息对自己发送，对指定用户发送，或者对全体发送，分别是自己的user，指定用户的user，或者全体的空字符串
-					continue
-				}
+				// if message.User != "" && message.User != client.name { //区分信息对自己发送，对指定用户发送，或者对全体发送，分别是自己的user，指定用户的user，或者全体的空字符串
+				// 	continue
+				// }
 				select {
 				case client.send <- data: //将需要发送的数据放入send中，在write函数中实际发送
 				default:

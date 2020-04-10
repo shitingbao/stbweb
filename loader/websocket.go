@@ -15,7 +15,6 @@ func initChatWebsocket() (chatHub, ctrlHub *ws.Hub) {
 		if err := json.Unmarshal(data, &msg); err != nil {
 			return err
 		}
-		// msg.DateTime = time.Now()
 		//原样消息发公告
 		hub.Broadcast <- msg
 		return nil

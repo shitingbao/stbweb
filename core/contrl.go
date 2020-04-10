@@ -9,8 +9,8 @@ import (
 
 //Controlle 保存所有定义的业务结构
 var (
-	controlles     = map[string]*Controlle{}
-	controlleNames = map[string]bool{}
+	controlles     = map[string]*Controlle{} //对应操作元素的控制器
+	controlleNames = map[string]bool{}       //对应操作元素是否是可外部调用
 )
 
 //Controlle 控制器结构
