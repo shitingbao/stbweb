@@ -35,7 +35,7 @@ func getExcelAllCell(fileURL string) error {
 	for _, v := range mySlice {
 		for _, val := range v {
 			for _, value := range val {
-				core.LOG.Info("vel:", value)
+				logrus.Info("vel:", value)
 			}
 		}
 	}
@@ -88,7 +88,7 @@ func (e *excel) createExcel() error {
 	}
 	fname := e.FileName + ".xlsx"
 	if err := file.Save(path.Join(core.DefaultFilePath, fname)); err != nil {
-		core.LOG.WithFields(logrus.Fields{"excel": err}).Error("file")
+		logrus.WithFields(logrus.Fields{"excel": err}).Error("file")
 		return err
 	}
 	return nil

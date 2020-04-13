@@ -20,11 +20,11 @@ func AutoLoader() {
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		for range c {
-			core.LOG.Info("received ctrl+c,wait back job finished...")
+			logrus.Info("received ctrl+c,wait back job finished...")
 			core.TaskWaitGroup.Wait()
-			core.LOG.Info("all back job finished,now shutdown http server...")
+			logrus.Info("all back job finished,now shutdown http server...")
 			Shutdown()
-			core.LOG.Info("success shutdown")
+			logrus.Info("success shutdown")
 			lend <- true
 			break
 		}
@@ -34,10 +34,10 @@ func AutoLoader() {
 
 func serve() {
 	go func() {
-		core.LOG.WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"port": core.WebConfig.Port,
 		}).Info("open prof")
-		core.LOG.Info(http.ListenAndServe(fmt.Sprintf(":%s", core.WebConfig.Port), nil))
+		logrus.Info(http.ListenAndServe(fmt.Sprintf(":%s", core.WebConfig.Port), nil))
 	}()
 	chatHub, ctrlHub := initChatWebsocket()
 	core.Initinal(chatHub, ctrlHub)

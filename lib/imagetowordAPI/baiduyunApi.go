@@ -101,7 +101,7 @@ func GetImageWord(imageBase64 []string) (AcceptResultWord, error) {
 func judge30Date(date string) bool {
 	historyTime, err := time.Parse("2006-01-02 15:04:05", date)
 	if err != nil {
-		core.LOG.WithFields(logrus.Fields{"AccessTokenDate": err.Error()}).Panic("AccessTokenDate")
+		logrus.WithFields(logrus.Fields{"AccessTokenDate": err.Error()}).Panic("AccessTokenDate")
 		panic(err)
 	}
 	if time.Now().AddDate(0, 0, -30).After(historyTime) {
@@ -115,10 +115,10 @@ func checkTokenEffect() {
 	if judge30Date(core.WebConfig.AccessTokenDate) {
 		return
 	}
-	core.LOG.WithFields(logrus.Fields{"baidu-word-token": "get new wordAPI token"}).Info("wordAPItoken")
+	logrus.WithFields(logrus.Fields{"baidu-word-token": "get new wordAPI token"}).Info("wordAPItoken")
 	at, err := getAccessToken()
 	if err != nil {
-		core.LOG.WithFields(logrus.Fields{"baidu-word-token": err}).Panic("get baidu api err") //出错就直接异常
+		logrus.WithFields(logrus.Fields{"baidu-word-token": err}).Panic("get baidu api err") //出错就直接异常
 	}
 	core.WebConfig.AccessToken = at.AccessToken
 	core.WebConfig.AccessTokenDate = time.Now().Format("2006-01-02 15:04:05")

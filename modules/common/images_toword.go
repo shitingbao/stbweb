@@ -6,6 +6,8 @@ import (
 	"stbweb/lib/formopera"
 	"stbweb/lib/images"
 	imagetowordapi "stbweb/lib/imagetowordAPI"
+
+	"github.com/Sirupsen/logrus"
 )
 
 //ImageWord 业务类
@@ -17,7 +19,7 @@ func init() {
 
 //Post 图片转文字
 func (im *ImageWord) Post(p *core.ElementHandleArgs) {
-	core.LOG.Info("image to word API")
+	logrus.Info("image to word API")
 	imageURLs, err := getFileHands(p)
 	if err != nil {
 		core.SendJSON(p.Res, http.StatusInternalServerError, err.Error())

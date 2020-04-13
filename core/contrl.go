@@ -60,7 +60,7 @@ func NewElementHandleArgs(w http.ResponseWriter, r *http.Request, ele *Element, 
 //RegisterFun 注册一个功能,第二个参数为对应结构，应该使用new关键字新开辟对象，防止断言出错,第三个参数为是否是外部API，true为需要登录后使用
 func RegisterFun(name string, ctr interface{}, isOut bool) {
 	if name == "" || ctr == nil {
-		LOG.Panic("app register err........")
+		logrus.Panic("app register err........")
 	}
 	register(&Controlle{
 		ControlleName: name,
@@ -80,23 +80,23 @@ func (c *Controlle) Handle(arge *ElementHandleArgs) {
 	case "GET":
 		defer func() {
 			if err := recover(); err != nil {
-				LOG.WithFields(logrus.Fields{"api-get": c.ControlleName}).Panic("api")
+				logrus.WithFields(logrus.Fields{"api-get": c.ControlleName}).Panic("api")
 			}
 		}()
 		f, ok := c.AppControlle.(BillGetEvent)
 		if !ok {
-			LOG.Error("get BillGetEvent change error")
+			logrus.Error("get BillGetEvent change error")
 		}
 		f.Get(arge)
 	case "POST":
 		defer func() {
 			if err := recover(); err != nil {
-				LOG.WithFields(logrus.Fields{"api-post": c.ControlleName}).Panic("api")
+				logrus.WithFields(logrus.Fields{"api-post": c.ControlleName}).Panic("api")
 			}
 		}()
 		f, ok := c.AppControlle.(BillPostEvent)
 		if !ok {
-			LOG.Error("post BillPostEvent change error")
+			logrus.Error("post BillPostEvent change error")
 		}
 		f.Post(arge)
 	}

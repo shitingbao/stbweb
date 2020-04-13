@@ -20,7 +20,7 @@ func (e *ElementHandleArgs) APIInterceptionGet(methodName string, param interfac
 		return false
 	}
 	if err := cb(param, e); err != nil {
-		LOG.WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"elename": e.Element.Name,
 			"method":  methodName,
 		}).Error(err)
@@ -43,12 +43,12 @@ func (e *ElementHandleArgs) APIInterceptionPost(methodName string, param interfa
 	}
 	defer e.Req.Body.Close()
 	if err := json.NewDecoder(e.Req.Body).Decode(param); err != nil {
-		LOG.WithFields(logrus.Fields{"methodName": methodName, "elementName": e.Element.Name}).Error("api")
+		logrus.WithFields(logrus.Fields{"methodName": methodName, "elementName": e.Element.Name}).Error("api")
 		// SendJSON(e.Res, http.StatusBadRequest, SendMap{"msg": err})
 		return false
 	}
 	if err := cb(param, e); err != nil {
-		LOG.WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"elename": e.Element.Name,
 			"method":  methodName,
 		}).Error(err)

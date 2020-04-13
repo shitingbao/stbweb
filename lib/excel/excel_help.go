@@ -1,7 +1,6 @@
 package excel
 
 import (
-	"stbweb/core"
 	"time"
 
 	"github.com/Sirupsen/logrus"
@@ -18,7 +17,7 @@ var (
 func numToDate(distace int) time.Time {
 	dDate, err := time.Parse(defaultDate, defaultExcelDate)
 	if err != nil {
-		core.LOG.WithFields(logrus.Fields{"date": err.Error()}).Error("excel")
+		logrus.WithFields(logrus.Fields{"date": err.Error()}).Error("excel")
 	}
 
 	return dDate.AddDate(0, 0, distace)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"stbweb/core"
 	"strings"
 
@@ -24,7 +25,7 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 				"%s,Origin, X-Requested-With, Content-Type, Accept, Connection, User-Agent, Cookie",
 				core.WebAPIHanderName)) //这里可以增加对应handle
 		}
-		core.LOG.WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"url":       r.URL.String(),
 			"allowCORS": core.WebConfig.AllowCORS,
 		}).Warn("options")
@@ -32,15 +33,17 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-
+	// http.Handle("/dist", http.StripPrefix("/dist", http.FileServer(http.Dir("dist"))))
 	if r.URL.String() == "/" {
-		core.SendJSON(w, http.StatusOK, core.SendMap{"url": "nothing"})
+		// http.Redirect(w, r, "dist/index.html", http.StatusFound)
+		http.ServeFile(w, r, filepath.Join("dist", "index.html")) //配置自己的前端入口，找不到会404
+		// core.SendJSON(w, http.StatusOK, core.SendMap{"url": "nothing"})
 		return
 	}
 	paths, err := parsePaths(r.URL)
 	//这里的path反馈工作元素内容待定
 	if err != nil {
-		core.LOG.Error(err)
+		logrus.Error(err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(nil)
 		return

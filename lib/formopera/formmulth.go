@@ -5,7 +5,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
-	"stbweb/core"
 	"stbweb/lib/images"
 
 	"github.com/Sirupsen/logrus"
@@ -63,7 +62,7 @@ func getAllFormFiles(r *http.Request) []*multipart.FileHeader {
 	//获取表单中的文件
 	//多个同时接受
 	if r.MultipartForm == nil {
-		core.LOG.WithFields(logrus.Fields{"form": "nil form"}).Warn("formmulth")
+		logrus.WithFields(logrus.Fields{"form": "nil form"}).Warn("formmulth")
 		return []*multipart.FileHeader{}
 	}
 	for _, v := range r.MultipartForm.File {

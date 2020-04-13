@@ -68,19 +68,19 @@ func (t *Task) submitPoolFunc() func() {
 				complete,
 				execution_time) VALUES(?,?,?,?,?,?,?,?)`)
 			if err != nil {
-				core.LOG.WithFields(logrus.Fields{"sql-prepare": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
+				logrus.WithFields(logrus.Fields{"sql-prepare": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
 			}
 			core.Rds.HSet(t.User, t.TaskType, t.TaskID)
 			t.executionTime = time.Now()
 			if err := t.Func(); err != nil {
-				core.LOG.WithFields(logrus.Fields{"func": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
+				logrus.WithFields(logrus.Fields{"func": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
 				t.complete = false
 			}
 			t.complete = true
 			core.Rds.HDel(t.User, t.TaskType) //手动设置丢弃,该任务未执行
 
 			if _, err := stmt.Exec(t.TaskID, t.User, t.TaskType, t.Spec, t.IsSave, t.createTime, t.complete, t.executionTime); err != nil {
-				core.LOG.WithFields(logrus.Fields{"sql-exec": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
+				logrus.WithFields(logrus.Fields{"sql-exec": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
 			}
 		})
 	}
@@ -93,7 +93,7 @@ func (t *Task) Run() {
 	}
 	t.createTime = time.Now()
 	if _, err := job.AddFunc(t.Spec, t.submitPoolFunc()); err != nil {
-		core.LOG.WithFields(logrus.Fields{"Spec": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
+		logrus.WithFields(logrus.Fields{"Spec": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
 	}
 }
 

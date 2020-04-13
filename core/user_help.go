@@ -13,6 +13,7 @@ import (
 	"golang.org/x/crypto/scrypt"
 )
 
+//User 用户对象
 type User struct {
 	Name       string
 	Pwd        []byte //对应mysql的varbinary,末尾不会填充，不能使用binary，因为不足会使用ox0填充导致取出的时候多18位的0
@@ -27,7 +28,7 @@ type User struct {
 func GetUser(username string) *User {
 	u := User{}
 	if err := Ddb.QueryRow("SELECT name,password,avatar,email,phone,salt,updatetime FROM user where name=?", username).Scan(&u.Name, &u.Pwd, &u.Avatar, &u.Email, &u.Phone, &u.Salt, &u.UpdateTime); err != nil {
-		LOG.WithFields(logrus.Fields{"get user": err}).Error("user")
+		logrus.WithFields(logrus.Fields{"get user": err}).Error("user")
 	}
 	return &u
 }
@@ -36,7 +37,7 @@ func GetUser(username string) *User {
 func IsExistUser(username string) bool {
 	num := 0
 	if err := Ddb.QueryRow("SELECT count(*) FROM user where name=?", username).Scan(&num); err != nil {
-		LOG.WithFields(logrus.Fields{"get user": err}).Error("user")
+		logrus.WithFields(logrus.Fields{"get user": err}).Error("user")
 	}
 	if num > 0 {
 		return true
@@ -48,7 +49,7 @@ func IsExistUser(username string) bool {
 func huexEncode(md5Pwd string) []byte {
 	decoded, err := hex.DecodeString(md5Pwd)
 	if err != nil {
-		LOG.WithFields(logrus.Fields{"decode": err}).Error("hex")
+		logrus.WithFields(logrus.Fields{"decode": err}).Error("hex")
 	}
 	return decoded
 }
@@ -75,7 +76,7 @@ func (u *User) Equal(pwd string) bool {
 func BuildPas(pwd, salt string) []byte {
 	bPwd, err := buildUserPassword(huexEncode(pwd), []byte(salt))
 	if err != nil {
-		LOG.WithFields(logrus.Fields{"pwd": err}).Error("validPwdMd5")
+		logrus.WithFields(logrus.Fields{"pwd": err}).Error("validPwdMd5")
 	}
 	return bPwd
 }
