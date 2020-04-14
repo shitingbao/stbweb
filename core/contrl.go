@@ -68,6 +68,9 @@ func RegisterFun(name string, ctr interface{}, isOut bool) {
 	}, isOut)
 }
 func register(ctr *Controlle, isOut bool) {
+	if controlles[ctr.ControlleName] != nil {
+		logrus.WithFields(logrus.Fields{"register": ctr.ControlleName}).Panic("重复注册")
+	}
 	controlleNames[ctr.ControlleName] = isOut
 	controlles[ctr.ControlleName] = ctr
 }

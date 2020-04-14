@@ -25,7 +25,7 @@ func SendJSON(w http.ResponseWriter, statuscode int, data interface{}) {
 	if err != nil {
 		return
 	}
-
+	w.Header().Set(ContentType, ContentJSON+";"+defaultCharset)
 	if WebConfig.AllowCORS {
 		allowOrigin := WebConfig.AllowOrigin
 		if len(allowOrigin) == 0 {

@@ -16,7 +16,7 @@ type Element struct {
 //这里需要先判断是否有对应的controller，防止为空异常
 func (e *Element) Handle(p *ElementHandleArgs) {
 	if e.Control == nil {
-		SendJSON(p.Res, http.StatusNotFound, nil)
+		SendJSON(p.Res, http.StatusNotFound, "control is nil")
 		return
 	}
 	e.Control.Handle(p)
