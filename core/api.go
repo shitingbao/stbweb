@@ -2,7 +2,6 @@ package core
 
 import (
 	"encoding/json"
-	"net/http"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -35,7 +34,6 @@ func (e *ElementHandleArgs) APIInterceptionPost(methodName string, param interfa
 	cb func(pa interface{}, content *ElementHandleArgs) error) bool {
 	//名称对应判断
 	if methodName != e.apiName() {
-		SendJSON(e.Res, http.StatusBadRequest, "Refuse")
 		return false
 	}
 	if e.Req.ContentLength <= 0 || param == nil {
@@ -44,7 +42,6 @@ func (e *ElementHandleArgs) APIInterceptionPost(methodName string, param interfa
 	defer e.Req.Body.Close()
 	if err := json.NewDecoder(e.Req.Body).Decode(param); err != nil {
 		logrus.WithFields(logrus.Fields{"methodName": methodName, "elementName": e.Element.Name}).Error(err)
-		// SendJSON(e.Res, http.StatusBadRequest, SendMap{"msg": err})
 		return false
 	}
 	if err := cb(param, e); err != nil {
@@ -52,7 +49,6 @@ func (e *ElementHandleArgs) APIInterceptionPost(methodName string, param interfa
 			"elename": e.Element.Name,
 			"method":  methodName,
 		}).Error(err)
-		// SendJSON(e.Res, http.StatusBadRequest, SendMap{"msg": err})
 	}
 	return true
 }

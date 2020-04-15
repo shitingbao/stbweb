@@ -55,7 +55,7 @@ func delProtect(param interface{}, p *core.ElementHandleArgs) error {
 func (bn *business) Post(p *core.ElementHandleArgs) {
 	if p.APIInterceptionPost("add", new(order), addProduct) ||
 		p.APIInterceptionPost("update", new(order), updateProduct) ||
-		p.APIInterceptionGet("result", new(tab), resProtect) {
+		p.APIInterceptionPost("result", new(tab), resProtect) {
 		return
 	}
 }
@@ -88,17 +88,16 @@ func addProduct(param interface{}, p *core.ElementHandleArgs) error {
 }
 
 type tab struct {
-	Page      int    //页码
-	Max       int    //每页约束
-	Order     string //排序标识
-	Condition string //条件
+	Page         int    //页码
+	Max          int    //每页约束
+	OrderBy      string //排序标识
+	ConditionCol string //条件列
+	Condition    string //条件
 }
 
 func resProtect(param interface{}, p *core.ElementHandleArgs) error {
 	pa := param.(*tab)
-	sql := fmt.Sprintf(`SELECT id,food_name,price,num,customer,out_time,pay_time FROM order_info WHERE food_name LIKE '%s' ORDER BY price asc LIMIT ?,?`, "%"+pa.Condition+"%")
-	log.Println("sql:", sql)
-	rows, err := core.Ddb.Query(sql, (pa.Page-1)*pa.Max, pa.Max)
+	rows, err := resProtectRows(pa)
 	if err != nil {
 		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": err})
 		return err
@@ -107,7 +106,6 @@ func resProtect(param interface{}, p *core.ElementHandleArgs) error {
 	for rows.Next() {
 		var res order
 		rows.Scan(&res.OrderID, &res.FoodName, &res.Price, &res.Number, &res.Customer, &res.OutTime, &res.PayTime)
-		log.Println("res:", res)
 		results = append(results, res)
 	}
 	if err := rows.Err(); err != nil {
@@ -116,4 +114,38 @@ func resProtect(param interface{}, p *core.ElementHandleArgs) error {
 	}
 	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true, "data": results})
 	return nil
+}
+
+func resProtectRows(pa *tab) (*sql.Rows, error) {
+	var rows *sql.Rows
+	var err error
+	sql := `SELECT id,food_name,price,num,customer,out_time,pay_time FROM order_info ORDER BY price asc LIMIT ?,?`
+	switch pa.ConditionCol {
+	case "all":
+		rows, err = core.Ddb.Query(sql, (pa.Page-1)*pa.Max, pa.Max)
+		if err != nil {
+			return nil, err
+		}
+	case "":
+		sql = `SELECT id,food_name,price,num,customer,out_time,pay_time FROM order_info 
+					WHERE 
+				LOCATE(?,id)>0 or 
+				LOCATE(?,food_name)>0 or
+				LOCATE(?,price)>0 or
+				LOCATE(?,num)>0 or
+				LOCATE(?,customer)>0 ORDER BY price asc LIMIT ?,?`
+		rows, err = core.Ddb.Query(sql, pa.Condition, pa.Condition, pa.Condition, pa.Condition, pa.Condition, (pa.Page-1)*pa.Max, pa.Max)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		sql = fmt.Sprintf(`SELECT id,food_name,price,num,customer,out_time,pay_time FROM order_info 
+					WHERE 
+				LOCATE(?,%s)>0 ORDER BY price asc LIMIT ?,?`, pa.ConditionCol)
+		rows, err = core.Ddb.Query(sql, pa.Condition, (pa.Page-1)*pa.Max, pa.Max)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return rows, err
 }
