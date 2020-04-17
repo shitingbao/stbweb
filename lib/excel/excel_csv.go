@@ -24,6 +24,7 @@ func LoadCsvCfg(filename string) ([][]string, error) {
 	return records, nil
 }
 
+//Lod 列对象
 type Lod struct {
 	Class1 string
 	Class2 string
