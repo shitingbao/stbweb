@@ -41,6 +41,7 @@ type Task struct {
 	IsSave        bool         //是否保存数据包
 	createTime    time.Time    //任务创建时间
 	complete      bool         //是否成功
+	errorsMes     string       //错误原因
 	executionTime time.Time    //执行时间
 }
 
@@ -58,6 +59,7 @@ func Stop() {
 func (t *Task) submitPoolFunc() func() {
 	return func() {
 		workPool.Submit(func() {
+			var err error
 			stmt, err := core.Ddb.Prepare(`INSERT INTO task(
 				task_id, 
 				user,
@@ -66,20 +68,21 @@ func (t *Task) submitPoolFunc() func() {
 				Is_save,
 				create_time,
 				complete,
-				execution_time) VALUES(?,?,?,?,?,?,?,?)`)
+				errors_mes,
+				execution_time) VALUES(?,?,?,?,?,?,?,?,?)`)
 			if err != nil {
 				logrus.WithFields(logrus.Fields{"sql-prepare": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
 			}
-			core.Rds.HSet(t.User, t.TaskType, t.TaskID)
+			core.Rds.HSet(t.User, t.TaskType, t.TaskID) //记录执行，防止重复执行
 			t.executionTime = time.Now()
-			if err := t.Func(); err != nil {
+			if err = t.Func(); err != nil {
 				logrus.WithFields(logrus.Fields{"func": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
 				t.complete = false
+			} else {
+				t.complete = true
 			}
-			t.complete = true
-			core.Rds.HDel(t.User, t.TaskType) //手动设置丢弃,该任务未执行
-
-			if _, err := stmt.Exec(t.TaskID, t.User, t.TaskType, t.Spec, t.IsSave, t.createTime, t.complete, t.executionTime); err != nil {
+			core.Rds.HDel(t.User, t.TaskType) //
+			if _, err = stmt.Exec(t.TaskID, t.User, t.TaskType, t.Spec, t.IsSave, t.createTime, t.complete, err.Error(), t.executionTime); err != nil {
 				logrus.WithFields(logrus.Fields{"sql-exec": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
 			}
 		})

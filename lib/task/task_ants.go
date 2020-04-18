@@ -24,7 +24,7 @@ var sum int32
 
 //NewCommonPool 反馈一个普通的pool
 func NewCommonPool() *ants.Pool {
-	p, _ := ants.NewPool(BenchAntsSize, ants.WithExpiryDuration(DefaultExpiredTime))
+	p, _ := ants.NewPool(defaultBenchAntsSize, ants.WithExpiryDuration(DefaultExpiredTime))
 	return p
 }
 

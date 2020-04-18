@@ -1,0 +1,41 @@
+syntax="proto3";
+
+package stbserver;
+
+message Character{
+    int64 xaxis=1;
+    int64 yaxis=2;
+    int64 zaxis=3;
+    string area=4;
+    string name=5;
+
+    repeated Skill skill=6;
+    repeated Summoner summoner=7;  
+}
+
+message Skill{
+    double ordinary=1;
+    string qkill=2;
+    string wkill=3;
+    string ekill=4;
+    string rkill=5;
+}
+
+message Summoner{
+    string dkill=1;
+    string fkill=2;
+}
+
+message Identity{
+    string idcard=1;
+    string name =2;
+}
+service StbServer{
+    //rpc ServerTest()returns(){}不能使用参数或者返回值为空的服务
+    rpc GetSummonerInfo(Identity)returns(Character){}
+    rpc PutSummonerInfo(stream Identity)returns(Character){}
+    rpc GetAllSummonerInfo(Identity)returns(stream Character){}
+    rpc ShareSummonerInfo(stream Identity)returns(stream Character){}
+}
+
+
