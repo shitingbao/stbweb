@@ -104,7 +104,6 @@ func (s *StbServe) ShareSummonerInfo(cli stbserver.StbServer_ShareSummonerInfoSe
 				break
 			}
 			log.Println("da:", da)
-
 		}
 		log.Println("接收完成")
 		wg.Done()
@@ -132,10 +131,10 @@ func (s *StbServe) ShareSummonerInfo(cli stbserver.StbServer_ShareSummonerInfoSe
 			}
 			log.Println("发送", i)
 			if err := cli.Send(&stbserver.Character{
-				Xaxis:    int64(i),
+				Xaxis:    int64(i), //当这里是0的时候，接收方是没有该属性数据的，并不是为0值，而是直接忽略了该属性
 				Yaxis:    int64(i),
 				Zaxis:    int64(i),
-				Area:     "22.5",
+				Area:     "", //同理当这里是“”空字符串的时候，接收方是没有该属性数据的，并不是为空字符串值，而是直接忽略了该属性
 				Name:     "yasuo",
 				Skill:    append(skillLists, skill),
 				Summoner: append(summonerLists, summoner),

@@ -21,14 +21,15 @@ func main() {
 		panic(err)
 	}
 	defer conn.Close()
-	c := stbserver.NewStbServerClient(conn)
+	c := stbserver.NewStbServerClient(conn) //新建client
 
-	// getSummoner(c)
-	// getAllSummoner(c)
-	// putSummoner(c)
+	getSummoner(c)
+	getAllSummoner(c)
+	putSummoner(c)
 	shareSummoner(c)
 }
 
+//普通数据传输
 func getSummoner(c stbserver.StbServerClient) {
 	character, err := c.GetSummonerInfo(context.Background(), &stbserver.Identity{
 		Idcard: "qwer",
@@ -40,6 +41,7 @@ func getSummoner(c stbserver.StbServerClient) {
 	log.Println("character:", character)
 }
 
+//单向流，接受值
 func getAllSummoner(c stbserver.StbServerClient) {
 	req, err := c.GetAllSummonerInfo(context.Background(), &stbserver.Identity{
 		Idcard: "qwer",
@@ -59,6 +61,7 @@ func getAllSummoner(c stbserver.StbServerClient) {
 	}
 }
 
+//单向流，发送值
 func putSummoner(c stbserver.StbServerClient) {
 	res, err := c.PutSummonerInfo(context.Background())
 	if err != nil {
@@ -83,6 +86,7 @@ func putSummoner(c stbserver.StbServerClient) {
 	}
 }
 
+//双向流
 func shareSummoner(c stbserver.StbServerClient) {
 	cli, err := c.ShareSummonerInfo(context.Background())
 	if err != nil {
@@ -90,12 +94,14 @@ func shareSummoner(c stbserver.StbServerClient) {
 		return
 	}
 	go func() {
-		da, err := cli.Recv()
-		if err != nil {
-			log.Println("err:", err)
-			return
+		for {
+			da, err := cli.Recv()
+			if err != nil {
+				log.Println("err:", err)
+				return
+			}
+			log.Println("da:", da)
 		}
-		log.Println("da:", da)
 	}()
 
 	go func() {
