@@ -2,13 +2,17 @@ package loader
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"stbweb/core"
+	"stbweb/lib/external_service/outserver"
+	"stbweb/lib/external_service/stbserver"
 	"stbweb/lib/task"
 
 	"github.com/Sirupsen/logrus"
+	"google.golang.org/grpc"
 )
 
 //AutoLoader 启动项
@@ -43,6 +47,7 @@ func serve() {
 	core.Initinal(chatHub, ctrlHub)
 	// http.HandleFunc("/", httpProcess) //设置访问的路由
 	clearInit()
+	go externalServer() //开启外置服务
 	http.Handle("/", http.HandlerFunc(httpProcess))
 }
 
@@ -51,4 +56,14 @@ func Shutdown() {
 	core.Ddb.Close()
 	core.Rds.Close()
 	task.Stop()
+}
+
+func externalServer() {
+	lis, err := net.Listen("tcp", outserver.Port)
+	if err != nil {
+		panic(err)
+	}
+	s := grpc.NewServer()
+	stbserver.RegisterStbServerServer(s, &outserver.StbServe{})
+	s.Serve(lis)
 }

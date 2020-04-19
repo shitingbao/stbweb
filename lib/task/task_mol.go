@@ -82,7 +82,11 @@ func (t *Task) submitPoolFunc() func() {
 				t.complete = true
 			}
 			core.Rds.HDel(t.User, t.TaskType) //
-			if _, err = stmt.Exec(t.TaskID, t.User, t.TaskType, t.Spec, t.IsSave, t.createTime, t.complete, err.Error(), t.executionTime); err != nil {
+			mes := ""
+			if err != nil {
+				mes = err.Error()
+			}
+			if _, err = stmt.Exec(t.TaskID, t.User, t.TaskType, t.Spec, t.IsSave, t.createTime, t.complete, mes, t.executionTime); err != nil {
 				logrus.WithFields(logrus.Fields{"sql-exec": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
 			}
 		})

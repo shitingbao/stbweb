@@ -99,7 +99,7 @@ func Initinal(chatHub, ctrlHub *ws.Hub) {
 		// LOG.Printf("open database error drive %s ,connection string:%s\n", WebConfig.Driver, WebConfig.ConnectString)
 	}
 	openRdis(WebConfig.RedisAdree+":"+WebConfig.RedisPort, WebConfig.RedisPwd, WebConfig.Redislevel)
-	restoreConnect()
+	// restoreConnect()
 	return
 }
 
@@ -125,12 +125,10 @@ func openx(driverName, dataSourceName string) error {
 func openRdis(addr, pwd string, dbevel int) {
 	defer func() {
 		if err := recover(); err != nil {
-			logrus.Info("open redis have err:", err)
-			logrus.Info(addr, ":", pwd, ":", dbevel, "--redis连接5S后重试。。。。。。")
+			logrus.WithFields(logrus.Fields{"ConnectString": addr, "level": dbevel}).Panic("redis")
 		}
 	}()
 	Rds = rediser.Open(addr, pwd, dbevel)
-	logrus.Info("redis:", addr, ":", pwd, ":", dbevel, "  connect success!")
 }
 
 //pathExists 判断是否存在默认路径，不存在则生成
@@ -146,7 +144,7 @@ func pathExists() {
 	}
 }
 
-//restoreConnect db连接重启,5s后重启
+//restoreConnect db连接重启,5s后重启,暂时保留
 func restoreConnect() {
 	ticker := time.NewTicker(5 * time.Second)
 	go func() {
