@@ -36,7 +36,6 @@ func nsqSend(param interface{}, p *core.ElementHandleArgs) error {
 	if err != nil {
 		fmt.Println(err)
 	}
-
 	for i := 0; i < 5; i++ {
 		total++
 		//主题

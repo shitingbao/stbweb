@@ -73,7 +73,6 @@ func startCustomerChannel1() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	select {}
 }
 
 func startCustomerChannel2() {
@@ -91,5 +90,4 @@ func startCustomerChannel2() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	select {}
 }
