@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"stbweb/core"
+	"stbweb/lib/snsq"
 
 	"github.com/nsqio/go-nsq"
 )
@@ -54,10 +55,11 @@ func (s *nsqHandler) HandleMessage(message *nsq.Message) error {
 func nsqCustomer(param interface{}, p *core.ElementHandleArgs) error {
 	go startCustomerChannel1() //开启第一个消息读取
 	go startCustomerChannel2() //开启第二个消息读取
-	// time.Sleep(time.Second * 25)
+	go startCustomerChannel3() //开启第三个消息读取
 	return nil
 }
 
+//原始方法
 func startCustomerChannel1() {
 	//初始化配置
 	config := nsq.NewConfig()
@@ -75,6 +77,7 @@ func startCustomerChannel1() {
 	}
 }
 
+//原始方法二
 func startCustomerChannel2() {
 	//初始化配置
 	config := nsq.NewConfig()
@@ -89,5 +92,13 @@ func startCustomerChannel2() {
 	err = com.ConnectToNSQD(tcpNsqdAddrr)
 	if err != nil {
 		fmt.Println(err)
+	}
+}
+
+//使用封装方法
+func startCustomerChannel3() {
+	if err := snsq.NewNsqCustomer(tcpNsqdAddrr, "Insert", "channel3", &nsqHandler{nsqHandlerID: "three"}); err != nil {
+		log.Println("ustomer3:", err)
+		return
 	}
 }

@@ -1,7 +1,8 @@
-package nsq
+package snsq
 
 import (
 	"encoding/json"
+	"errors"
 
 	"github.com/nsqio/go-nsq"
 )
@@ -23,8 +24,14 @@ func NewNsqProducerClient(tcpNsqdAddrr string) (*ProducerModel, error) {
 	return &ProducerModel{TPro: tPro}, nil
 }
 
-//Pulish 发送消息，输入data，主题和nsq连接生成对象，返回err，数据在内部json化
+//Pulish 发送消息，data需要赋值在对象内部，主题和nsq连接生成对象，返回err，数据在内部json化,发送后清楚
 func (np *ProducerModel) Pulish() error {
+	defer func() {
+		np.Data = nil
+	}()
+	if np.Topic == "" || np.Data == nil {
+		return errors.New("主题和data数据不能为空")
+	}
 	da, err := json.Marshal(np.Data)
 	if err != nil {
 		return err
