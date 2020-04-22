@@ -65,4 +65,11 @@ func settest(rd *redis.Client) {
 	if err := rd.HSet("user", "c", "zxvc").Err(); err != nil {
 		logrus.WithFields(logrus.Fields{"set": err}).Error("redisErr")
 	}
+
+	rd.GeoAdd("")
+	rd.GeoPos("")
+	rd.GeoDist("", "", "", "")
+	// rd.GeoRadius("", 0, 0,interface{}{})
+	// rd.GeoRadiusByMember()
+	// rd.GeoHash("","")
 }
