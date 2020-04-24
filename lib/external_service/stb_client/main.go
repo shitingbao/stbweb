@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"io"
 	"log"
+	"os"
 	"stbweb/lib/external_service/stbserver"
 	"time"
 
@@ -16,6 +18,12 @@ import (
 const port = "localhost:5000"
 
 func main() {
+	go startConnect()
+	startConnect()
+
+}
+
+func startConnect() {
 	conn, err := grpc.Dial(port, grpc.WithInsecure())
 	if err != nil {
 		panic(err)
@@ -82,7 +90,7 @@ func putSummoner(c stbserver.StbServerClient) {
 			break
 		}
 		i++
-		time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 1)
 	}
 }
 
@@ -124,4 +132,33 @@ func shareSummoner(c stbserver.StbServerClient) {
 
 	}()
 	time.Sleep(time.Second * 10)
+}
+
+func readFileBuf(url string) {
+	f, err := os.Open(url)
+	if err != nil {
+		panic(err)
+	}
+	sta, err := f.Stat()
+	if err != nil {
+		panic(err)
+	}
+	log.Println("size:", sta.Size())
+	defer f.Close()
+	buf := make([]byte, 400)
+	i := 1
+	for {
+
+		_, err := f.Read(buf)
+		log.Println("i:", i)
+
+		if err != nil && err != io.EOF {
+			break
+		}
+		if err == io.EOF {
+			log.Println(err)
+			break
+		}
+		i++
+	}
 }

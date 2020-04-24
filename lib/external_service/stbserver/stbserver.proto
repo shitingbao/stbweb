@@ -30,6 +30,14 @@ message Identity{
     string idcard=1;
     string name =2;
 }
+
+message FileMessage{
+    string filename=1;
+    string filetype=2;
+    bytes filedata=3;
+    bool iscarry=4;
+}
+
 service StbServer{
     //rpc ServerTest()returns(){}不能使用参数或者返回值为空的服务
     rpc GetSummonerInfo(Identity)returns(Character){}
