@@ -1,4 +1,4 @@
-package outserver
+package stboutserver
 
 import (
 	"context"

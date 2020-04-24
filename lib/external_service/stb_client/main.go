@@ -23,10 +23,10 @@ func main() {
 	defer conn.Close()
 	c := stbserver.NewStbServerClient(conn) //新建client
 
-	getSummoner(c)
-	getAllSummoner(c)
+	// getSummoner(c)
+	// getAllSummoner(c)
 	putSummoner(c)
-	shareSummoner(c)
+	// shareSummoner(c)
 }
 
 //普通数据传输

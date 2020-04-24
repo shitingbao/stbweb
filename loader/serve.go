@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"stbweb/core"
-	"stbweb/lib/external_service/outserver"
+	stboutserver "stbweb/lib/external_service/stb_server"
 	"stbweb/lib/external_service/stbserver"
 	"stbweb/lib/task"
 
@@ -59,11 +59,11 @@ func Shutdown() {
 }
 
 func externalServer() {
-	lis, err := net.Listen("tcp", outserver.Port)
+	lis, err := net.Listen("tcp", stboutserver.Port)
 	if err != nil {
 		panic(err)
 	}
 	s := grpc.NewServer()
-	stbserver.RegisterStbServerServer(s, &outserver.StbServe{})
+	stbserver.RegisterStbServerServer(s, &stboutserver.StbServe{})
 	s.Serve(lis)
 }
