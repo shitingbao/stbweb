@@ -71,6 +71,7 @@ eg: @/lib/snsq---@/modules/common/nsq_send---@/modules/common/nsq_customer
     7.nsq消息队列的构建
     8.redis地理位置操作
     9.redis信息保存和用户状态
+    10.文件传输（包含大文件传输）
 #### --loader  
     启动服务设定，开启项目基本依赖（数据库，redis连接，webocekt监听以及日志记录功能等），开启服务监听，拦截api请求等  
 #### --modules  

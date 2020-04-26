@@ -258,12 +258,13 @@ func sendGroupFile(c stbserver.StbServerClient) {
 			break
 		}
 		res.Send(&stbserver.FileMessage{
-			Filename: filename,
-			Filetype: strconv.Itoa(i),
-			Filedata: buf,
-			Iscarry:  isCarry,
-			Isstart:  isStart,
-			User:     "shitingbao",
+			Filename:  filename,
+			Filetype:  strconv.Itoa(i),
+			Filedata:  buf,
+			Iscarry:   isCarry,
+			Isstart:   isStart,
+			User:      "shitingbao",
+			Totalsize: fSize,
 		})
 		i++
 	}

@@ -38,6 +38,7 @@ message FileMessage{
     bool iscarry=4;
     bool isstart=5;
     string user=6;
+    int64 totalsize=7;
 }
 
 message FileResult{
