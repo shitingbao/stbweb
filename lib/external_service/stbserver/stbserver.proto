@@ -36,6 +36,8 @@ message FileMessage{
     string filetype=2;
     bytes filedata=3;
     bool iscarry=4;
+    bool isstart=5;
+    string user=6;
 }
 
 message FileResult{
@@ -50,6 +52,7 @@ service StbServer{
     rpc GetAllSummonerInfo(Identity)returns(stream Character){}
     rpc ShareSummonerInfo(stream Identity)returns(stream Character){}
     rpc SendFile(stream FileMessage)returns(FileResult){}
+    rpc SendGroupFile(stream FileMessage)returns(FileResult){}
 }
 
 

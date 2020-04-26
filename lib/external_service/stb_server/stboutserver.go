@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"stbweb/lib/external_service/stbserver"
 	"sync"
+	"time"
 )
 
 const (
@@ -178,6 +179,38 @@ func (s *StbServe) SendFile(cli stbserver.StbServer_SendFileServer) error {
 		log.Println("name:", da.Filename)
 		f.Write(da.Filedata)
 	}
+	return nil
+}
+
+//SendGroupFile 用户分组文件传输
+func (s *StbServe) SendGroupFile(cli stbserver.StbServer_SendGroupFileServer) error {
+	var sf *os.File
+	for {
+		data, err := cli.Recv()
+		if err != nil {
+			log.Println(err)
+			break
+		}
+		log.Println("data:", data.Filetype)
+		if data.Isstart {
+			fDir, err := os.Executable()
+			if err != nil {
+				panic(err)
+			}
+
+			fURL := filepath.Join(filepath.Dir(fDir), "assets")
+			mkdir(fURL)
+			sf, err = os.Create(filepath.Join(fURL, data.Filename))
+			if err != nil {
+				return err
+			}
+		}
+		sf.Write(data.Filedata)
+		if data.Iscarry {
+			sf.Close()
+		}
+	}
+	time.Sleep(time.Second * 2)
 	return nil
 }
 

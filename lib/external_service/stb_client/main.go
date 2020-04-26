@@ -36,7 +36,8 @@ func startConnect() {
 	// putSummoner(c)
 	// shareSummoner(c)
 	// sendfile(c)
-	sendBigFile(c)
+	// sendBigFile(c)
+	sendGroupFile(c)
 }
 
 //普通数据传输
@@ -218,4 +219,53 @@ func sendBigFile(c stbserver.StbServerClient) {
 	}
 	time.Sleep(time.Second * 2)
 	return
+}
+
+func sendGroupFile(c stbserver.StbServerClient) {
+	res, err := c.SendGroupFile(context.Background())
+	if err != nil {
+		return
+	}
+	filename := "test.json"
+	f, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
+	fInfo, err := f.Stat()
+	if err != nil {
+		panic(err)
+	}
+	fSize := fInfo.Size()
+	i := 1
+	for {
+		isCarry := false
+		isStart := false
+		if i == 1 {
+			isStart = true
+		}
+		bufSize := 200
+		if int64(200*i) > fSize && int64(200*(i-1)) < fSize {
+			bufSize = int(fSize) - ((i - 1) * 200)
+			isCarry = true
+		}
+		buf := make([]byte, bufSize)
+		_, err := f.Read(buf)
+		if err != nil && err != io.EOF {
+			break
+		}
+		if err == io.EOF {
+			log.Println(err)
+			break
+		}
+		res.Send(&stbserver.FileMessage{
+			Filename: filename,
+			Filetype: strconv.Itoa(i),
+			Filedata: buf,
+			Iscarry:  isCarry,
+			Isstart:  isStart,
+			User:     "shitingbao",
+		})
+		i++
+	}
+	time.Sleep(time.Second * 2)
 }
