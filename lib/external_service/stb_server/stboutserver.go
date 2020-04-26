@@ -3,6 +3,8 @@ package stboutserver
 import (
 	"context"
 	"log"
+	"os"
+	"path/filepath"
 	"stbweb/lib/external_service/stbserver"
 	"sync"
 )
@@ -50,6 +52,7 @@ func (s *StbServe) PutSummonerInfo(cli stbserver.StbServer_PutSummonerInfoServer
 		// }
 		da, err := cli.Recv()
 		if err != nil {
+			log.Println("err:", err)
 			return err
 		}
 		log.Println("da:", da)
@@ -149,4 +152,42 @@ func (s *StbServe) ShareSummonerInfo(cli stbserver.StbServer_ShareSummonerInfoSe
 	}()
 	wg.Wait()
 	return nil
+}
+
+//SendFile 文件传输
+func (s *StbServe) SendFile(cli stbserver.StbServer_SendFileServer) error {
+
+	fDir, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+
+	fURL := filepath.Join(filepath.Dir(fDir), "assets")
+	mkdir(fURL)
+	f, err := os.Create(filepath.Join(fURL, "test.json"))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	for {
+		da, err := cli.Recv()
+		if err != nil {
+			log.Println("err:", err)
+			break
+		}
+		log.Println("name:", da.Filename)
+		f.Write(da.Filedata)
+	}
+	return nil
+}
+
+func mkdir(url string) {
+	_, err := os.Stat(url)
+	if err == nil {
+		return
+	}
+	if os.IsNotExist(err) {
+		log.Println("创建目录")
+		os.MkdirAll(url, os.ModePerm)
+	}
 }

@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"stbweb/lib/external_service/stbserver"
+	"strconv"
 	"time"
 
 	"github.com/pborman/uuid"
@@ -18,7 +19,6 @@ import (
 const port = "localhost:5000"
 
 func main() {
-	go startConnect()
 	startConnect()
 
 }
@@ -33,8 +33,10 @@ func startConnect() {
 
 	// getSummoner(c)
 	// getAllSummoner(c)
-	putSummoner(c)
+	// putSummoner(c)
 	// shareSummoner(c)
+	// sendfile(c)
+	sendBigFile(c)
 }
 
 //普通数据传输
@@ -134,8 +136,13 @@ func shareSummoner(c stbserver.StbServerClient) {
 	time.Sleep(time.Second * 10)
 }
 
-func readFileBuf(url string) {
-	f, err := os.Open(url)
+func sendfile(c stbserver.StbServerClient) {
+	res, err := c.SendFile(context.Background())
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	f, err := os.Open("./test.json")
 	if err != nil {
 		panic(err)
 	}
@@ -145,13 +152,10 @@ func readFileBuf(url string) {
 	}
 	log.Println("size:", sta.Size())
 	defer f.Close()
-	buf := make([]byte, 400)
+	buf := make([]byte, sta.Size())
 	i := 1
 	for {
-
 		_, err := f.Read(buf)
-		log.Println("i:", i)
-
 		if err != nil && err != io.EOF {
 			break
 		}
@@ -159,6 +163,59 @@ func readFileBuf(url string) {
 			log.Println(err)
 			break
 		}
+
+		res.Send(&stbserver.FileMessage{
+			Filename: strconv.Itoa(i),
+			Filetype: "json",
+			Filedata: buf,
+			Iscarry:  true,
+		})
 		i++
 	}
+	time.Sleep(time.Second * 2)
+}
+
+func sendBigFile(c stbserver.StbServerClient) {
+	f, err := os.Open("./test.json")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	fInfo, err := f.Stat()
+	if err != nil {
+		panic(err)
+	}
+	// log.Println(fInfo.Size())
+	fSize := fInfo.Size()
+	i := 1
+	res, err := c.SendFile(context.Background())
+	if err != nil {
+		panic(err)
+	}
+
+	for {
+		bufSize := 200
+		if int64(200*i) > fSize && int64(200*(i-1)) < fSize {
+			bufSize = int(fSize) - ((i - 1) * 200)
+		}
+
+		buf := make([]byte, bufSize)
+		_, err := f.Read(buf)
+		if err != nil && err != io.EOF {
+			break
+		}
+		if err == io.EOF {
+			log.Println(err)
+			break
+		}
+		res.Send(&stbserver.FileMessage{
+			Filename: strconv.Itoa(i),
+			Filetype: "json",
+			Filedata: buf,
+			Iscarry:  true,
+		})
+		i++
+	}
+	time.Sleep(time.Second * 2)
+	return
 }

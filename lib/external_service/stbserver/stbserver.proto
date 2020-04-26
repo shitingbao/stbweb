@@ -38,12 +38,18 @@ message FileMessage{
     bool iscarry=4;
 }
 
+message FileResult{
+    int64 filenumber=1;
+    bool iscarry=2;
+}
+
 service StbServer{
     //rpc ServerTest()returns(){}不能使用参数或者返回值为空的服务
     rpc GetSummonerInfo(Identity)returns(Character){}
     rpc PutSummonerInfo(stream Identity)returns(Character){}
     rpc GetAllSummonerInfo(Identity)returns(stream Character){}
     rpc ShareSummonerInfo(stream Identity)returns(stream Character){}
+    rpc SendFile(stream FileMessage)returns(FileResult){}
 }
 
 
