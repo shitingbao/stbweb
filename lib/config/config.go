@@ -16,6 +16,7 @@ type Config struct {
 	AllowCORS       bool   //是否允许本地跨域
 	LogLevel        string //log等级
 	Port            string //监听端口
+	ExternalPort    string //外部服务监听端口
 	AllowOrigin     string //允许跨域地址
 	AccessTokenDate string //文字识别接口token的有效期，自动写入，不需要手动修改
 

@@ -6,6 +6,7 @@
     "AllowCORS": true,
     "LogLevel": "debug",
     "Port": "3002",
+    "ExternalPort": "5000",
     "AllowOrigin": "http://47.244.236.195:8080",
     "AccessTokenDate": "2020-02-27 12:12:12",
     "RedisAdree": "127.0.0.1",

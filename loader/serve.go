@@ -59,7 +59,7 @@ func Shutdown() {
 }
 
 func externalServer() {
-	lis, err := net.Listen("tcp", stboutserver.Port)
+	lis, err := net.Listen("tcp", core.WebConfig.ExternalPort)
 	if err != nil {
 		panic(err)
 	}

@@ -10,11 +10,6 @@ import (
 	"time"
 )
 
-const (
-	//Port 服务端口
-	Port = ":5000"
-)
-
 //StbServe 外部调用结构体
 type StbServe struct{}
 

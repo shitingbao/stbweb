@@ -25,7 +25,7 @@ var (
 	//Ddb 数据库连接
 	Ddb *sql.DB
 
-	//WebConfig 数据库连接
+	//WebConfig config配置
 	WebConfig *config.Config
 
 	//TaskWaitGroup 任务
