@@ -17,7 +17,7 @@ func init() {
 	core.RegisterFun("customer", new(customer), false)
 }
 
-func (c customer) Get(p *core.ElementHandleArgs) {
+func (c *customer) Get(p *core.ElementHandleArgs) {
 	if p.APIInterceptionGet("info", nil, getCustomer) ||
 		p.APIInterceptionGet("del", nil, delCustomer) {
 		return

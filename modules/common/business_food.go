@@ -15,7 +15,7 @@ func init() {
 	core.RegisterFun("food", new(food), false)
 }
 
-func (c food) Get(p *core.ElementHandleArgs) {
+func (c *food) Get(p *core.ElementHandleArgs) {
 	if p.APIInterceptionGet("info", nil, getFood) ||
 		p.APIInterceptionGet("del", nil, delFood) {
 		return
@@ -61,7 +61,7 @@ func delFood(pa interface{}, p *core.ElementHandleArgs) error {
 	return nil
 }
 
-func (c food) Post(p *core.ElementHandleArgs) {
+func (c *food) Post(p *core.ElementHandleArgs) {
 	if p.APIInterceptionPost("add", new(food), addFood) ||
 		p.APIInterceptionPost("update", new(food), updateFood) {
 		return
