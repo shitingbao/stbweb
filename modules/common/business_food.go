@@ -5,6 +5,7 @@ import (
 	"stbweb/core"
 )
 
+//商品信息操作
 type food struct {
 	ID   string
 	Name string

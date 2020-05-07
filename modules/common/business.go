@@ -28,31 +28,9 @@ func init() {
 }
 
 func (bn *business) Get(p *core.ElementHandleArgs) {
-	if p.APIInterceptionGet("del", nil, delProtect) ||
-		p.APIInterceptionGet("summary", nil, summaryProtect) {
+	if p.APIInterceptionGet("del", nil, delProtect) {
 		return
 	}
-}
-
-type summaryInfo struct {
-	Customer string
-	Summary  string
-}
-
-func summaryProtect(param interface{}, p *core.ElementHandleArgs) error {
-	sql := "SELECT customer,SUM(price*num) as summary FROM order_info  GROUP BY customer"
-	rows, err := core.Ddb.Query(sql)
-	if err != nil {
-		return err
-	}
-	var results []summaryInfo
-	for rows.Next() {
-		var res summaryInfo
-		rows.Scan(&res.Customer, &res.Summary)
-		results = append(results, res)
-	}
-	core.SendJSON(p.Res, http.StatusOK, results)
-	return nil
 }
 
 func delProtect(param interface{}, p *core.ElementHandleArgs) error {

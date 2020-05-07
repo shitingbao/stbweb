@@ -5,6 +5,7 @@ import (
 	"stbweb/core"
 )
 
+//顾客信息操作
 type customer struct {
 	ID     string
 	Name   string
