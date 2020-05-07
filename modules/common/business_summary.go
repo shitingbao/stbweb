@@ -93,13 +93,22 @@ func customize(param interface{}, p *core.ElementHandleArgs) error {
 	return nil
 }
 
-func getWhere(cus customizeParam) string {
+func getWhere(cus *customizeParam) string {
 	switch {
-	case cus.OutTime.StartTime.IsZero() || cus.OutTime.StopTime.IsZero(): //入库时间参数有一个
-	case cus.OutTime.StartTime.IsZero() && cus.OutTime.StopTime.IsZero(): //入库时间参数都有
-	case cus.PayTime.StartTime.IsZero() || cus.PayTime.StopTime.IsZero(): //支付时间参数有一个
-	case cus.PayTime.StartTime.IsZero() && cus.PayTime.StopTime.IsZero(): //支付时间参数都有
+	case !(cus.OutTime.StartTime.IsZero() || cus.OutTime.StopTime.IsZero()):
+		log.Println("1")
+	case cus.OutTime.StartTime.IsZero() && cus.OutTime.StopTime.IsZero():
+		log.Println("2")
 	default:
+		log.Println("3")
+	}
+	switch {
+	case !(cus.PayTime.StartTime.IsZero() || cus.PayTime.StopTime.IsZero()):
+		log.Println("4")
+	case cus.PayTime.StartTime.IsZero() && cus.PayTime.StopTime.IsZero():
+		log.Println("5")
+	default:
+		log.Println("6")
 	}
 	return ""
 }
