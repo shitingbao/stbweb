@@ -49,24 +49,10 @@ func summaryProtectThisMon(param interface{}, p *core.ElementHandleArgs) error {
 	return nil
 }
 
-func getSummaryInfo(sql string, start, stop time.Time) ([]summaryInfo, error) {
-	rows, err := core.Ddb.Query(sql, start, stop)
-	if err != nil {
-		return nil, err
-	}
-	var results []summaryInfo
-	for rows.Next() {
-		var res summaryInfo
-		rows.Scan(&res.Customer, &res.Summary)
-		results = append(results, res)
-	}
-	return results, nil
-}
-
 //条件定义，入库时间，支付时间和是否支付条件分别选择
-//如果开始时间或者结束时间只写了一个，那就是对应的时间大于结束时间或者开始时间
-//example,OutTime只有一个StartTime,那就是入库时间小于该时间，只有一个StopTime，就是入库时间大于该时间，都存在则取中间值，其他同理
-//IsPay内容为0，1，2，代表无条件，已支付或未支付
+//如果开始时间或者结束时间只写了一个，那就是对应的时间小于结束时间或者大于开始时间
+//example,OutTime只有一个StartTime,那就是入库时间大于该时间，只有一个StopTime，就是入库时间小于该时间，都存在则取中间值，其他同理
+//IsPay内容为0，1，2，0代表无条件，可以对paytime参数进行赋值，反馈不同条件查询，1和2代表已支付或未支付，pattime参数将不起作用
 type customizeParam struct {
 	OutTime outTime
 	PayTime outTime
@@ -87,32 +73,70 @@ func (s *summaryInfo) Post(p *core.ElementHandleArgs) {
 
 func customize(param interface{}, p *core.ElementHandleArgs) error {
 	pa := param.(*customizeParam)
-	log.Println(getWhere(pa))
-
+	strWhere, paramList := getWhere(pa)
+	if strWhere != "" {
+		strWhere = " where " + strWhere
+	}
+	sql := "SELECT customer,SUM(price*num) as summary FROM order_info " + strWhere + " GROUP BY customer"
+	log.Println("sql:", sql)
+	res, err := getSummaryInfo(sql, paramList...)
+	if err != nil {
+		return err
+	}
+	core.SendJSON(p.Res, http.StatusOK, res)
 	return nil
 }
 
 //出库时间，支付时间的判断
-func getWhere(cus *customizeParam) string {
-	outWhere := setTimeToWhere("out_time", cus.OutTime.StartTime, cus.OutTime.StopTime)
-	payWhere := setTimeToWhere("pay_time", cus.PayTime.StartTime, cus.PayTime.StopTime)
-	if outWhere != "" && payWhere != "" {
-		return outWhere + " and " + payWhere
+func getWhere(cus *customizeParam) (string, []interface{}) {
+	outWhere, outList := setTimeToWhere("out_time", cus.OutTime.StartTime, cus.OutTime.StopTime)
+	isPayWhere := ""
+	switch cus.IsPay {
+	case 0:
+		//可以设置条件区间，或者没有条件
+	case 1:
+		//已支付
+		isPayWhere = "pay_time is not null"
+	case 2:
+		//未支付
+		isPayWhere = "pay_time is null"
 	}
-	return outWhere + payWhere
+	if cus.IsPay != 0 {
+		return outWhere + " and " + isPayWhere, outList
+	}
+	payWhere, payList := setTimeToWhere("pay_time", cus.PayTime.StartTime, cus.PayTime.StopTime)
+	if outWhere != "" && payWhere != "" {
+		return outWhere + " and " + payWhere, append(outList, payList...)
+	}
+	return outWhere + payWhere, append(outList, payList...)
 }
 
 //将时间参数转化为条件
-func setTimeToWhere(column string, start, stop time.Time) string {
+func setTimeToWhere(column string, start, stop time.Time) (string, []interface{}) {
 	switch {
 	case !(start.IsZero() || stop.IsZero()): //都存在
-		return column + " between ? and ?"
+		return column + " between ? and ?", []interface{}{start, stop}
 	case start.IsZero() && stop.IsZero():
-		return ""
+		return "", []interface{}{}
 	default:
 		if start.IsZero() {
-			return column + " < ?"
+			return column + " <= ?", []interface{}{stop}
 		}
-		return column + " > ?"
+		return column + " >= ?", []interface{}{start}
 	}
+}
+
+//getSummaryInfo sql执行，返回数据组和err
+func getSummaryInfo(sql string, paramList ...interface{}) ([]summaryInfo, error) {
+	rows, err := core.Ddb.Query(sql, paramList...)
+	if err != nil {
+		return nil, err
+	}
+	var results []summaryInfo
+	for rows.Next() {
+		var res summaryInfo
+		rows.Scan(&res.Customer, &res.Summary)
+		results = append(results, res)
+	}
+	return results, nil
 }
