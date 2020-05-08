@@ -87,28 +87,32 @@ func (s *summaryInfo) Post(p *core.ElementHandleArgs) {
 
 func customize(param interface{}, p *core.ElementHandleArgs) error {
 	pa := param.(*customizeParam)
-	log.Println("pa:", pa)
-	log.Println("StartTime:", pa.OutTime.StartTime.IsZero())
-	log.Println("StopTime:", pa.OutTime.StopTime.IsZero())
+	log.Println(getWhere(pa))
+
 	return nil
 }
 
+//出库时间，支付时间的判断
 func getWhere(cus *customizeParam) string {
-	switch {
-	case !(cus.OutTime.StartTime.IsZero() || cus.OutTime.StopTime.IsZero()):
-		log.Println("1")
-	case cus.OutTime.StartTime.IsZero() && cus.OutTime.StopTime.IsZero():
-		log.Println("2")
-	default:
-		log.Println("3")
+	outWhere := setTimeToWhere("out_time", cus.OutTime.StartTime, cus.OutTime.StopTime)
+	payWhere := setTimeToWhere("pay_time", cus.PayTime.StartTime, cus.PayTime.StopTime)
+	if outWhere != "" && payWhere != "" {
+		return outWhere + " and " + payWhere
 	}
+	return outWhere + payWhere
+}
+
+//将时间参数转化为条件
+func setTimeToWhere(column string, start, stop time.Time) string {
 	switch {
-	case !(cus.PayTime.StartTime.IsZero() || cus.PayTime.StopTime.IsZero()):
-		log.Println("4")
-	case cus.PayTime.StartTime.IsZero() && cus.PayTime.StopTime.IsZero():
-		log.Println("5")
+	case !(start.IsZero() || stop.IsZero()): //都存在
+		return column + " between ? and ?"
+	case start.IsZero() && stop.IsZero():
+		return ""
 	default:
-		log.Println("6")
+		if start.IsZero() {
+			return column + " < ?"
+		}
+		return column + " > ?"
 	}
-	return ""
 }
