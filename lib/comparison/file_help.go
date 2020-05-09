@@ -10,6 +10,12 @@ import (
 	"strings"
 )
 
+const (
+	space = " "
+	comma = ","
+	other = ""
+)
+
 //逐行读取的三种方法
 func readLineFile(fileName string) {
 	if file, err := os.Open(fileName); err != nil {
@@ -22,6 +28,7 @@ func readLineFile(fileName string) {
 	}
 }
 
+//如果有空行，这个方法会多一行，因为最后一行也可能有回车转义符
 func readFileLine(fileName string) error {
 	f, err := os.Open(fileName)
 	if err != nil {
