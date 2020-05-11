@@ -56,30 +56,70 @@ type ParisonResult struct {
 //比较lineMode不同
 //记录相同记录的内容和对应文件行号
 //根据相同数据去除对应源数据内容，筛选剩余数据
-func lineModeComparison(obj, objSep map[int]LineMode) ParisonResult {
-	sameData := []FileSameLineList{}
-	for i, v := range obj {
-		for idx, val := range objSep {
-			if reflect.DeepEqual(v, val) {
-				sData := FileSameLineList{
-					LeftRow:  i,
-					RightRow: idx,
-					Data:     v,
+func lineModeComparison(obj, objSep interface{}) ParisonResult {
+	logon := styleJudge(obj, objSep)
+	switch logon {
+	case 11:
+		objData := obj.(map[int]LineMode)
+		objSepData := objSep.(map[int]LineMode)
+		sameData := []FileSameLineList{}
+		for i, v := range objData {
+			for idx, val := range objSepData {
+				if reflect.DeepEqual(v, val) {
+					sData := FileSameLineList{
+						LeftRow:  i,
+						RightRow: idx,
+						Data:     v,
+					}
+					sameData = append(sameData, sData)
+					break
 				}
-				sameData = append(sameData, sData)
-				break
 			}
 		}
+		for _, v := range sameData {
+			delete(objData, v.LeftRow)
+			delete(objSepData, v.RightRow)
+		}
+		return ParisonResult{
+			SameDataLists: sameData,
+			LeftAims:      objData,
+			RightAims:     objSepData,
+		}
+	case 12:
+	case 21:
+	case 22:
+	default:
+		return ParisonResult{}
 	}
-	for _, v := range sameData {
-		delete(obj, v.LeftRow)
-		delete(objSep, v.RightRow)
+	return ParisonResult{}
+}
+
+//styleJudge 反馈四种情况
+//11 都为map[int]LineMode类型
+//12 obj为map[int]LineMode类型 objSep为map[int]LineModeBool类型
+//21 obj为map[int]LineModeBool类型 objSep为map[int]LineMode类型
+//22 都为map[int]LineModeBool类型
+//-1则其中有数据的类型错误
+func styleJudge(obj, objSep interface{}) int {
+	logoObj := 0
+	logObjSep := 0
+	if _, ok := obj.(map[int]LineMode); !ok {
+		if _, ok := obj.(map[int]LineModeBool); !ok {
+			return -1
+		}
+		logoObj = 2
+	} else {
+		logoObj = 1
 	}
-	return ParisonResult{
-		SameDataLists: sameData,
-		LeftAims:      obj,
-		RightAims:     objSep,
+	if _, ok := objSep.(map[int]LineMode); !ok {
+		if _, ok := objSep.(map[int]LineModeBool); !ok {
+			return -1
+		}
+		logObjSep = 20
+	} else {
+		logObjSep = 10
 	}
+	return logoObj + logObjSep
 }
 
 //比较lineModeBool不同
@@ -89,7 +129,3 @@ func lineModeBoolComparison(obj, objSep map[int]LineModeBool) {
 
 //比较lineMode和lineModeBool不同
 func otherComparison(obj map[int]LineMode, objSep map[int]LineModeBool) {}
-
-func searchLineMode() {
-
-}

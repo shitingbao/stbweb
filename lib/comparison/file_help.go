@@ -9,6 +9,8 @@ import (
 	"os"
 	"stbweb/lib/excel"
 	"strings"
+
+	"github.com/Sirupsen/logrus"
 )
 
 const (
@@ -79,7 +81,8 @@ type LineModeBool map[string]bool
 func getTitleLineGroup(fileName, sep string) map[int]LineMode {
 	file, err := os.Open(fileName)
 	if err != nil {
-		panic(err)
+		logrus.WithFields(logrus.Fields{"file error": err.Error()}).Error("parsing file have err")
+		return nil
 	}
 	result := make(map[int]LineMode)
 	var title []string
