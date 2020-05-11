@@ -70,17 +70,18 @@ func readLine(fileName string) {
 
 //////////////////////////////////////////////////////////
 
-type lineMode map[string]string
-type lineModeBool map[string]bool
+type LineMode map[string]string
+type LineModeBool map[string]bool
 
 //csv,txt第一行为标题时,获取行组
 //返回的key是行号，下同
-func getTitleLineGroup(fileName, sep string) map[int]lineMode {
+//csv按文本形式解析时，会以最长的行为基准，短的行的列不足也会有空字符，用制表符（逗号）隔开
+func getTitleLineGroup(fileName, sep string) map[int]LineMode {
 	file, err := os.Open(fileName)
 	if err != nil {
 		panic(err)
 	}
-	result := make(map[int]lineMode)
+	result := make(map[int]LineMode)
 	var title []string
 	scanner := bufio.NewScanner(file)
 	i := 1
@@ -97,8 +98,8 @@ func getTitleLineGroup(fileName, sep string) map[int]lineMode {
 }
 
 //将两个字符串抓转化成map
-func sTmap(title, cot []string) lineMode {
-	res := make(lineMode)
+func sTmap(title, cot []string) LineMode {
+	res := make(LineMode)
 	switch {
 	case len(title) == len(cot):
 		for i, v := range title {
@@ -125,12 +126,12 @@ func sTmap(title, cot []string) lineMode {
 }
 
 //csv,txt第一行不为标题时,获取行组
-func getLineGroup(fileName, sep string) map[int]lineModeBool {
+func getLineGroup(fileName, sep string) map[int]LineModeBool {
 	file, err := os.Open(fileName)
 	if err != nil {
 		panic(err)
 	}
-	result := make(map[int]lineModeBool)
+	result := make(map[int]LineModeBool)
 	scanner := bufio.NewScanner(file)
 	i := 1
 	for scanner.Scan() {
@@ -141,8 +142,8 @@ func getLineGroup(fileName, sep string) map[int]lineModeBool {
 	return result
 }
 
-func sTBoolMap(cot []string) lineModeBool {
-	res := make(lineModeBool)
+func sTBoolMap(cot []string) LineModeBool {
+	res := make(LineModeBool)
 	for _, v := range cot {
 		res[v] = true
 	}
@@ -150,13 +151,13 @@ func sTBoolMap(cot []string) lineModeBool {
 }
 
 //excel第一行为标题时，获取行组
-func excelTitleLineGroup(fileName string) map[int]lineMode {
+func excelTitleLineGroup(fileName string) map[int]LineMode {
 	resultList, err := excel.LoadCsvCfg(fileName)
 	if err != nil {
 		return nil
 	}
 	var title []string
-	result := make(map[int]lineMode)
+	result := make(map[int]LineMode)
 	for i, v := range resultList {
 		if i == 0 {
 			title = v
@@ -168,12 +169,12 @@ func excelTitleLineGroup(fileName string) map[int]lineMode {
 }
 
 //excel第一行不为标题时，获取行组
-func excelLineGroup(fileName string) map[int]lineModeBool {
+func excelLineGroup(fileName string) map[int]LineModeBool {
 	resultList, err := excel.LoadCsvCfg(fileName)
 	if err != nil {
 		return nil
 	}
-	result := make(map[int]lineModeBool)
+	result := make(map[int]LineModeBool)
 	for i, v := range resultList {
 		result[i+1] = sTBoolMap(v)
 	}

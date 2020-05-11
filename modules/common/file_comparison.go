@@ -2,6 +2,7 @@ package common
 
 import (
 	"stbweb/core"
+	"stbweb/lib/comparison"
 )
 
 type fileComparison struct{}
@@ -11,12 +12,18 @@ func init() {
 }
 
 func (f *fileComparison) Get(p *core.ElementHandleArgs) {
-	if p.APIInterceptionGet("comparison", nil, comparison) {
+	if p.APIInterceptionGet("comparison", nil, comparisonFile) {
 		return
 	}
 }
 
-func comparison(param interface{}, p *core.ElementHandleArgs) error {
+func comparisonFile(param interface{}, p *core.ElementHandleArgs) error {
+	name := p.Req.URL.Query().Get("filename")
+	sep := p.Req.URL.Query().Get("sep")
+	// comparison.GetTitleLineGroup(name, sep)
+	comparison.GetLineGroup(name, sep)
+	// comparison.ExcelTitleLineGroup(name)
+	// comparison.ExcelLineGroup(name)
 	return nil
 }
 
