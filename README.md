@@ -1,5 +1,5 @@
 # stbweb
->自己的web框架，封装各个模块，api拦截，异步端口监听，多个httpserver同时服务，后台日志收集服务,websocekt为基础的消息功能，nsq消息队列，grpc外部服务，redis地理位置处理，ants和cron结合的任务机制等
+>自己的web框架，封装各个模块，收集实现的实用性功能及技术点记录，api拦截，异步端口监听，多个httpserver同时服务，后台日志收集服务,websocekt为基础的消息功能，nsq消息队列，grpc外部服务，redis地理位置处理，ants和cron结合的任务机制等
 
 ## 1.api拦截实现
 >功能核心，采用类多态的性质，引入工作元素的概念（以url和对应header进行划分），每一个工作元素将对应不同的业务类，实现功能划分。权限上将api分为内部调用和外部调用，来约束调用过程
@@ -49,7 +49,7 @@ eg: @/lib/snsq---@/modules/common/nsq_send---@/modules/common/nsq_customer
     core    核心功能目录
     lib     功能列表目录
     loader  启动目录
-    modules/common  功能实现和展示目录
+    modules/common  功能实现和展示目录（实际api调用接口书写）
 #### --builds\common  
     main.go 主函数入口  
     assets静态资源存放  
@@ -72,6 +72,7 @@ eg: @/lib/snsq---@/modules/common/nsq_send---@/modules/common/nsq_customer
     8.redis地理位置操作
     9.redis信息保存和用户状态
     10.文件传输（包含大文件传输）
+    11.文件内容比对（txt，csv和xlsx三种文件相互比对）
 #### --loader  
     启动服务设定，开启项目基本依赖（数据库，redis连接，webocekt监听以及日志记录功能等），开启服务监听，拦截api请求等  
 #### --modules  
