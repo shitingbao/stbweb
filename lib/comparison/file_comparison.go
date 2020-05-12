@@ -102,9 +102,9 @@ func checkFile(fileName string) (string, error) {
 	fileSuffix = path.Ext(filenameWithSuffix) //获取文件后缀
 
 	switch fileSuffix {
-	case ".csv", ".txt", ".xlsx", ".xls":
+	case ".csv", ".txt", ".xlsx":
 	default:
-		return "", errors.New("文件类型不匹配")
+		return "", errors.New("file type not match")
 	}
 	_, err := os.Stat(fileName)
 	if err != nil {

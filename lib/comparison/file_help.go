@@ -98,8 +98,9 @@ func getLineGroup(fileName, sep string) map[int]LineMode {
 
 //excel获取行组
 func getExcelLineGroup(fileName string) map[int]LineMode {
-	resultList, err := excel.LoadCsvCfg(fileName)
+	resultList, err := excel.ExportParse(fileName)
 	if err != nil {
+		logrus.WithFields(logrus.Fields{"parse excel": err.Error()}).Error("ExportParse")
 		return nil
 	}
 	result := make(map[int]LineMode)
