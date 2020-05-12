@@ -7,4 +7,6 @@
 *.xlx
 *.csv
 __debug_bin
-config.json
+*.json
+*.xls
+*.xlsx

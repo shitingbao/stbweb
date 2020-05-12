@@ -15,7 +15,8 @@ func init() {
 //Get 业务处理,get请求的例子
 func (ap *export) Get(arge *core.ElementHandleArgs) {
 	if arge.APIInterceptionGet("excel", nil, excelExport) ||
-		arge.APIInterceptionGet("excelparse", nil, excelparse) ||
+		arge.APIInterceptionGet("excelparse", nil, excelParse) ||
+		arge.APIInterceptionGet("xlsparse", nil, xlsParse) ||
 		arge.APIInterceptionGet("csvparse", nil, csvParase) {
 		return
 	}
@@ -45,7 +46,16 @@ func excelExport(pa interface{}, content *core.ElementHandleArgs) error {
 	return nil
 }
 
-func excelparse(pa interface{}, content *core.ElementHandleArgs) error {
+func excelParse(pa interface{}, content *core.ElementHandleArgs) error {
+	res, err := excel.ExportParse("./assets/aa.xls", "Sheet1")
+	if err != nil {
+		return err
+	}
+	core.SendJSON(content.Res, http.StatusOK, res)
+	return nil
+}
+
+func xlsParse(pa interface{}, content *core.ElementHandleArgs) error {
 	res, err := excel.ExportParse("./assets/stb.xlsx", "Sheet2")
 	if err != nil {
 		return err

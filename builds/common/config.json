@@ -12,5 +12,6 @@
     "RedisAdree": "127.0.0.1",
     "RedisPort": "6379",
     "RedisPwd": "",
-    "Redislevel": 0
+    "Redislevel": 0,
+    "ExternalServer": false
 }

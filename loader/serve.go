@@ -47,7 +47,9 @@ func serve() {
 	core.Initinal(chatHub, ctrlHub)
 	// http.HandleFunc("/", httpProcess) //设置访问的路由
 	clearInit()
-	go externalServer() //开启外置服务
+	if core.WebConfig.ExternalServer {
+		go externalServer() //开启外置服务
+	}
 	http.Handle("/", http.HandlerFunc(httpProcess))
 }
 
