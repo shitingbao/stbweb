@@ -59,34 +59,40 @@ func lineModeComparison(objData, objSepData map[int]LineMode) ParisonResult {
 
 //FileComparison 是否有标题，分隔符时什么，csv也可以定义分隔符
 //主要三种不同文件类型的相互比较，txt，csv和excel，对是否有标题有影响
-//文件带有标题，则以标题key为基准，不带有标题或者忽略标题比较则仅仅对内容进行比较
-func FileComparison(fn, ofn ParisonFileObject) error {
-	// getLineGroup("./assets/gg.csv", ",")
-	if tp, err := checkFile(fn.FileName); err != nil {
-
-	} else {
-		switch tp {
-		case ".csv", ".txt":
-			getLineGroup(fn.FileName, fn.Sep)
-		default:
-			getExcelLineGroup(fn.FileName)
-		}
+//标题行不参与比对
+func FileComparison(fn, ofn ParisonFileObject) (ParisonResult, error) {
+	fnData, err := getFileDataLists(fn)
+	if err != nil {
+		return ParisonResult{}, err
 	}
-	if tp, err := checkFile(ofn.FileName); err != nil {
-
-	} else {
-		switch tp {
-		case ".csv", ".txt":
-			getLineGroup(fn.FileName, fn.Sep)
-		default:
-			getExcelLineGroup(fn.FileName)
-		}
+	if fn.IsTitle && len(fnData) > 1 {
+		delete(fnData, 1)
 	}
-
-	//判断文件类型
-	return nil
+	ofnData, err := getFileDataLists(ofn)
+	if err != nil {
+		return ParisonResult{}, err
+	}
+	if fn.IsTitle && len(ofnData) > 1 {
+		delete(ofnData, 1)
+	}
+	return lineModeComparison(fnData, ofnData), nil
 }
 
+//根据文件类型解析文件，反馈文件内容对象map
+func getFileDataLists(param ParisonFileObject) (map[int]LineMode, error) {
+	tp, err := checkFile(param.FileName)
+	if err != nil {
+		return nil, err
+	}
+	switch tp {
+	case ".csv", ".txt":
+		return getLineGroup(param.FileName, param.Sep), nil
+	default:
+		return getExcelLineGroup(param.FileName), nil
+	}
+}
+
+//检查文件存在和类型
 func checkFile(fileName string) (string, error) {
 	filenameWithSuffix := path.Base(fileName) //获取文件名带后缀
 	var fileSuffix string
