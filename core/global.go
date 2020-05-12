@@ -140,6 +140,8 @@ func pathExists() {
 	if os.IsNotExist(err) {
 		if err := os.MkdirAll(DefaultFilePath, os.ModePerm); err != nil {
 			logrus.WithFields(logrus.Fields{"msg": err.Error()}).Error("CreateDefaultFilePath")
+		} else {
+			logrus.Info("生成默认路径")
 		}
 	}
 }
