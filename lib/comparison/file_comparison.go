@@ -94,6 +94,9 @@ func getFileDataLists(param ParisonFileObject) (map[int]LineMode, error) {
 
 //检查文件存在和类型
 func checkFile(fileName string) (string, error) {
+	if fileName == "" {
+		return "", errors.New("file name can not nil")
+	}
 	filenameWithSuffix := path.Base(fileName) //获取文件名带后缀
 	var fileSuffix string
 	fileSuffix = path.Ext(filenameWithSuffix) //获取文件后缀

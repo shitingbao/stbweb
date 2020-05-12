@@ -14,9 +14,7 @@ import (
 )
 
 const (
-	space = " "
-	comma = ","
-	other = ""
+	defaultComma = "," //默认文件内容分隔符
 )
 
 //逐行读取的三种基础方法
@@ -87,9 +85,12 @@ func getLineGroup(fileName, sep string) map[int]LineMode {
 	result := make(map[int]LineMode)
 	scanner := bufio.NewScanner(file)
 	i := 1
+	if sep == "" {
+		sep = defaultComma
+	}
 	for scanner.Scan() {
 		strList := strings.Split(scanner.Text(), sep)
-		result[i] = strList
+		result[i] = deleteStrBlank(strList)
 		i++
 	}
 	return result
@@ -103,7 +104,29 @@ func getExcelLineGroup(fileName string) map[int]LineMode {
 	}
 	result := make(map[int]LineMode)
 	for i, v := range resultList {
-		result[i+1] = v
+		result[i+1] = deleteStrBlank(v)
 	}
 	return result
+}
+
+//切除尾部空白
+func (l *LineMode) deleteTailBlank() {
+	for i := len([]string(*l)) - 1; i >= 0; i-- {
+		if (*l)[i] != "" {
+			*l = (*l)[0 : i+1]
+			return
+		}
+	}
+	*l = make(LineMode, 0)
+}
+
+//切除尾部空白
+func deleteStrBlank(str []string) LineMode {
+	for i := len(str) - 1; i >= 0; i-- {
+		if str[i] != "" {
+			str = str[0 : i+1]
+			return str
+		}
+	}
+	return make(LineMode, 0)
 }
