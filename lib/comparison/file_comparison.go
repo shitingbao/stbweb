@@ -8,6 +8,7 @@ import (
 )
 
 //ParisonFileObject 比较文件对象
+//传入文件名，文件分隔符（excel文件不用，并且默认是","）和第一行是否是标题的标志(true为是标题)
 type ParisonFileObject struct {
 	FileName string
 	Sep      string
