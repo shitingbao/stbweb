@@ -61,6 +61,7 @@ func lineModeComparison(objData, objSepData map[int]LineMode) ParisonResult {
 //FileComparison 是否有标题，分隔符时什么，csv也可以定义分隔符
 //主要三种不同文件类型的相互比较，txt，csv和excel，对是否有标题有影响
 //标题行不参与比对
+//如果第一行是标题，就直接delete第一行，不参与比较
 func FileComparison(fn, ofn ParisonFileObject) (ParisonResult, error) {
 	fnData, err := getFileDataLists(fn)
 	if err != nil {
