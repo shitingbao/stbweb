@@ -60,17 +60,15 @@ func AllComparison(brd, aim DeckOfCards) bool {
 }
 
 //SortOrderAsc 升序排序
-//SortOrderAsc 升序排序
 func (dc *DeckOfCards) SortOrderAsc() {
-
 	pt := Brand{}
-	for i, v := range dc.Bd {
+	for i := 0; i < len(dc.Bd); i++ {
 		temp := -1
-		tempCode := 0
+		tempCode := dc.Bd[i].Code
 		for j := len(dc.Bd) - 1; j > i; j-- {
-			if v.Code > tempCode {
+			if dc.Bd[j].Code < tempCode {
 				temp = j
-				tempCode = v.Code
+				tempCode = dc.Bd[j].Code
 			}
 		}
 		if temp != -1 {
