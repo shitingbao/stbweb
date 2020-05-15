@@ -5,6 +5,10 @@ type DoubleBuckle struct{}
 
 //BrandComparison 比较大小
 func (db *DoubleBuckle) BrandComparison(d, aim DeckOfCards) bool {
+	if db.GetBrandType(d) != db.GetBrandType(aim) {
+		return false
+	}
+	//炸要另外判断
 	return true
 }
 
