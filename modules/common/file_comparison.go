@@ -8,7 +8,6 @@ import (
 	"path"
 	"stbweb/core"
 	"stbweb/lib/comparison"
-	"stbweb/lib/formopera"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/pborman/uuid"
@@ -62,34 +61,27 @@ func comparisonFileCommon(param interface{}, p *core.ElementHandleArgs) error {
 func getFormFile(p *core.ElementHandleArgs) (comparison.ParisonFileObject, comparison.ParisonFileObject, error) {
 	p.Req.ParseMultipartForm(20 << 20)
 	leftObject, rightObject := comparison.ParisonFileObject{}, comparison.ParisonFileObject{}
-	lft, rft := "", ""
 	if p.Req.MultipartForm == nil {
 		return leftObject, rightObject, errors.New("form is nil")
 	}
 	for k, v := range p.Req.MultipartForm.Value { //获取表单字段
 		switch k {
-		case "lft":
-			lft = v[0]
 		case "lsep":
 			leftObject.Sep = v[0]
 		case "listitle":
 			leftObject.IsTitle = false
-		case "rft":
-			rft = v[0]
 		case "rsep":
 			rightObject.Sep = v[0]
 		case "ristitle":
 			rightObject.IsTitle = false
 		}
 	}
-
-	ladree, err := getFile("left", lft, p)
+	ladree, err := getSaveFilePath("left", p)
 	if err != nil {
 		return leftObject, rightObject, err
 	}
 	leftObject.FileName = ladree
-
-	radree, err := getFile("right", rft, p)
+	radree, err := getSaveFilePath("right", p)
 	if err != nil {
 		return leftObject, rightObject, err
 	}
@@ -98,12 +90,16 @@ func getFormFile(p *core.ElementHandleArgs) (comparison.ParisonFileObject, compa
 }
 
 //获取表单中的文件，保存至默认路径并反馈保存的文件路径
-func getFile(fileName, ft string, p *core.ElementHandleArgs) (string, error) {
-	f, err := formopera.GetFormOnceFile(fileName, p.Req)
+func getSaveFilePath(fileName string, p *core.ElementHandleArgs) (string, error) {
+	_, file, err := p.Req.FormFile(fileName)
 	if err != nil {
 		return "", err
 	}
-
+	f, err := file.Open()
+	if err != nil {
+		return "", err
+	}
+	ft := path.Ext(file.Filename)
 	if err := os.MkdirAll(core.DefaultFilePath, os.ModePerm); err != nil {
 		return "", err
 	}

@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path"
 	"stbweb/lib/excel"
 	"strings"
 
@@ -130,4 +131,21 @@ func deleteStrBlank(str []string) LineMode {
 		}
 	}
 	return make(LineMode, 0)
+}
+
+//文件后缀操作
+func fileNameOpera() {
+	fullFilename := "/Users/itfanr/Documents/test.txt"
+
+	var filenameWithSuffix string
+	filenameWithSuffix = path.Base(fullFilename) //获取文件名带后缀(test.txt)
+	fmt.Println("filenameWithSuffix =", filenameWithSuffix)
+
+	var fileSuffix string
+	fileSuffix = path.Ext(fullFilename) //获取文件后缀(.txt)
+	fmt.Println("fileSuffix =", fileSuffix)
+
+	var filenameOnly string
+	filenameOnly = strings.TrimSuffix(filenameWithSuffix, fileSuffix) //获取文件名(test)
+	fmt.Println("filenameOnly =", filenameOnly)
 }
