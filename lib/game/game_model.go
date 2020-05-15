@@ -3,13 +3,14 @@ package game
 
 //类型规则
 const (
-	Single   = "Single"
-	Double   = "Double"
-	Three    = "Three"
-	Straight = "Straight" //顺
-	EvenPair = "EvenPair" //对
-	Bomb     = "Bomb"
-	CodeErr  = "Err" //错误类型
+	Single        = "Single"
+	Double        = "Double"
+	Three         = "Three"
+	Straight      = "Straight" //顺
+	EvenPair      = "EvenPair" //对
+	ThreeEvenPair = "ThreeEvenPair"
+	Bomb          = "Bomb"
+	CodeErr       = "Err" //错误类型
 )
 
 //Brand 基本
