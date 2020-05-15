@@ -62,6 +62,7 @@ func getFormBodyVal(r *http.Request) {
 
 //GetFormOnceFile 解析出表单内的文件,form-data中的值获取
 //单文件内容解析，这里是指定获取文件对象名称为name的，这里的name不是文件名，而是和前端对应的那个name属性名（就是form-data的key）
+//如果想获取文件基本信息，需要获取FormFile的第二个参数*multipart.FileHeader，内部又filename和size，就是使用是对一步open方法而已
 func GetFormOnceFile(name string, r *http.Request) (multipart.File, error) {
 	r.ParseMultipartForm(20 << 20)
 	//也需要调用ParseMultipartForm

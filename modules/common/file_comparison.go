@@ -99,6 +99,7 @@ func getSaveFilePath(fileName string, p *core.ElementHandleArgs) (string, error)
 	if err != nil {
 		return "", err
 	}
+	defer f.Close()
 	ft := path.Ext(file.Filename)
 	if err := os.MkdirAll(core.DefaultFilePath, os.ModePerm); err != nil {
 		return "", err
