@@ -1,6 +1,7 @@
 package common
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"os"
@@ -33,15 +34,11 @@ func (f *fileComparison) Post(p *core.ElementHandleArgs) {
 	if p.APIInterceptionPost("comparison", new(comparisonParam), comparisonFileCommon) {
 		return
 	}
-	rPath, err := getFormFile("lft", "left", "lsep", "listitle", p)
+	rPath, lPath, err := getFormFile(p)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"Err": err.Error()}).Error("getFormFile")
+		return
 	}
-	lPath, err := getFormFile("rft", "right", "rsep", "ristitle", p)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{"Err": err.Error()}).Error("getFormFile")
-	}
-
 	res, err := comparison.FileComparison(rPath, lPath)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"Err": err.Error()}).Error("FileComparison")
@@ -62,43 +59,61 @@ func comparisonFileCommon(param interface{}, p *core.ElementHandleArgs) error {
 }
 
 //根据传入文件名称标识，文件类型标识，从formdata中获取文件
-func getFormFile(tkey, fileName, sep, isTitle string, p *core.ElementHandleArgs) (comparison.ParisonFileObject, error) {
-	lFileType := ""
-	fSep := ""
-	fIsTitle := false
+func getFormFile(p *core.ElementHandleArgs) (comparison.ParisonFileObject, comparison.ParisonFileObject, error) {
 	p.Req.ParseMultipartForm(20 << 20)
+	leftObject, rightObject := comparison.ParisonFileObject{}, comparison.ParisonFileObject{}
+	lft, rft := "", ""
+	if p.Req.MultipartForm == nil {
+		return leftObject, rightObject, errors.New("form is nil")
+	}
 	for k, v := range p.Req.MultipartForm.Value { //获取表单字段
-		if k == tkey && len(v) > 0 {
-			lFileType = v[0]
+		switch k {
+		case "lft":
+			lft = v[0]
+		case "lsep":
+			leftObject.Sep = v[0]
+		case "listitle":
+			leftObject.IsTitle = false
+		case "rft":
+			rft = v[0]
+		case "rsep":
+			rightObject.Sep = v[0]
+		case "ristitle":
+			rightObject.IsTitle = false
 		}
-		if k == sep && len(v) > 0 {
-			fSep = v[0]
-		}
-		if k == isTitle && len(v) > 0 && v[0] == "true" {
-			fIsTitle = true
-		}
-	}
-	lfile, err := formopera.GetFormOnceFile(fileName, p.Req)
-	if err != nil {
-		return comparison.ParisonFileObject{}, err
-	}
-	defer lfile.Close()
-	if err := os.MkdirAll(core.DefaultFilePath, os.ModePerm); err != nil {
-		return comparison.ParisonFileObject{}, err
-	}
-	fileAdree := path.Join(core.DefaultFilePath, uuid.NewUUID().String()+lFileType)
-	fl, err := os.Create(fileAdree)
-	if err != nil {
-		return comparison.ParisonFileObject{}, err
-	}
-	if _, err := io.Copy(fl, lfile); err != nil {
-		return comparison.ParisonFileObject{}, err
-	}
-	fInfo := comparison.ParisonFileObject{
-		FileName: fileAdree,
-		Sep:      fSep,
-		IsTitle:  fIsTitle,
 	}
 
-	return fInfo, nil
+	ladree, err := getFile("left", lft, p)
+	if err != nil {
+		return leftObject, rightObject, err
+	}
+	leftObject.FileName = ladree
+
+	radree, err := getFile("right", rft, p)
+	if err != nil {
+		return leftObject, rightObject, err
+	}
+	rightObject.FileName = radree
+	return leftObject, rightObject, nil
+}
+
+//获取表单中的文件，保存至默认路径并反馈保存的文件路径
+func getFile(fileName, ft string, p *core.ElementHandleArgs) (string, error) {
+	f, err := formopera.GetFormOnceFile(fileName, p.Req)
+	if err != nil {
+		return "", err
+	}
+
+	if err := os.MkdirAll(core.DefaultFilePath, os.ModePerm); err != nil {
+		return "", err
+	}
+	fileAdree := path.Join(core.DefaultFilePath, uuid.NewUUID().String()+ft)
+	fl, err := os.Create(fileAdree)
+	if err != nil {
+		return "", err
+	}
+	if _, err := io.Copy(fl, f); err != nil {
+		return "", err
+	}
+	return fileAdree, nil
 }
