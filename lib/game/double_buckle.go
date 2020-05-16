@@ -31,7 +31,8 @@ func (dk *DoubleBuckle) LicensingCode() DeckOfCards {
 
 //BrandComparison 比较大小,其中aim为后出的逻辑牌队列
 func (dk *DoubleBuckle) BrandComparison(d, aim DeckOfCards) bool {
-	if dk.GetBrandType(d) != dk.GetBrandType(aim) {
+
+	if (dk.GetBrandType(d) != dk.GetBrandType(aim)) && dk.GetBrandType(aim) != Bomb {
 		return false
 	}
 	//炸要另外判断
