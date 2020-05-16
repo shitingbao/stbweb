@@ -3,14 +3,19 @@ package game
 
 //类型规则
 const (
-	Single        = "Single"
-	Double        = "Double"
-	Three         = "Three"
-	Straight      = "Straight" //顺
-	EvenPair      = "EvenPair" //对
-	ThreeEvenPair = "ThreeEvenPair"
-	Bomb          = "Bomb"
+	Single        = "单牌"
+	Double        = "对牌"
+	Three         = "三牌"
+	Straight      = "顺子"
+	EvenPair      = "连对"
+	ThreeEvenPair = "三连对"
+	Bomb          = "炸"
 	CodeErr       = "Err" //错误类型
+
+	PlumBlossom = "梅花"
+	Square      = "方块"
+	Spades      = "黑桃"
+	RedPeach    = "红桃"
 )
 
 //Brand 基本
@@ -21,6 +26,7 @@ type Brand struct {
 
 //CodeGameType 类型
 type CodeGameType interface {
+	LicensingCode() DeckOfCards
 	BrandComparison(d, aim DeckOfCards) bool
 	GetBrandType(d DeckOfCards) string
 }

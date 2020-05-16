@@ -3,9 +3,35 @@ package game
 //DoubleBuckle 双
 type DoubleBuckle struct{}
 
-//BrandComparison 比较大小
-func (db *DoubleBuckle) BrandComparison(d, aim DeckOfCards) bool {
-	if db.GetBrandType(d) != db.GetBrandType(aim) {
+//LicensingCode 发牌,10以后，11，12，13，14，15，16增量代表J，Q，K，A，2,王
+func (dk *DoubleBuckle) LicensingCode() DeckOfCards {
+	dModel := DeckOfCards{}
+	suit := ""
+	for m := 0; m < 4; m++ {
+		switch m {
+		case 0:
+			suit = PlumBlossom
+		case 1:
+			suit = Square
+		case 2:
+			suit = Spades
+		case 3:
+			suit = RedPeach
+		}
+		for i := 3; i < 17; i++ {
+			bm := Brand{
+				Code: i,
+				Suit: suit,
+			}
+			dModel.Bd = append(dModel.Bd, bm)
+		}
+	}
+	return DeckOfCards{}
+}
+
+//BrandComparison 比较大小,其中aim为后出的逻辑牌队列
+func (dk *DoubleBuckle) BrandComparison(d, aim DeckOfCards) bool {
+	if dk.GetBrandType(d) != dk.GetBrandType(aim) {
 		return false
 	}
 	//炸要另外判断
@@ -14,7 +40,7 @@ func (db *DoubleBuckle) BrandComparison(d, aim DeckOfCards) bool {
 
 //GetBrandType 类型反馈
 //必须先调用SortOrderAsc排序
-func (db *DoubleBuckle) GetBrandType(d DeckOfCards) string {
+func (dk *DoubleBuckle) GetBrandType(d DeckOfCards) string {
 	d.SortOrderAsc() //必须先进行排序
 	switch {
 	case len(d.Bd) == 1:
