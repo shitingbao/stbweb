@@ -43,8 +43,8 @@ func serve() {
 		}).Info("open prof")
 		logrus.Info(http.ListenAndServe(fmt.Sprintf(":%s", core.WebConfig.Port), nil))
 	}()
-	chatHub, ctrlHub := initChatWebsocket()
-	core.Initinal(chatHub, ctrlHub)
+	chatHub, ctrlHub, cardHun := initChatWebsocket()
+	core.Initinal(chatHub, ctrlHub, cardHun)
 	// http.HandleFunc("/", httpProcess) //设置访问的路由
 	clearInit()
 	if core.WebConfig.ExternalServer {

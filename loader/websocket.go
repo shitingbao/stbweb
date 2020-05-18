@@ -9,7 +9,7 @@ import (
 )
 
 //initChatWebsocket 初始化websocket hub，开启消息处理循环
-func initChatWebsocket() (chatHub, ctrlHub *ws.Hub) {
+func initChatWebsocket() (chatHub, ctrlHub, cardHun *ws.Hub) {
 	chatHub = ws.NewHub(func(data []byte, hub *ws.Hub) error {
 		msg := ws.Message{}
 		if err := json.Unmarshal(data, &msg); err != nil {
@@ -24,6 +24,20 @@ func initChatWebsocket() (chatHub, ctrlHub *ws.Hub) {
 	http.HandleFunc("/sockets/chat", func(w http.ResponseWriter, r *http.Request) {
 		ws.ServeWs(rediser.GetUser(core.Rds, r.Header.Get("Sec-WebSocket-Protocol")), chatHub, w, r)
 	})
+
+	cardHun = ws.NewHub(func(data []byte, hub *ws.Hub) error {
+		msg := ws.Message{}
+		if err := json.Unmarshal(data, &msg); err != nil {
+			return err
+		}
+		hub.Broadcast <- msg
+		return nil
+	})
+	go chatHub.Run()
+	http.HandleFunc("/sockets/game", func(w http.ResponseWriter, r *http.Request) {
+		ws.ServeWs(rediser.GetUser(core.Rds, r.Header.Get("Sec-WebSocket-Protocol")), chatHub, w, r)
+	})
+
 	ctrlHub = ws.NewHub(nil)
 	//ctrl 控制消息
 	go ctrlHub.Run()

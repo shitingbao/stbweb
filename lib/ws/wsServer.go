@@ -38,7 +38,7 @@ var (
 //user中为空"",则为全体发送，写入username则为指定发送，包括自己的信息
 type Message struct {
 	User     string
-	Data     string
+	Data     interface{}
 	DateTime time.Time
 }
 
@@ -198,6 +198,11 @@ func (h *Hub) Run() {
 			}
 		}
 	}
+}
+
+//Len 返回连接数量
+func (h *Hub) Len() int {
+	return len(h.clients)
 }
 
 // ServeWs handles websocket requests from the peer.

@@ -32,16 +32,20 @@ func (dk *DoubleBuckle) LicensingCode() DeckOfCards {
 //BrandComparison 比较大小,其中aim为后出的逻辑牌队列
 //其中第一个为bomb的情况时，第二个一定为bomb才能比较
 func (dk *DoubleBuckle) BrandComparison(d, aim DeckOfCards) bool {
-
 	if (dk.GetBrandType(d) != dk.GetBrandType(aim)) && dk.GetBrandType(aim) != Bomb {
 		return false
 	}
 	switch {
 	case dk.GetBrandType(d) != Bomb && dk.GetBrandType(aim) == Bomb:
-	case dk.GetBrandType(d) == Bomb && dk.GetBrandType(aim) == Bomb:
+		return true
+	case dk.GetBrandType(d) == Bomb && dk.GetBrandType(aim) == Bomb: //都是bomb直接比大小即可
+		return AllComparison(d, aim)
 	default:
+		if len(d.Bd) != len(aim.Bd) {
+			return false
+		}
+		AllComparison(d, aim)
 	}
-	//炸要另外判断
 	return true
 }
 

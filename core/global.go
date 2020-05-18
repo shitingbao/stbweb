@@ -33,12 +33,14 @@ var (
 
 	//LOG 日志
 	// LOG *datelogger.DateLogger
+
 	//ChatHub 公共聊天频道的hub对象
 	ChatHub *ws.Hub
 
 	//CtrlHub 发送控制消息的hub对象
 	CtrlHub *ws.Hub
-
+	//CardHun 牌hub对象
+	CardHun *ws.Hub
 	//Rds redis连接d
 	Rds *redis.Client
 )
@@ -90,9 +92,10 @@ func checkLog() {
 }
 
 //Initinal 函数初始化日志及数据库链接，以及以后的消息频道
-func Initinal(chatHub, ctrlHub *ws.Hub) {
+func Initinal(chatHub, ctrlHub, cardHun *ws.Hub) {
 	ChatHub = chatHub
 	CtrlHub = ctrlHub
+	CardHun = cardHun
 	pathExists()
 	if err := openx(WebConfig.Driver, WebConfig.ConnectString); err != nil {
 		logrus.WithFields(logrus.Fields{"Driver": WebConfig.Driver, "ConnectString": WebConfig.ConnectString}).Panic("database")

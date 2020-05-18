@@ -36,21 +36,7 @@ type DeckOfCards struct {
 	Bd []Brand
 }
 
-//同一类的比较
-func stackComparison(cardType string) {
-	switch cardType {
-	case Single:
-	case Double:
-	case Three:
-	case Straight:
-	case EvenPair:
-	case Bomb:
-	}
-}
-
-//调用下列比较函数前需要先校验类型，有类型之后主要就是大小比较，待定
-
-//AllComparison 长度相同大小比较，特殊情况不同，比如炸
+//AllComparison 长度相同大小比较，特殊情况不同
 func AllComparison(brd, aim DeckOfCards) bool {
 	brdNum := 0
 	for _, v := range brd.Bd {
