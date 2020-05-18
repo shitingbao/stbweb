@@ -24,6 +24,7 @@ func initChatWebsocket() (chatHub, ctrlHub, cardHun *ws.Hub) {
 	//chat 聊天消息
 	http.HandleFunc("/sockets/chat", func(w http.ResponseWriter, r *http.Request) {
 		ws.ServeWs(rediser.GetUser(core.Rds, r.Header.Get("Sec-WebSocket-Protocol")), chatHub, w, r)
+		game.RegisterAndStart(r.Header.Get("Sec-WebSocket-Protocol"))
 	})
 
 	cardHun = ws.NewHub(game.ResponseOnMessage)

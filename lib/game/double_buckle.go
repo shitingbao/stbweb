@@ -17,13 +17,26 @@ type AllUserBrands struct {
 	UserBrands map[string]DeckOfCards
 }
 
+//下发给用户的数据包
+//下一个出牌的玩家
+//数据包
+//出的牌
+type sendBrandsData struct {
+	NextUser string
+	Data     AllUserBrands
+	ShowData DeckOfCards
+	Success  bool
+}
+
 var (
-	dbuck         DoubleBuckle
-	lastBrands    DeckOfCards   //保存上一次的数据
-	allUserBrands AllUserBrands //保存四个人的所有数据
+	dbuck          DoubleBuckle
+	lastBrands     DeckOfCards   //保存上一次的数据
+	lastBrandsUser string        //上一次是谁出的
+	allUserBrands  AllUserBrands //保存四个人的所有数据
+	brandsUser     []string
 )
 
-//LicensingCode 给定所有牌,10以后，11，12，13，14，15，16增量代表J，Q，K，A，2,小王，大王
+//LicensingCode 给定所有牌,10以后，11，12，13，14，15，16增量代表J，Q，K，A，2,小王，大王，其他逻辑需要重定义玩法的话使用Ox
 func (dk *DoubleBuckle) LicensingCode() DeckOfCards {
 	dModel := DeckOfCards{}
 	suit := ""
@@ -207,16 +220,44 @@ func ResponseOnMessage(data []byte, hub *ws.Hub) error {
 	if !ok {
 		return errors.New("data type have error")
 	}
-	if dbuck.BrandComparison(lastBrands, res) {
+	//如果这次不出的下一个用户，是上一次出牌的人，那就是一轮不要
+	if len(res.Bd) == 0 && getNextUser(msg.User) == lastBrandsUser {
+		lastBrands = DeckOfCards{}
+	}
+	//上一次出牌长度为0说明是没人出
+	if len(lastBrands.Bd) == 0 || dbuck.BrandComparison(lastBrands, res) {
 		//减去用户对应brand
 		allUserBrands.UserBrands[msg.User] = deleteBrand(allUserBrands.UserBrands[msg.User], res)
+		lastBrands = res
+		lastBrandsUser = msg.User
 	}
+	result := sendBrandsData{
+		NextUser: getNextUser(msg.User),
+		Data:     allUserBrands,
+		ShowData: res,
+		Success:  true,
+	}
+
 	hub.BroadcastUser <- ws.Message{
 		User:     msg.User,
-		Data:     allUserBrands,
+		Data:     result,
 		DateTime: msg.DateTime,
 	}
 	return nil
+}
+func getNextUser(user string) string {
+	nextUser := ""
+	for i, v := range brandsUser {
+		if v == user {
+			if i == len(brandsUser)-1 {
+				nextUser = brandsUser[0]
+				break
+			}
+			nextUser = brandsUser[i+1]
+			break
+		}
+	}
+	return nextUser
 }
 
 //删除第一个参数中，第二个参数的内容
@@ -239,15 +280,17 @@ func deleteBrand(divisor, dividend DeckOfCards) DeckOfCards {
 	return divisor
 }
 
-func registerAndStart(user string) {
+//RegisterAndStart 注册人员，满四人开始
+func RegisterAndStart(user string) {
+	brandsUser = append(brandsUser, user)
 	allUserBrands.UserBrands[user] = DeckOfCards{}
 	if len(allUserBrands.UserBrands) == 4 {
-		StartBrandGame()
+		startBrandGame()
 	}
 }
 
 //StartBrandGame 起始，使用map随机的特性，将原始总数据分发给四个用户
-func StartBrandGame() {
+func startBrandGame() {
 	totalBrands := dbuck.LicensingCode()
 	log.Println(totalBrands)
 	vm := make(map[int]Brand)
@@ -255,30 +298,30 @@ func StartBrandGame() {
 		vm[i] = v
 	}
 	tl := 0
-	user := []string{}
-	for u := range allUserBrands.UserBrands {
-		user = append(user, u)
-	}
 	for _, v := range vm {
 		switch tl % 3 {
 		case 0:
-			setAllUserBrands(user[0], v)
+			setAllUserBrands(brandsUser[0], v)
 		case 1:
-			setAllUserBrands(user[1], v)
+			setAllUserBrands(brandsUser[1], v)
 		case 2:
-			setAllUserBrands(user[2], v)
+			setAllUserBrands(brandsUser[2], v)
 		case 3:
-			setAllUserBrands(user[3], v)
+			setAllUserBrands(brandsUser[3], v)
 		}
 		tl++
 	}
-
-	core.CardHun.Broadcast <- ws.Message{
-		User:     "",
+	result := sendBrandsData{
+		NextUser: "",
 		Data:     allUserBrands,
+		ShowData: DeckOfCards{},
+		Success:  true,
+	}
+	core.CardHun.Broadcast <- ws.Message{
+		User:     brandsUser[0],
+		Data:     result,
 		DateTime: time.Now(),
 	}
-
 }
 
 //给用户发牌
