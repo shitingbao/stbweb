@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"stbweb/core"
 	"stbweb/lib/ws"
+	"time"
 )
 
 //DoubleBuckle 双
@@ -195,6 +197,7 @@ func Judgebomb(str DeckOfCards) bool {
 }
 
 //ResponseOnMessage 接收到执行的逻辑，在newhub定义中赋值给方法类型
+//这里接受到出的牌，删除后，把结果传递回去
 func ResponseOnMessage(data []byte, hub *ws.Hub) error {
 	msg := ws.Message{}
 	if err := json.Unmarshal(data, &msg); err != nil {
@@ -208,13 +211,9 @@ func ResponseOnMessage(data []byte, hub *ws.Hub) error {
 		//减去用户对应brand
 		allUserBrands.UserBrands[msg.User] = deleteBrand(allUserBrands.UserBrands[msg.User], res)
 	}
-	sendMsg, err := json.Marshal(allUserBrands)
-	if err != nil {
-		return err
-	}
-	hub.Broadcast <- ws.Message{
+	hub.BroadcastUser <- ws.Message{
 		User:     msg.User,
-		Data:     sendMsg,
+		Data:     allUserBrands,
 		DateTime: msg.DateTime,
 	}
 	return nil
@@ -247,8 +246,47 @@ func registerAndStart(user string) {
 	}
 }
 
-//StartBrandGame 起始
+//StartBrandGame 起始，使用map随机的特性，将原始总数据分发给四个用户
 func StartBrandGame() {
 	totalBrands := dbuck.LicensingCode()
 	log.Println(totalBrands)
+	vm := make(map[int]Brand)
+	for i, v := range totalBrands.Bd {
+		vm[i] = v
+	}
+	tl := 0
+	user := []string{}
+	for u := range allUserBrands.UserBrands {
+		user = append(user, u)
+	}
+	for _, v := range vm {
+		switch tl % 3 {
+		case 0:
+			setAllUserBrands(user[0], v)
+		case 1:
+			setAllUserBrands(user[1], v)
+		case 2:
+			setAllUserBrands(user[2], v)
+		case 3:
+			setAllUserBrands(user[3], v)
+		}
+		tl++
+	}
+
+	core.CardHun.Broadcast <- ws.Message{
+		User:     "",
+		Data:     allUserBrands,
+		DateTime: time.Now(),
+	}
+
+}
+
+//给用户发牌
+func setAllUserBrands(user string, brd Brand) {
+	md := allUserBrands.UserBrands[user].Bd
+	md = append(md, brd)
+	dcs := DeckOfCards{
+		Bd: md,
+	}
+	allUserBrands.UserBrands[user] = dcs
 }

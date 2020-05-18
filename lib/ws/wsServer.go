@@ -77,6 +77,8 @@ type Hub struct {
 
 	//Broadcast 公告消息队列
 	Broadcast chan Message
+	//用户私人消息队列
+	BroadcastUser chan Message
 	//OnMessage 当收到任意一个客户端发送到消息时触发
 	OnMessage OnMessageFunc
 
@@ -192,6 +194,22 @@ func (h *Hub) Run() {
 				default:
 					//如果这个client不通,message无法进行发送，说明这个client已经关闭，接下来就去除对应client列表中的client，
 					//虽然在unregister中已经做了这个操作，但是防止某些非正常断开连接的操作的影响
+					close(client.send)        //关闭发送通道
+					delete(h.clients, client) //删除连接
+				}
+			}
+		case message := <-h.BroadcastUser: //将数据发给连接中的send，用来发送
+			data, err := json.Marshal(message)
+			if err != nil {
+				logrus.Panic(err)
+			}
+			for client := range h.clients { //clients中保存了所有的客户端连接，循环所有连接给与要发送的数据
+				if message.User == "" || message.User != client.name { //区分信息对自己发送，对指定用户发送，或者对全体发送，分别是自己的user，指定用户的user，或者全体的空字符串
+					continue
+				}
+				select {
+				case client.send <- data:
+				default:
 					close(client.send)        //关闭发送通道
 					delete(h.clients, client) //删除连接
 				}

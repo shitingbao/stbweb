@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"stbweb/core"
+	"stbweb/lib/game"
 	"stbweb/lib/rediser"
 	"stbweb/lib/ws"
 )
@@ -25,14 +26,7 @@ func initChatWebsocket() (chatHub, ctrlHub, cardHun *ws.Hub) {
 		ws.ServeWs(rediser.GetUser(core.Rds, r.Header.Get("Sec-WebSocket-Protocol")), chatHub, w, r)
 	})
 
-	cardHun = ws.NewHub(func(data []byte, hub *ws.Hub) error {
-		msg := ws.Message{}
-		if err := json.Unmarshal(data, &msg); err != nil {
-			return err
-		}
-		hub.Broadcast <- msg
-		return nil
-	})
+	cardHun = ws.NewHub(game.ResponseOnMessage)
 	go cardHun.Run()
 	http.HandleFunc("/sockets/game", func(w http.ResponseWriter, r *http.Request) {
 		ws.ServeWs(rediser.GetUser(core.Rds, r.Header.Get("Sec-WebSocket-Protocol")), chatHub, w, r)
