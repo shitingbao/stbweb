@@ -33,7 +33,7 @@ func initChatWebsocket() (chatHub, ctrlHub, cardHun *ws.Hub) {
 		hub.Broadcast <- msg
 		return nil
 	})
-	go chatHub.Run()
+	go cardHun.Run()
 	http.HandleFunc("/sockets/game", func(w http.ResponseWriter, r *http.Request) {
 		ws.ServeWs(rediser.GetUser(core.Rds, r.Header.Get("Sec-WebSocket-Protocol")), chatHub, w, r)
 	})

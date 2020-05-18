@@ -18,6 +18,14 @@ const (
 	RedPeach    = "红桃"
 )
 
+var (
+	gUser = GameUser{}
+)
+
+type GameUser struct {
+	Users []string
+}
+
 //Brand 基本
 type Brand struct {
 	Code int

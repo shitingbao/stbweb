@@ -1,13 +1,31 @@
 package game
 
+import (
+	"encoding/json"
+	"errors"
+	"log"
+	"stbweb/lib/ws"
+)
+
 //DoubleBuckle 双
 type DoubleBuckle struct{}
 
-//LicensingCode 发牌,10以后，11，12，13，14，15，16增量代表J，Q，K，A，2,王
+//AllUserBrands 保存四个用户对应数据
+type AllUserBrands struct {
+	UserBrands map[string]DeckOfCards
+}
+
+var (
+	dbuck         DoubleBuckle
+	lastBrands    DeckOfCards   //保存上一次的数据
+	allUserBrands AllUserBrands //保存四个人的所有数据
+)
+
+//LicensingCode 给定所有牌,10以后，11，12，13，14，15，16增量代表J，Q，K，A，2,小王，大王
 func (dk *DoubleBuckle) LicensingCode() DeckOfCards {
 	dModel := DeckOfCards{}
 	suit := ""
-	for m := 0; m < 4; m++ {
+	for m := 0; m < 2; m++ {
 		switch m {
 		case 0:
 			suit = PlumBlossom
@@ -18,15 +36,22 @@ func (dk *DoubleBuckle) LicensingCode() DeckOfCards {
 		case 3:
 			suit = RedPeach
 		}
-		for i := 3; i < 17; i++ {
+		for i := 3; i < 16; i++ {
 			bm := Brand{
 				Code: i,
 				Suit: suit,
 			}
 			dModel.Bd = append(dModel.Bd, bm)
 		}
+		bt := Brand{
+			Code: 16,
+			Suit: "",
+		}
+		dModel.Bd = append(dModel.Bd, bt)
+		bt.Code = 17
+		dModel.Bd = append(dModel.Bd, bt)
 	}
-	return DeckOfCards{}
+	return dModel
 }
 
 //BrandComparison 比较大小,其中aim为后出的逻辑牌队列
@@ -44,9 +69,8 @@ func (dk *DoubleBuckle) BrandComparison(d, aim DeckOfCards) bool {
 		if len(d.Bd) != len(aim.Bd) {
 			return false
 		}
-		AllComparison(d, aim)
+		return AllComparison(d, aim)
 	}
-	return true
 }
 
 //GetBrandType 类型反馈
@@ -79,12 +103,20 @@ func (dk *DoubleBuckle) GetBrandType(d DeckOfCards) string {
 	}
 }
 
-//JudgeStraight 判断是顺子
+//JudgeStraight 判断是顺子,顺子里不能有2，小王和大王
 func JudgeStraight(str DeckOfCards) bool {
 	if len(str.Bd) < 5 {
 		return false
 	}
 	for i := 0; i < len(str.Bd)-1; i++ {
+		switch str.Bd[i+1].Code {
+		case 15:
+			return false
+		case 16:
+			return false
+		case 17:
+			return false
+		}
 		if str.Bd[i+1].Code-str.Bd[i].Code != 1 {
 			return false
 		}
@@ -98,6 +130,14 @@ func JudgeEvenPair(str DeckOfCards) bool {
 		return false
 	}
 	for i := 0; i < len(str.Bd)-1; i++ {
+		switch str.Bd[i+1].Code {
+		case 15:
+			return false
+		case 16:
+			return false
+		case 17:
+			return false
+		}
 		switch {
 		case i%2 == 0:
 			if str.Bd[i].Code != str.Bd[i+1].Code {
@@ -118,6 +158,14 @@ func JudgeTriplePair(str DeckOfCards) bool {
 		return false
 	}
 	for i := 0; i < len(str.Bd)-2; i++ {
+		switch str.Bd[i+1].Code {
+		case 15:
+			return false
+		case 16:
+			return false
+		case 17:
+			return false
+		}
 		switch {
 		case i%3 == 0:
 			if !(str.Bd[i].Code == str.Bd[i+1].Code && str.Bd[i].Code == str.Bd[i+2].Code) {
@@ -144,4 +192,63 @@ func Judgebomb(str DeckOfCards) bool {
 		}
 	}
 	return true
+}
+
+//ResponseOnMessage 接收到执行的逻辑，在newhub定义中赋值给方法类型
+func ResponseOnMessage(data []byte, hub *ws.Hub) error {
+	msg := ws.Message{}
+	if err := json.Unmarshal(data, &msg); err != nil {
+		return err
+	}
+	res, ok := msg.Data.(DeckOfCards)
+	if !ok {
+		return errors.New("data type have error")
+	}
+	if dbuck.BrandComparison(lastBrands, res) {
+		//减去用户对应brand
+		allUserBrands.UserBrands[msg.User] = deleteBrand(allUserBrands.UserBrands[msg.User], res)
+	}
+	sendMsg, err := json.Marshal(allUserBrands)
+	if err != nil {
+		return err
+	}
+	hub.Broadcast <- ws.Message{
+		User:     msg.User,
+		Data:     sendMsg,
+		DateTime: msg.DateTime,
+	}
+	return nil
+}
+
+//删除第一个参数中，第二个参数的内容
+func deleteBrand(divisor, dividend DeckOfCards) DeckOfCards {
+	for _, v := range dividend.Bd {
+		for i, val := range divisor.Bd {
+			if v.Code == val.Code {
+				if i == 0 {
+					divisor.Bd = divisor.Bd[1:]
+					continue
+				}
+				if i == len(divisor.Bd)-1 {
+					divisor.Bd = divisor.Bd[:len(divisor.Bd)-1]
+					continue
+				}
+				divisor.Bd = append(divisor.Bd[:i], divisor.Bd[i+1:]...)
+			}
+		}
+	}
+	return divisor
+}
+
+func registerAndStart(user string) {
+	allUserBrands.UserBrands[user] = DeckOfCards{}
+	if len(allUserBrands.UserBrands) == 4 {
+		StartBrandGame()
+	}
+}
+
+//StartBrandGame 起始
+func StartBrandGame() {
+	totalBrands := dbuck.LicensingCode()
+	log.Println(totalBrands)
 }
