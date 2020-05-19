@@ -21,13 +21,13 @@ type AllUserBrands struct {
 //数据包
 //出的牌
 //出牌的人
-//页面显示（出的牌，不出或者什么都不显示）,没不出一个，就把这个用户放进去，没有该用户名字的就什么都不显示，有出过牌的，就是关联出牌的名称ShowDataUser就可以了，有人出牌就重来
+//UserShowStatues页面显示,里面有该用户的，就显示不出（其他两种情况，出牌的就匹配出牌人即可，两个都没的说明还没轮到，就什么都不显示）
 //是否成功提交
 type sendBrandsData struct {
 	NextUser        string
+	ShowDataUser    string
 	Data            AllUserBrands
 	ShowData        DeckOfCards
-	ShowDataUser    string
 	UserShowStatues map[string]bool
 	Success         bool
 }
@@ -216,7 +216,9 @@ func Judgebomb(str DeckOfCards) bool {
 
 //ResponseOnMessage 接收到执行的逻辑，在newhub定义中赋值给方法类型
 //这里接受到出的牌，删除后，把结果传递回去
-//区分第一次出，不出和压上
+//中间要区分第一次出，不出和压上
+//先验证是否符合出的逻辑,错误信息在私人通道反馈，错误信息只包含一个false
+//CodeErr这个错误是出牌类型不符合
 func ResponseOnMessage(data []byte, hub *ws.Hub) error {
 	msg := ws.Message{}
 	if err := json.Unmarshal(data, &msg); err != nil {
@@ -226,79 +228,57 @@ func ResponseOnMessage(data []byte, hub *ws.Hub) error {
 	if !ok {
 		return errors.New("data type have error")
 	}
-	//先验证是否符合出的逻辑,错误信息在私人通道反馈，错误信息只包含一个false
-	//这个错误是出牌类型不符合
 	if dbuck.GetBrandType(res) == CodeErr {
-		result := sendBrandsData{
-			Success: false,
-		}
-
-		hub.BroadcastUser <- ws.Message{
-			User:     msg.User,
-			Data:     result,
-			DateTime: msg.DateTime,
-		}
+		hubUserSend(msg.User, msg.DateTime, hub)
 		return nil
 	}
-	//如果这次不出的下一个用户，是上一次出牌的人，那就是一轮不要
-	//内容为空就是不出
-	if len(res.Bd) == 0 {
+	if len(res.Bd) == 0 { //res.Bd内容为空就是不出，如果这次不出的下一个用户，是上一次出牌的人，那就是一轮不要
 		showStart[msg.User] = true
-		//如果这个要不起的人是最后一个，那就是过了一轮，把上一次保存的清空，开始新的一轮
-		if getNextUser(msg.User) == lastBrandsUser {
-			lastBrands = DeckOfCards{}
-			lastBrandsUser = ""
-			showStart = make(map[string]bool)
+		if getNextUser(msg.User) == lastBrandsUser { //如果这个要不起的人是最后一个，那就是过了一轮，把上一次保存的清空，开始新的一轮
+			lastBrands, lastBrandsUser, showStart = DeckOfCards{}, "", make(map[string]bool)
 		}
-
-		result := sendBrandsData{
-			NextUser:        getNextUser(msg.User),
-			Data:            allUserBrands,
-			ShowData:        lastBrands,
-			ShowDataUser:    lastBrandsUser,
-			UserShowStatues: showStart,
-			Success:         true,
-		}
-		hub.Broadcast <- ws.Message{
-			User:     msg.User,
-			Data:     result,
-			DateTime: msg.DateTime,
-		}
+		hubSend(msg.User, lastBrandsUser, allUserBrands, res, showStart, true, msg.DateTime, hub)
 		return nil
 	}
-	//上一次出牌长度为0说明是第一次出，或者压上
-	if len(lastBrands.Bd) == 0 || dbuck.BrandComparison(lastBrands, res) {
-		//出牌成功，减去用户对应brand
-		//结果给所有人反馈
+	if len(lastBrands.Bd) == 0 || dbuck.BrandComparison(lastBrands, res) { ////上一次出牌长度为0说明是第一次出，或者压上，出牌成功，减去用户对应brand，结果给所有人反馈
 		allUserBrands.UserBrands[msg.User] = deleteBrand(allUserBrands.UserBrands[msg.User], res)
-		lastBrands = res
-		lastBrandsUser = msg.User
-		showStart = make(map[string]bool) //出牌后也要清空，因为页面上只需要显示出的牌即可
-		result := sendBrandsData{
-			NextUser:     getNextUser(msg.User),
-			Data:         allUserBrands,
-			ShowData:     res,
-			ShowDataUser: lastBrandsUser,
-			Success:      true,
-		}
-		hub.Broadcast <- ws.Message{
-			User:     msg.User,
-			Data:     result,
-			DateTime: msg.DateTime,
-		}
+		lastBrands, lastBrandsUser, showStart = res, msg.User, make(map[string]bool) //showStart出牌后也要清空，因为页面上只需要显示出的牌即可
+		hubSend(msg.User, lastBrandsUser, allUserBrands, res, showStart, true, msg.DateTime, hub)
 		return nil
 	}
-	//说明出的牌不比上一次的大，不能这么出，也是给私人通道发送false信息
+	hubUserSend(msg.User, msg.DateTime, hub) //执行到这里说明出的牌不比上一次的大，不能这么出，也是给私人通道发送false信息
+	return nil
+}
+
+//公共信息展示
+func hubSend(user, lbs string, ads AllUserBrands, res DeckOfCards, st map[string]bool, isSuccess bool, tm time.Time, hub *ws.Hub) {
+	result := sendBrandsData{
+		NextUser:        getNextUser(user),
+		ShowDataUser:    lbs,
+		Data:            ads,
+		ShowData:        res,
+		UserShowStatues: st,
+		Success:         isSuccess,
+	}
+	hub.Broadcast <- ws.Message{
+		User:     user,
+		Data:     result,
+		DateTime: tm,
+	}
+}
+
+//私人信息，内容为错误信息，出牌大小或者出牌的规程错误
+func hubUserSend(user string, tm time.Time, hub *ws.Hub) {
 	result := sendBrandsData{
 		Success: false,
 	}
 	hub.BroadcastUser <- ws.Message{
-		User:     msg.User,
+		User:     user,
 		Data:     result,
-		DateTime: msg.DateTime,
+		DateTime: tm,
 	}
-	return nil
 }
+
 func getNextUser(user string) string {
 	nextUser := ""
 	for i, v := range brandsUser {
