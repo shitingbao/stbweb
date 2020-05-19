@@ -3,7 +3,6 @@ package game
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"stbweb/core"
 	"stbweb/lib/ws"
 	"time"
@@ -21,11 +20,16 @@ type AllUserBrands struct {
 //下一个出牌的玩家
 //数据包
 //出的牌
+//出牌的人
+//页面显示（出的牌，不出或者什么都不显示）,没不出一个，就把这个用户放进去，没有该用户名字的就什么都不显示，有出过牌的，就是关联出牌的名称ShowDataUser就可以了，有人出牌就重来
+//是否成功提交
 type sendBrandsData struct {
-	NextUser string
-	Data     AllUserBrands
-	ShowData DeckOfCards
-	Success  bool
+	NextUser        string
+	Data            AllUserBrands
+	ShowData        DeckOfCards
+	ShowDataUser    string
+	UserShowStatues map[string]bool
+	Success         bool
 }
 
 var (
@@ -33,7 +37,8 @@ var (
 	lastBrands     DeckOfCards   //保存上一次的数据
 	lastBrandsUser string        //上一次是谁出的
 	allUserBrands  AllUserBrands //保存四个人的所有数据
-	brandsUser     []string
+	brandsUser     []string      //用户名以及顺序，不同的位置提前调整，保存的是已经是合理的顺序
+	showStart      map[string]bool
 )
 
 //LicensingCode 给定所有牌,10以后，11，12，13，14，15，16增量代表J，Q，K，A，2,小王，大王，其他逻辑需要重定义玩法的话使用Ox
@@ -211,6 +216,7 @@ func Judgebomb(str DeckOfCards) bool {
 
 //ResponseOnMessage 接收到执行的逻辑，在newhub定义中赋值给方法类型
 //这里接受到出的牌，删除后，把结果传递回去
+//区分第一次出，不出和压上
 func ResponseOnMessage(data []byte, hub *ws.Hub) error {
 	msg := ws.Message{}
 	if err := json.Unmarshal(data, &msg); err != nil {
@@ -220,24 +226,72 @@ func ResponseOnMessage(data []byte, hub *ws.Hub) error {
 	if !ok {
 		return errors.New("data type have error")
 	}
-	//如果这次不出的下一个用户，是上一次出牌的人，那就是一轮不要
-	if len(res.Bd) == 0 && getNextUser(msg.User) == lastBrandsUser {
-		lastBrands = DeckOfCards{}
+	//先验证是否符合出的逻辑,错误信息在私人通道反馈，错误信息只包含一个false
+	//这个错误是出牌类型不符合
+	if dbuck.GetBrandType(res) == CodeErr {
+		result := sendBrandsData{
+			Success: false,
+		}
+
+		hub.BroadcastUser <- ws.Message{
+			User:     msg.User,
+			Data:     result,
+			DateTime: msg.DateTime,
+		}
+		return nil
 	}
-	//上一次出牌长度为0说明是没人出
+	//如果这次不出的下一个用户，是上一次出牌的人，那就是一轮不要
+	//内容为空就是不出
+	if len(res.Bd) == 0 {
+		showStart[msg.User] = true
+		//如果这个要不起的人是最后一个，那就是过了一轮，把上一次保存的清空，开始新的一轮
+		if getNextUser(msg.User) == lastBrandsUser {
+			lastBrands = DeckOfCards{}
+			lastBrandsUser = ""
+			showStart = make(map[string]bool)
+		}
+
+		result := sendBrandsData{
+			NextUser:        getNextUser(msg.User),
+			Data:            allUserBrands,
+			ShowData:        lastBrands,
+			ShowDataUser:    lastBrandsUser,
+			UserShowStatues: showStart,
+			Success:         true,
+		}
+		hub.Broadcast <- ws.Message{
+			User:     msg.User,
+			Data:     result,
+			DateTime: msg.DateTime,
+		}
+		return nil
+	}
+	//上一次出牌长度为0说明是第一次出，或者压上
 	if len(lastBrands.Bd) == 0 || dbuck.BrandComparison(lastBrands, res) {
-		//减去用户对应brand
+		//出牌成功，减去用户对应brand
+		//结果给所有人反馈
 		allUserBrands.UserBrands[msg.User] = deleteBrand(allUserBrands.UserBrands[msg.User], res)
 		lastBrands = res
 		lastBrandsUser = msg.User
+		showStart = make(map[string]bool) //出牌后也要清空，因为页面上只需要显示出的牌即可
+		result := sendBrandsData{
+			NextUser:     getNextUser(msg.User),
+			Data:         allUserBrands,
+			ShowData:     res,
+			ShowDataUser: lastBrandsUser,
+			Success:      true,
+		}
+		hub.Broadcast <- ws.Message{
+			User:     msg.User,
+			Data:     result,
+			DateTime: msg.DateTime,
+		}
+		return nil
 	}
+	//说明出的牌不比上一次的大，不能这么出，也是给私人通道发送false信息
 	result := sendBrandsData{
-		NextUser: getNextUser(msg.User),
-		Data:     allUserBrands,
-		ShowData: res,
-		Success:  true,
+		Success: false,
 	}
-
 	hub.BroadcastUser <- ws.Message{
 		User:     msg.User,
 		Data:     result,
@@ -290,9 +344,10 @@ func RegisterAndStart(user string) {
 }
 
 //StartBrandGame 起始，使用map随机的特性，将原始总数据分发给四个用户
+//这里的第一次数据给定一个第一个出的用户，后续待定
 func startBrandGame() {
 	totalBrands := dbuck.LicensingCode()
-	log.Println(totalBrands)
+	// log.Println(totalBrands)
 	vm := make(map[int]Brand)
 	for i, v := range totalBrands.Bd {
 		vm[i] = v
@@ -312,7 +367,7 @@ func startBrandGame() {
 		tl++
 	}
 	result := sendBrandsData{
-		NextUser: "",
+		NextUser: brandsUser[0],
 		Data:     allUserBrands,
 		ShowData: DeckOfCards{},
 		Success:  true,
