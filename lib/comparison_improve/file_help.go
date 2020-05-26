@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	defaultComma = "," //默认文件内容分隔符
+	defaultSep = "," //默认文件内容分隔符
 )
 
 var (
@@ -144,5 +144,5 @@ func delStrBlank(col, sep string) string {
 		}
 		pstr += sep + v
 	}
-	return strings.Replace(pstr, sep, defaultComma, -1)
+	return strings.Replace(pstr, sep, defaultSep, -1)
 }
