@@ -64,10 +64,10 @@ func FileComparise(fileName, sep, otherFileName, osep string) ResultFileRow {
 	for {
 		select {
 		case mes := <-outData:
-			res.SameLine = append(res.SameLine, mes)
 			if mes.FRow.LineNumber == -1 && mes.OtherFRow.LineNumber == -1 {
 				goto out
 			}
+			res.SameLine = append(res.SameLine, mes)
 		}
 	}
 out:
