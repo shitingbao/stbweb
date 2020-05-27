@@ -19,6 +19,12 @@ var (
 	LineModel = make(map[string]FileLineRow)
 )
 
+//ResultFileRow 完成比较结果反馈
+type ResultFileRow struct {
+	SameLine  []SameFileRow
+	OtherLine map[string]FileLineRow
+}
+
 //FileLineRow 反馈一列文件的行对象，包含文件名称，行号和未拆分的内容,sep制表符
 type FileLineRow struct {
 	FileName   string
@@ -27,8 +33,8 @@ type FileLineRow struct {
 	Sep        string
 }
 
-//反馈对应相同的数据行，包含对应文件行号
-type sameFileRow struct {
+//SameFileRow 反馈对应相同的数据行，包含对应文件行号
+type SameFileRow struct {
 	FRow      FileLine
 	OtherFRow FileLine
 	RowVal    string
@@ -47,9 +53,11 @@ type FileLine struct {
 //这里生成一个唯一uuid，作为两个解析内容完成协程的结束标识
 //sep制表符这里，如果替换后数据不同，那原来肯定不同，所以不同制表符的问价替换比较没问题，数据包含该制表符也没问题,所以把输入的制表符都换成默认的比较即可
 //注意输出的时候将原来的数据输出，因为数据中也可能包含制表符
-func FileComparise(fileName, sep, otherFileName, osep string) {
+//生成的uuid作为最后一个文件结束-1的key值，把他当作行内容，-1结束当成行号，这样就不用另外判断结束了
+func FileComparise(fileName, sep, otherFileName, osep string) ResultFileRow {
+	var res ResultFileRow
 	inData := make(chan FileLineRow, 1)
-	outData := make(chan sameFileRow)
+	outData := make(chan SameFileRow)
 	stopLogo := uuid.New()
 	go dataMatch(inData, outData)
 	go getFileData(fileName, sep, stopLogo, inData)
@@ -58,18 +66,21 @@ func FileComparise(fileName, sep, otherFileName, osep string) {
 		select {
 		case mes := <-outData:
 			log.Println(mes)
+			res.SameLine = append(res.SameLine, mes)
 			if mes.FRow.LineNumber == -1 && mes.OtherFRow.LineNumber == -1 {
 				goto out
 			}
 		}
 	}
 out:
-	log.Println(LineModel)
+	res.OtherLine = LineModel
+	LineModel = make(map[string]FileLineRow)
+	return res
 }
 
 //数据匹配，in通道中接受文件解析的行数据，out中反馈匹配成功的相同数据，两方不同的数据则遗留在总map中
 //对应数据分别会包含对应的文件名和行号
-func dataMatch(inData <-chan FileLineRow, outData chan<- sameFileRow) {
+func dataMatch(inData <-chan FileLineRow, outData chan<- SameFileRow) {
 	for {
 		line := <-inData
 		if line.RowVal == "" { //为空就掠过
@@ -89,7 +100,7 @@ func dataMatch(inData <-chan FileLineRow, outData chan<- sameFileRow) {
 			FileName:   lineData.FileName,
 			LineNumber: lineData.LineNumber,
 		}
-		sm := sameFileRow{
+		sm := SameFileRow{
 			FRow:      f,
 			OtherFRow: of,
 			RowVal:    line.RowVal,
