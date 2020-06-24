@@ -79,4 +79,4 @@ eg: @/lib/snsq---@/modules/common/nsq_send---@/modules/common/nsq_customer
     实际业务实现模块  
 
 ## sql及nosql  
-    后天数据库使用了mysql,缓存使用redis。
+    使用mysql作为基本数据支持容器,缓存使用redis用于注册中心和用户状态保持，以及一部分缓存形的展示数据。新引入了mogodb用于不定格式的数据收集
