@@ -9,6 +9,11 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	//这里应用了bson里面的M类型，但是D类型的使用会出错，原因待定
 	//所以所有的条件以及结果集反馈都是用了M类型，其实就是map
+	//注意多条件查询的对象这么写
+	//eg bson.M{"age":"18","number": bson.M{"$in": []string{"1", "2"}}}
+	//代表 age=18 and number in (1,2)
+	//同理，不同的条件，只要把第二个条件字符串（$in）变成其他的即可，比如 bson.M{"number": bson.M{"$gt": 1}}。就是number大于1的
+	//or多条件麻烦点 bson.M{"$or": []bson.M{bson.M{"age": "bb"}, bson.M{"number": 1}}}
 )
 
 //Mongodb 一个mongo连接对象
