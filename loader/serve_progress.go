@@ -42,7 +42,7 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		// http.ServeFile(w, r, filepath.Join("dist", "index.html")) //配置自己的前端入口，找不到会404
 		// core.SendJSON(w, http.StatusOK, core.SendMap{"url": "nothing"})
 
-		f, err := os.Open("/opt/dist/ts.html")
+		f, err := os.Open("/opt/dist/index.html")
 		if err != nil {
 			log.Println(err)
 			return
