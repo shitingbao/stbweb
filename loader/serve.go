@@ -51,6 +51,7 @@ func serve() {
 		go externalServer() //开启外置服务
 	}
 	http.Handle("/", http.HandlerFunc(httpProcess))
+	http.Handle("/static/", http.FileServer(http.Dir("")))
 }
 
 //Shutdown 关闭所有连接

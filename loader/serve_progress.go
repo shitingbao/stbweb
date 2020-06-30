@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"path/filepath"
 	"stbweb/core"
 	"strings"
 
@@ -36,7 +35,8 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 	// http.Handle("/dist", http.StripPrefix("/dist", http.FileServer(http.Dir("dist"))))
 	//？？这里需要定向前端地址，待定
 	if r.URL.String() == "/" {
-		http.ServeFile(w, r, filepath.Join("./dist", "index.html"))
+		// http.ServeFile(w, r, filepath.Join("./dist", "index.html"))
+		http.Redirect(w, r, "./dist/index.html", http.StatusFound)
 	}
 	paths, err := parsePaths(r.URL)
 	//这里的path反馈工作元素内容待定
