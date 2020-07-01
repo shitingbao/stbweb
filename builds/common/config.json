@@ -7,7 +7,7 @@
     "LogLevel": "debug",
     "Port": "3002",
     "ExternalPort": "5000",
-    "AllowOrigin": "124.70.156.31",
+    "AllowOrigin": "http://124.70.156.31:3001",
     "AccessTokenDate": "2020-02-27 12:12:12",
     "RedisAdree": "127.0.0.1",
     "RedisPort": "6379",
