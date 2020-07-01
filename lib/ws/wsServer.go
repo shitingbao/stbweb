@@ -235,7 +235,6 @@ func ServeWs(user string, hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 	//生成一个client，里面包含用户信息连接信息等信息
 	client := &Client{hub: hub, name: user, conn: conn, send: make(chan []byte, 256)}
-	logrus.WithFields(logrus.Fields{"socket adress": r.URL}).Info("client")
 	client.hub.register <- client //将这个连接放入注册，在run中会加一个
 	go client.writePump()         //新开一个写入，因为有一个用户连接就新开一个，相互不影响，在内部实现心跳包检测连接，详细看函数内部
 	client.readPump()             //读取websocket中的信息，详细看函数内部
