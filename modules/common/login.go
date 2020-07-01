@@ -20,13 +20,13 @@ func (l *login) Post(p *core.ElementHandleArgs) {
 }
 
 type apiUser struct {
-	Name       string
-	Pwd        string
-	Avatar     string
-	Email      string
-	Phone      string
-	Salt       string
-	UpdateTime string
+	Name   string
+	Pwd    string
+	Avatar string
+	Email  string
+	Phone  string
+	Salt   string
+	// UpdateTime string
 }
 
 func loginAPI(param interface{}, p *core.ElementHandleArgs) error {

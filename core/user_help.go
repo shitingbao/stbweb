@@ -21,13 +21,13 @@ type User struct {
 	Email      string
 	Phone      string
 	Salt       string
-	UpdateTime string
+	CreateTime string
 }
 
 //GetUser 获取一个user
 func GetUser(username string) *User {
 	u := User{}
-	if err := Ddb.QueryRow("SELECT name,password,avatar,email,phone,salt,updatetime FROM user where name=?", username).Scan(&u.Name, &u.Pwd, &u.Avatar, &u.Email, &u.Phone, &u.Salt, &u.UpdateTime); err != nil {
+	if err := Ddb.QueryRow("SELECT name,password,avatar,email,phone,salt,create_time FROM user where name=?", username).Scan(&u.Name, &u.Pwd, &u.Avatar, &u.Email, &u.Phone, &u.Salt, &u.CreateTime); err != nil {
 		logrus.WithFields(logrus.Fields{"get user": err}).Error("user")
 	}
 	return &u
