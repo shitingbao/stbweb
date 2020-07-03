@@ -15,7 +15,7 @@ import (
 
 func init() {
 	mime.AddExtensionType(".js", "text/javascript")
-	mime.AddExtensionType(".css", "text/css")
+	mime.AddExtensionType(".css", "text/css; charset=utf-8")
 	// gob.Register(map[string]interface{}{})
 }
 
@@ -61,13 +61,22 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	suf := strings.Split(paths[len(paths)-1], ".")
-	if suf[len(suf)-1] == "css" || suf[len(suf)-1] == "js" {
+	if suf[len(suf)-1] == "css" {
 		str, err := os.Getwd()
 		if err != nil {
 			logrus.WithFields(logrus.Fields{"path": err.Error()}).Warn("getwd")
 			return
 		}
-		http.ServeFile(w, r, filepath.Join(str, paths[len(paths)-2], paths[len(paths)-1]))
+		http.ServeFile(w, r, filepath.Join(str, "dist", "css", paths[len(paths)-1]))
+		return
+	}
+	if suf[len(suf)-1] == "js" {
+		str, err := os.Getwd()
+		if err != nil {
+			logrus.WithFields(logrus.Fields{"path": err.Error()}).Warn("getwd")
+			return
+		}
+		http.ServeFile(w, r, filepath.Join(str, "dist", "js", paths[len(paths)-1]))
 		return
 	}
 	core.ElementHandle(w, r, paths[0]) //待定，工作元素的名称获取是否来源于路由
