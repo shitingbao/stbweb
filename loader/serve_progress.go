@@ -1,41 +1,33 @@
 package loader
 
 import (
-	"encoding/gob"
 	"fmt"
+	"log"
 	"mime"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
 	"stbweb/core"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/tdewolff/minify"
-	"github.com/tdewolff/minify/css"
-	"github.com/tdewolff/minify/html"
-	"github.com/tdewolff/minify/js"
-	"github.com/tdewolff/minify/json"
-	"github.com/tdewolff/minify/svg"
-	"github.com/tdewolff/minify/xml"
 )
 
-var (
-	m = minify.New() //资源缩小
-)
+// var (
+// 	m = minify.New() //资源缩小
+// )
 
 func init() {
 	mime.AddExtensionType(".js", "text/javascript")
 	mime.AddExtensionType(".css", "text/css; charset=utf-8")
-	m.AddFunc(".js", js.Minify)
-	m.AddFunc(".css", css.Minify)
-	m.AddFunc("text/html", html.Minify)
-	m.AddFuncRegexp(regexp.MustCompile("[/+]json$"), json.Minify)
-	m.AddFunc("image/svg+xml", svg.Minify)
-	m.AddFuncRegexp(regexp.MustCompile("[/+]xml$"), xml.Minify)
-	gob.Register(map[string]interface{}{})
+	// m.AddFunc(".js", js.Minify)
+	// m.AddFunc(".css", css.Minify)
+	// m.AddFunc("text/html", html.Minify)
+	// m.AddFuncRegexp(regexp.MustCompile("[/+]json$"), json.Minify)
+	// m.AddFunc("image/svg+xml", svg.Minify)
+	// m.AddFuncRegexp(regexp.MustCompile("[/+]xml$"), xml.Minify)
+	// gob.Register(map[string]interface{}{})
 }
 
 func httpProcess(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +52,6 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-	http.Handle("/favicon.ico", http.NotFoundHandler()) //请求时会有这个多余的一次请求，直接给他过,不给他
 	//？？这里需要定向前端地址，待定
 	if r.URL.String() == "/" {
 		// http.ServeFile(w, r, filepath.Join("./dist", "index.html"))
@@ -80,6 +71,8 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		w.Write(nil)
 		return
 	}
+	log.Println("path:", paths[0], "===", paths[len(paths)-1])
+
 	if paths[0] == "css" || paths[0] == "js" || paths[0] == "fonts" {
 		str, err := os.Getwd()
 		if err != nil {
