@@ -2,6 +2,7 @@ package loader
 
 import (
 	"fmt"
+	"mime"
 	"net/http"
 	"net/url"
 	"stbweb/core"
@@ -9,6 +10,11 @@ import (
 
 	"github.com/Sirupsen/logrus"
 )
+
+func init() {
+	mime.AddExtensionType(".js", "text/javascript")
+	// gob.Register(map[string]interface{}{})
+}
 
 func httpProcess(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "OPTIONS" {
@@ -36,7 +42,7 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 	//？？这里需要定向前端地址，待定
 	if r.URL.String() == "/" {
 		// http.ServeFile(w, r, filepath.Join("./dist", "index.html"))
-		http.ServeFile(w, r, "./dist/ts.html")
+		http.ServeFile(w, r, "./dist/index.html")
 		return
 	}
 	paths, err := parsePaths(r.URL)
