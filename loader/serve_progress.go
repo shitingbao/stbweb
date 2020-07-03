@@ -44,7 +44,11 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 	//？？这里需要定向前端地址，待定
 	if r.URL.String() == "/" {
 		// http.ServeFile(w, r, filepath.Join("./dist", "index.html"))
-		str, _ := os.Getwd()
+		str, err := os.Getwd()
+		if err != nil {
+			logrus.WithFields(logrus.Fields{"path": err.Error()}).Warn("getwd")
+			return
+		}
 		http.ServeFile(w, r, filepath.Join(str, "dist", "index.html"))
 		return
 	}
