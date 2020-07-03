@@ -7,16 +7,33 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"stbweb/core"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/tdewolff/minify"
+	"github.com/tdewolff/minify/css"
+	"github.com/tdewolff/minify/html"
+	"github.com/tdewolff/minify/js"
+	"github.com/tdewolff/minify/json"
+	"github.com/tdewolff/minify/svg"
+	"github.com/tdewolff/minify/xml"
+)
+
+var (
+	m = minify.New() //资源缩小
 )
 
 func init() {
 	mime.AddExtensionType(".js", "text/javascript")
 	mime.AddExtensionType(".css", "text/css; charset=utf-8")
-
+	m.AddFunc(".js", js.Minify)
+	m.AddFunc(".css", css.Minify)
+	m.AddFunc("text/html", html.Minify)
+	m.AddFuncRegexp(regexp.MustCompile("[/+]json$"), json.Minify)
+	m.AddFunc("image/svg+xml", svg.Minify)
+	m.AddFuncRegexp(regexp.MustCompile("[/+]xml$"), xml.Minify)
 }
 
 func httpProcess(w http.ResponseWriter, r *http.Request) {
