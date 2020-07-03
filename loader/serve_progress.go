@@ -40,7 +40,6 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-	// http.Handle("/dist", http.StripPrefix("/dist", http.FileServer(http.Dir("dist"))))
 	//？？这里需要定向前端地址，待定
 	if r.URL.String() == "/" {
 		// http.ServeFile(w, r, filepath.Join("./dist", "index.html"))
@@ -58,6 +57,16 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		logrus.Error(err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(nil)
+		return
+	}
+	suf := strings.Split(paths[len(paths)-1], ".")
+	if suf[len(suf)-1] == "css" {
+		str, err := os.Getwd()
+		if err != nil {
+			logrus.WithFields(logrus.Fields{"path": err.Error()}).Warn("getwd")
+			return
+		}
+		http.ServeFile(w, r, filepath.Join(str, "css", paths[len(paths)-1]))
 		return
 	}
 	core.ElementHandle(w, r, paths[0]) //待定，工作元素的名称获取是否来源于路由
