@@ -42,7 +42,7 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 	//？？这里需要定向前端地址，待定
 	if r.URL.String() == "/" {
 		// http.ServeFile(w, r, filepath.Join("./dist", "index.html"))
-		http.ServeFile(w, r, "./dist/index.html")
+		http.ServeFile(w, r, "dist/index.html")
 		return
 	}
 	paths, err := parsePaths(r.URL)
