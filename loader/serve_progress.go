@@ -1,6 +1,7 @@
 package loader
 
 import (
+	"encoding/gob"
 	"fmt"
 	"mime"
 	"net/http"
@@ -34,6 +35,7 @@ func init() {
 	m.AddFuncRegexp(regexp.MustCompile("[/+]json$"), json.Minify)
 	m.AddFunc("image/svg+xml", svg.Minify)
 	m.AddFuncRegexp(regexp.MustCompile("[/+]xml$"), xml.Minify)
+	gob.Register(map[string]interface{}{})
 }
 
 func httpProcess(w http.ResponseWriter, r *http.Request) {
