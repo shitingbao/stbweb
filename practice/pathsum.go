@@ -27,15 +27,11 @@ func wideOrder(root *TreeNode, sum int) bool {
 		NodeSum: root.Val,
 	}
 	stack = append(stack, logoNode)
-	log.Println(len(stack))
-	for len(stack) == 0 {
-		log.Println(stack[0].NodeSum)
-		log.Println(stack[0].Node.Val)
+	for len(stack) > 0 {
 		if stack[0].Node.Left == nil && stack[0].Node.Right == nil {
 			if stack[0].NodeSum == sum {
 				return true
 			}
-			continue
 		}
 		if stack[0].Node.Left != nil {
 			stack = append(stack, keepNode{
