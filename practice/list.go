@@ -1,17 +1,17 @@
 package main
 
-//ListNode listnode
-type ListNode struct {
+//ListNodeData listnode
+type ListNodeData struct {
 	Val  int
-	Next *ListNode
+	Next *ListNodeData
 }
 
-func addTwoNumbersChan(l1 *ListNode, l2 *ListNode) *ListNode {
+func addTwoNumbersChan(l1 *ListNodeData, l2 *ListNodeData) *ListNodeData {
 	nm1 := make(chan int)
 	nm2 := make(chan int)
 	go getNodeNum(l1, nm1)
 	go getNodeNum(l2, nm2)
-	result := &ListNode{}
+	result := &ListNodeData{}
 	resKeyres := result //复制头指针
 	resKey := true
 	num1 := 0
@@ -27,7 +27,7 @@ func addTwoNumbersChan(l1 *ListNode, l2 *ListNode) *ListNode {
 		}
 		if num2 == -1 && num1 == -1 {
 			if resCount != 0 { //判断一个5+5这种多一位的情况
-				rt := &ListNode{
+				rt := &ListNodeData{
 					Val: 1,
 				}
 				resKeyres.Next = rt
@@ -43,7 +43,7 @@ func addTwoNumbersChan(l1 *ListNode, l2 *ListNode) *ListNode {
 			numCount2 = 0
 		}
 		count := numCount1 + numCount2 + resCount
-		resVal := &ListNode{
+		resVal := &ListNodeData{
 			Val: count % 10,
 		}
 		if resKey {
@@ -65,14 +65,14 @@ func addTwoNumbersChan(l1 *ListNode, l2 *ListNode) *ListNode {
 	return result
 }
 
-func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
+func addTwoNumbers(l1 *ListNodeData, l2 *ListNodeData) *ListNodeData {
 	oneList := []int{}
 	twoList := []int{}
 	nm1 := make(chan int)
 	nm2 := make(chan int)
 	go getNodeNum(l1, nm1)
 	go getNodeNum(l2, nm2)
-	result := &ListNode{}
+	result := &ListNodeData{}
 	resKeyres := result
 	num1 := 0
 	num2 := 0
@@ -124,7 +124,7 @@ func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
 	}
 	for i := len(resultList) - 1; i >= 0; i-- {
 		// log.Println(resultList[i])
-		resVal := &ListNode{
+		resVal := &ListNodeData{
 			Val: resultList[i],
 		}
 		if i == len(resultList)-1 {
@@ -138,7 +138,7 @@ func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
 	return result
 }
 
-func getNodeNum(node *ListNode, cnum chan int) {
+func getNodeNum(node *ListNodeData, cnum chan int) {
 	for node != nil {
 		cnum <- node.Val
 		node = node.Next
