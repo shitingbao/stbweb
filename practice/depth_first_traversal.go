@@ -2,6 +2,7 @@ package main
 
 import "log"
 
+//深度优先遍历
 func isBipartite(graph [][]int) bool {
 	gh := make(map[int]int)
 	isExist := make(map[int]bool)
@@ -37,7 +38,6 @@ func spk(node, color int, graph [][]int, gh map[int]int, isExist map[int]bool) {
 			}
 			spk(v, color, graph, gh, isExist)
 		}
-
 	}
 }
 
