@@ -2,6 +2,7 @@ package main
 
 import "log"
 
+//寻找最长的回文子串，中心扩展的方法，就是以一个索引点为中心，向两边扩展比较，注意奇数和偶数
 func longestPalindrome(s string) string {
 	res := ""
 	switch len(s) {
@@ -17,7 +18,6 @@ func longestPalindrome(s string) string {
 			if i == 0 {
 				continue
 			}
-
 			sp := objecgLeng(i, s)
 			if len(sp) > len(res) {
 				res = sp
@@ -28,15 +28,16 @@ func longestPalindrome(s string) string {
 }
 
 func objecgLeng(logo int, str string) string {
+	index := 0
 	res := ""
-	isB := true
 	for i := 0; i <= logo; i++ {
 		if logo-i < 0 || logo+i > len(str)-1 {
 			break
 		}
-		if str[logo-i] != str[logo+i] {
-			isB = false
-			res = str[logo-i+1 : logo+i]
+		if str[logo-i] == str[logo+i] {
+			index = i
+			res = str[logo-i : logo+i+1]
+		} else {
 			break
 		}
 	}
@@ -44,22 +45,19 @@ func objecgLeng(logo int, str string) string {
 		if logo-i-1 < 0 || logo+i > len(str)-1 {
 			break
 		}
-		if str[logo-i-1] != str[logo+i] {
-			isB = false
-			sp := str[logo-i : logo+i]
-			if len(sp) > len(res) {
-				res = sp
+		if str[logo-i-1] == str[logo+i] {
+			if i >= index {
+				index = i
+				res = str[logo-i-1 : logo+i+1]
 			}
+		} else {
 			break
 		}
-	}
-	if isB {
-		return str
 	}
 	return res
 }
 
 func longestPalindromeLoad() {
-	str := longestPalindrome("ccc")
+	str := longestPalindrome("cbbd")
 	log.Println(str)
 }
