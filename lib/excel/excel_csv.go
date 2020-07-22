@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"unicode/utf8"
 
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
@@ -102,6 +103,26 @@ func getRes(recordE [][]string) *map[int]Lod {
 	return &reMapE
 }
 
+//新建csv文件
+func createFile(fileName string, data [][]string) error {
+	f, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	for _, v := range data {
+		for i, val := range v {
+			f.WriteString(val)
+			if i == len(v)-1 {
+				break
+			}
+			f.WriteString(",")
+		}
+		f.WriteString("\r\n")
+	}
+	defer f.Close()
+	return nil
+}
+
 var enc = simplifiedchinese.GBK
 
 //GBK形式读csv文件
@@ -155,4 +176,10 @@ code points.`)
 	if err = f.Close(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+//使用utf8的包，判断是否是utf8,还有很多其他包的使用，具体参考官网 https://golang.org/pkg/unicode/utf8/#pkg-examples
+func isUTF8() bool {
+	valid := 'a'
+	return utf8.ValidRune(valid)
 }
