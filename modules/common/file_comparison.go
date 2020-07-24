@@ -9,8 +9,8 @@ import (
 	"stbweb/core"
 	"stbweb/lib/comparison"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/pborman/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type fileComparison struct{}

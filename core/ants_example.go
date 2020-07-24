@@ -35,8 +35,7 @@ func demosFunc() {
 //antsCommon 使用普通的pool
 //例子一
 func antsCommon() {
-
-	p, _ := ants.NewPool(BenchAntsSize, ants.WithExpiryDuration(DefaultExpiredTime)) //新建一个pool对象，其他同上
+	p, _ := ants.NewPool(BenchAntsSize) //新建一个pool对象，其他同上
 	defer p.Release()
 	for j := 0; j < runTime; j++ {
 		_ = p.Submit(func() {

@@ -14,8 +14,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
+	"github.com/sirupsen/logrus"
 )
 
 var (

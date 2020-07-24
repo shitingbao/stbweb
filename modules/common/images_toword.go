@@ -7,7 +7,7 @@ import (
 	"stbweb/lib/images"
 	imagetowordapi "stbweb/lib/imagetowordAPI"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 //ImageWord 业务类

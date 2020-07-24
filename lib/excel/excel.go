@@ -10,7 +10,7 @@ import (
 	"strconv"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/tealeg/xlsx"
 )
 
@@ -49,10 +49,7 @@ func getExcelRows(excelURL, sheet string) ([][]string, error) {
 		return nil, err
 	}
 
-	rows, err := xlsx.GetRows(sheet)
-	if err != nil {
-		return nil, err
-	}
+	rows := xlsx.GetRows(sheet)
 	return rows, nil
 }
 

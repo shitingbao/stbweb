@@ -11,7 +11,7 @@ import (
 	"stbweb/lib/excel"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 const (

@@ -8,7 +8,7 @@ import (
 	"stbweb/core"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
 	"github.com/pborman/uuid"
 
@@ -99,7 +99,7 @@ func (t *Task) Run() {
 		return
 	}
 	t.createTime = time.Now()
-	if _, err := job.AddFunc(t.Spec, t.submitPoolFunc()); err != nil {
+	if err := job.AddFunc(t.Spec, t.submitPoolFunc()); err != nil {
 		logrus.WithFields(logrus.Fields{"Spec": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
 	}
 }

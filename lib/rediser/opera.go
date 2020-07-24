@@ -3,8 +3,8 @@ package rediser
 import (
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
+	"github.com/sirupsen/logrus"
 )
 
 const (

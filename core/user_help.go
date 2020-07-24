@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
 	"github.com/pborman/uuid"
 	"golang.org/x/crypto/scrypt"

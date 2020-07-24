@@ -16,7 +16,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 //sendForm 发送表单数据,form内的数据，后台用key := r.PostFormValue("key")接收

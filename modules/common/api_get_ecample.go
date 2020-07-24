@@ -9,7 +9,7 @@ import (
 	"stbweb/lib/task"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 //AppExample 业务类

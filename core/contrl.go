@@ -3,8 +3,8 @@ package core
 import (
 	"net/http"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
+	"github.com/sirupsen/logrus"
 )
 
 //Controlle 保存所有定义的业务结构

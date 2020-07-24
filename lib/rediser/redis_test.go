@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/go-redis/redis"
+	"github.com/sirupsen/logrus"
 )
 
 func gettest(rd *redis.Client) {
