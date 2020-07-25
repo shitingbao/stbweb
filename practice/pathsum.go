@@ -2,22 +2,22 @@ package main
 
 import "log"
 
-//TreeNode tree
-type TreeNode struct {
+//pathTreeNode tree
+type pathTreeNode struct {
 	Val   int
-	Left  *TreeNode
-	Right *TreeNode
+	Left  *pathTreeNode
+	Right *pathTreeNode
 }
 
 //保存有左右节点的节点，每次先读左
 type keepNode struct {
-	Node    *TreeNode //保存有兄弟的节点
-	NodeSum int       //根到该点的sum
-	IsRead  int       //是否左右都已经读取,0star,1读左，2读右
+	Node    *pathTreeNode //保存有兄弟的节点
+	NodeSum int           //根到该点的sum
+	IsRead  int           //是否左右都已经读取,0star,1读左，2读右
 }
 
 //pass Wide-order first traversal
-func wideOrder(root *TreeNode, sum int) bool {
+func wideOrder(root *pathTreeNode, sum int) bool {
 	if root == nil {
 		return false
 	}
@@ -50,7 +50,7 @@ func wideOrder(root *TreeNode, sum int) bool {
 	return false
 }
 
-func hasPathSum(root *TreeNode, sum int) bool {
+func hasPathSum(root *pathTreeNode, sum int) bool {
 	if root == nil {
 		return false
 	}
@@ -129,48 +129,48 @@ func treeLoad() {
 	logo := wideOrder(root, 22)
 	log.Println(logo)
 }
-func getRoot() *TreeNode {
-	t9 := &TreeNode{
+func getRoot() *pathTreeNode {
+	t9 := &pathTreeNode{
 		Val:   1,
 		Left:  nil,
 		Right: nil,
 	}
-	t8 := &TreeNode{
+	t8 := &pathTreeNode{
 		Val:   2,
 		Left:  nil,
 		Right: nil,
 	}
-	t7 := &TreeNode{
+	t7 := &pathTreeNode{
 		Val:   7,
 		Left:  nil,
 		Right: nil,
 	}
-	t6 := &TreeNode{
+	t6 := &pathTreeNode{
 		Val:   4,
 		Left:  nil,
 		Right: t9,
 	}
-	t5 := &TreeNode{
+	t5 := &pathTreeNode{
 		Val:   13,
 		Left:  nil,
 		Right: nil,
 	}
-	t4 := &TreeNode{
+	t4 := &pathTreeNode{
 		Val:   11,
 		Left:  t7,
 		Right: t8,
 	}
-	t3 := &TreeNode{
+	t3 := &pathTreeNode{
 		Val:   8,
 		Left:  t5,
 		Right: t6,
 	}
-	t2 := &TreeNode{
+	t2 := &pathTreeNode{
 		Val:   4,
 		Left:  t4,
 		Right: nil,
 	}
-	t1 := &TreeNode{
+	t1 := &pathTreeNode{
 		Val:   5,
 		Left:  t2,
 		Right: t3,

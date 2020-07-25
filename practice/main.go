@@ -1,5 +1,7 @@
 package main
 
+import "log"
+
 func main() {
-	trapLoad()
+	log.Println(generateTrees(3))
 }
