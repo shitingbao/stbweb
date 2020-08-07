@@ -6,12 +6,12 @@
     "AllowCORS": true,
     "LogLevel": "debug",
     "Port": "3002",
-    "ExternalPort": "5000",
+    "ExternalPort": ":5000",
     "AllowOrigin": "",
     "AccessTokenDate": "2020-02-27 12:12:12",
     "RedisAdree": "127.0.0.1",
     "RedisPort": "6379",
     "RedisPwd": "",
     "Redislevel": 0,
-    "ExternalServer": false
+    "ExternalServer": true
 }

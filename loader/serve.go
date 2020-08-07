@@ -63,7 +63,7 @@ func Shutdown() {
 func externalServer() {
 	lis, err := net.Listen("tcp", core.WebConfig.ExternalPort)
 	if err != nil {
-		logrus.Info("未开启nsq服务")
+		logrus.Info("外置服务开启失败:", err)
 		panic(err)
 	}
 	s := grpc.NewServer()

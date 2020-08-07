@@ -8,7 +8,7 @@ require (
 	github.com/extrame/xls v0.0.1
 	github.com/go-redis/redis v6.15.8+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/golang/protobuf v1.4.1
+	github.com/golang/protobuf v1.4.2
 	github.com/gorilla/websocket v1.4.2
 	github.com/jinzhu/gorm v1.9.15
 	github.com/linlexing/dbx v1.1.3
@@ -23,5 +23,6 @@ require (
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	golang.org/x/text v0.3.3
 	google.golang.org/grpc v1.30.0
+	google.golang.org/grpc/examples v0.0.0-20200806223615-7419b444ee17
 	google.golang.org/protobuf v1.25.0
 )
