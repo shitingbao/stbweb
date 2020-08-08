@@ -9,6 +9,9 @@ func open(driver, connect string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
 	// db.Close()
 	return db, nil
 }
