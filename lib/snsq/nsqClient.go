@@ -7,6 +7,14 @@ import (
 	"github.com/nsqio/go-nsq"
 )
 
+// 前提是安装后开启nsq服务
+// nsqlookupd
+// nsqd --lookupd-tcp-address=127.0.0.1:4160
+// nsqadmin --lookupd-http-address=127.0.0.1:4161
+//使用注意：开启数据发送前，应该确保消费者先连接，不然第一次可能会发生消息都被第一个消化完，导致第二个连接开启时获取不到消息
+//使用同一个通道的消息消费者需要注意，那这个通道内的消息就是i大家公用的，一起在线就一起消费，如果没在线就会被其他消费者消费完
+//创建消费者注意，创建连接后，有生产就会消费
+
 //ProducerModel 一个生成者
 type ProducerModel struct {
 	Data  interface{}
