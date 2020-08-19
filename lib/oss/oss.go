@@ -23,7 +23,7 @@ func ossUp() {
 		os.Exit(-1)
 	}
 
-	// 上传本地文件。上传到服务器使用的文件名和本地文件地址，比如这里本地上传aa图片，服务器上名称就是bb
+	// 上传本地文件。上传到服务器使用的文件名和本地文件地址，比如这里本地上传aa图片，服务器上名称就是bb,bb这里可以是一个路径，web/bb就是web目录下bb文件
 	err = bucket.PutObjectFromFile("bb", "./aa.jpg")
 	if err != nil {
 		fmt.Println("Error:", err)
