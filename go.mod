@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
+	github.com/aliyun/aliyun-oss-go-sdk v2.1.4+incompatible
 	github.com/extrame/ole2 v0.0.0-20160812065207-d69429661ad7 // indirect
 	github.com/extrame/xls v0.0.1
 	github.com/go-redis/redis v6.15.8+incompatible
@@ -22,6 +23,7 @@ require (
 	github.com/tealeg/xlsx v1.0.5
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	golang.org/x/text v0.3.3
+	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	google.golang.org/grpc v1.30.0
 	google.golang.org/grpc/examples v0.0.0-20200806223615-7419b444ee17
 	google.golang.org/protobuf v1.25.0
