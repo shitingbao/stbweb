@@ -7,7 +7,7 @@
 *.xlx
 *.csv
 __debug_bin
-*.json
+config.json
 *.xls
 *.xlsx
 *.zip
