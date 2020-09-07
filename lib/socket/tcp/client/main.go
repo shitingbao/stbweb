@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -12,29 +13,39 @@ const (
 	service = ":1200"
 )
 
+type dataModel struct {
+	User string
+	Data string
+}
+
 //write和read都是阻塞形式的读写实际连接看实际应用
 func main() {
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
-	checkError(err)
+	checkError("tcp addr", err)
 	conn, err := net.DialTCP("tcp", nil, tcpAddr)
-	checkError(err)
+	checkError("connect", err)
 	for {
 		result := make([]byte, 256)
-		_, err = conn.Read(result)
-		checkError(err)
-		fmt.Println("get mes:", string(result))
-
-		wlen, err := conn.Write([]byte("a1好"))
-		checkError(err)
-		log.Println("wlen:", wlen)
-		// result, err := ioutil.ReadAll(conn)
-
+		readLen, err := conn.Read(result)
+		checkError("conn read", err)
+		res := dataModel{}
+		//这里的json解析得去掉后面的空格，不然会有invalid character '\x00' after top-level value，这个错误，可能是结尾有什么特殊字符导致的
+		if err := json.Unmarshal(result[:readLen], &res); err != nil {
+			checkError("unmarshal:", err)
+			break
+		}
+		log.Println("get mes:", string(result))
+		da, _ := json.Marshal(dataModel{User: "shitinbao", Data: "123"})
+		wlen, err := conn.Write(da)
+		checkError("conn write", err)
+		log.Println("发送长度:", wlen)
+		// result, err = ioutil.ReadAll(conn)
 		time.Sleep(time.Second * 5)
 	}
 }
-func checkError(err error) {
+func checkError(reson string, err error) {
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Fatal error: %s", err.Error())
+		fmt.Fprintf(os.Stderr, reson+": %s", err.Error())
 		os.Exit(1)
 	}
 }

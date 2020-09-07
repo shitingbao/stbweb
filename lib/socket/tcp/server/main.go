@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -11,6 +12,11 @@ import (
 const (
 	service = ":1200"
 )
+
+type dataModel struct {
+	User string
+	Data string
+}
 
 func main() {
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
@@ -30,21 +36,28 @@ func main() {
 func handleClient(conn net.Conn) {
 	conn.SetReadDeadline(time.Now().Add(2 * time.Minute)) // set 2 minutes timeout
 	// set maxium request length to 128B to prevent flood attack
+	log.Println("adress:", conn.LocalAddr().String())
 	defer conn.Close() // close connection before exit
 	for {
-		conn.Write([]byte("shitngbao"))
-		log.Println("start read")
+
+		da, _ := json.Marshal(dataModel{User: "shitinbao", Data: "123"})
+		conn.Write(da)
 		request := make([]byte, 128)
 		readLen, err := conn.Read(request)
-		log.Println("read len:", readLen)
+		if readLen == 0 {
+			log.Println("connect out")
+			break // connection already closed by client
+		}
+		res := dataModel{}
+		if err := json.Unmarshal(request[:readLen], &res); err != nil {
+			log.Println("err:", err)
+			break
+		}
+		log.Println("get client:", string(request), "-接受长度:", readLen)
 		if err != nil {
 			fmt.Println("connect:", err)
 			break
 		}
-		if readLen == 0 {
-			break // connection already closed by client
-		}
-		log.Println("client get mes:", string(request))
 
 	}
 }
