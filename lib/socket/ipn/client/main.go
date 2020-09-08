@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -15,11 +17,17 @@ const (
 )
 
 type dataModel struct {
-	User string
-	Data string
+	Adress string
+	User   string
+	Data   string
 }
 
-//main监听本地请求
+var (
+	dialogList   map[string]net.Conn
+	contrastList map[net.Conn]net.Conn //保存两个连接的对应关系，确保连接和断开连接能找到另一个转接连接对象
+)
+
+//main监听本地请求,本身是一个server端的服务，在一个连接后连接远程进行转接
 func main() {
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
 	checkError("tcp:", err)
@@ -37,46 +45,67 @@ func main() {
 //write和read都是阻塞形式的读写实际连接看实际应用
 func handleClient(conn net.Conn) {
 	wg := sync.WaitGroup{}
-	wg.Add(1)
+	wg.Add(2)
 	conn.SetReadDeadline(time.Now().Add(2 * time.Minute))
-	remotelyCon := remotelyConnect()
-	go readAndWrite(&wg, conn, remotelyCon)
-	go readAndWrite(&wg, remotelyCon, conn)
+	go readAndWrite(&wg, conn)
+	// go readAndWrite(&wg, remotelyCon, conn)
 	wg.Wait()
 }
 
 //连接远程端口
-func remotelyConnect() net.Conn {
+func remotelyConnect(address string) (net.Conn, error) {
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", remotelyService)
-	checkError("remotely tcp addr", err)
+	if err != nil {
+		return nil, err
+	}
 	conn, err := net.DialTCP("tcp", nil, tcpAddr)
-	checkError("remotely connect", err)
-	return conn
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
 }
 
 //将一端的读写转发到另一端
-func readAndWrite(wg *sync.WaitGroup, con, remotelyCon net.Conn) {
+func readAndWrite(wg *sync.WaitGroup, con net.Conn) {
 	for {
 		request := make([]byte, 128)
 		readLen, err := con.Read(request)
 		if err != nil {
-			log.Println("connect err:", err)
-			close(remotelyCon, con)
+			close(contrastList[con], con, "connect err:"+err.Error())
 			break
 		}
 		if readLen == 0 {
-			log.Println("connect out")
-			close(remotelyCon, con)
+			close(contrastList[con], con, "connect out")
 			break
+		}
+		da := dataModel{}
+		if err := json.Unmarshal(request[:readLen], &da); err != nil {
+			close(contrastList[con], con, "json err:"+err.Error())
+			break
+		}
+		remotelyCon := dialogList[da.Adress]
+		if remotelyCon == nil {
+			remotelyCon, err = remotelyConnect(da.Adress)
+			if err != nil {
+				con.Write([]byte(err.Error()))
+				continue
+			}
+			dialogList[da.Adress] = remotelyCon
+			contrastList[con] = remotelyCon
 		}
 		remotelyCon.Write(request[:readLen])
 	}
 	wg.Done()
 }
-func close(remotelyCon, conn net.Conn) {
-	remotelyCon.Close()
+
+func close(remotelyCon, conn net.Conn, reason string) {
+	if remotelyCon != nil {
+		remotelyCon.Close()
+	}
 	conn.Close()
+	logrus.Info(reason)
 }
+
 func checkError(reson string, err error) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, reson+": error: %s", err.Error())
