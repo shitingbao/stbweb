@@ -40,7 +40,7 @@ func main() {
 		checkError("conn write", err)
 		log.Println("发送长度:", wlen)
 		// result, err = ioutil.ReadAll(conn)
-		time.Sleep(time.Second * 5)
+		time.Sleep(time.Second * 2)
 	}
 }
 func checkError(reson string, err error) {

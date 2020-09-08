@@ -7,16 +7,11 @@ import (
 	"time"
 )
 
-type conCoat struct {
-	Con  net.Conn
-	User string
-}
-
 var (
-	controlWaitList map[string]net.Conn   //控制方连接列表,标识对应
-	inviteWaitList  map[string]net.Conn   //邀请方连接列表
-	contrastList    map[net.Conn]net.Conn //对应表，两边都对应
-	loopWait        map[string]chan bool  //用于两方等待时的阻塞，key为两边对应标识
+	controlWaitList = make(map[string]net.Conn)   //控制方连接列表,标识对应
+	inviteWaitList  = make(map[string]net.Conn)   //邀请方连接列表
+	contrastList    = make(map[net.Conn]net.Conn) //对应表，两边都对应
+	loopWait        = make(map[string]chan bool)  //用于两方等待时的阻塞，key为两边对应标识
 )
 
 func main() {
@@ -54,8 +49,10 @@ func handleClient(con net.Conn) {
 		switch {
 		//fi fc都为第一次处理
 		case strings.HasPrefix(mes, "fi:"):
+			log.Println("fi into", mes)
 			firstOpera(mes, con, controlWaitList, inviteWaitList)
 		case strings.HasPrefix(mes, "fc:"):
+			log.Println("fc into", mes)
 			firstOpera(mes, con, inviteWaitList, controlWaitList)
 		default:
 			operaCon := contrastList[con]
@@ -76,22 +73,28 @@ func firstOpera(mes string, con net.Conn, i, c map[string]net.Conn) {
 	if icon != nil {
 		contrastList[icon] = con
 		contrastList[con] = icon
+		log.Println(user, ":i start wait")
 		<-aisle
+		log.Println(user, ":i continue")
 		con.Write([]byte("success"))
 	} else {
 		c[user] = con
+		log.Println(user, ":c start wait")
 		aisle <- true
+		log.Println(user, ":c continue")
 	}
 }
 
 //关闭连接，以及清除保存的连接对应关系
 func close(con net.Conn) {
 	con.Close()
-	delete(contrastList, con)
 	conn := contrastList[con]
 	if conn != nil {
-		conn.Close()
+		if err := conn.Close(); err != nil {
+			log.Println("conn:", err)
+		}
 		delete(contrastList, conn)
 	}
+	delete(contrastList, con)
 	log.Println("this is close")
 }

@@ -16,16 +16,16 @@ func main() {
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
 	checkError(err)
 	conn, err := net.DialTCP("tcp", nil, tcpAddr)
+	conn.Write([]byte("fi:1234"))
 	checkError(err)
+
 	for {
-		_, err = conn.Write([]byte("this is tcp client two"))
-		checkError(err)
-		// result, err := ioutil.ReadAll(conn)
 		result := make([]byte, 256)
 		_, err = conn.Read(result)
 		checkError(err)
 		fmt.Println("get mes:", string(result))
-		time.Sleep(time.Second * 5)
+		time.Sleep(time.Second * 1)
+		conn.Write([]byte("this is fi" + time.Now().Format("2006-01-02 15:04:05")))
 	}
 }
 func checkError(err error) {
