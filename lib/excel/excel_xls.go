@@ -1,6 +1,13 @@
 package excel
 
-import "github.com/extrame/xls"
+import (
+	"io/ioutil"
+	"os"
+	"path"
+	"strings"
+
+	"github.com/extrame/xls"
+)
 
 //xls文件解析，反馈数据二维数组
 func openXlsFile(url string) [][]string {
@@ -20,4 +27,61 @@ func openXlsFile(url string) [][]string {
 		}
 	}
 	return dataList
+}
+
+var baseURL = "C:/Users/87125/Desktop/report/2020-09-09app_data"
+
+//输入保存路径和文件前缀
+func load(url, pro string) {
+	urlList, err := getFileList(baseURL)
+	if err != nil {
+		panic(err)
+	}
+	for _, v := range urlList {
+		fileName := strings.Split(v, ".")
+		var data [][]string
+		switch fileName[1] {
+		case "xls":
+			data = openXlsFile(path.Join(baseURL, v))
+		}
+		fName := strings.Replace(fileName[0], " ", "-", -1)
+		fName = strings.Replace(fileName[0], "_", "-", -1)
+		if err := createCsvFile(path.Join(url, pro+fName+".csv"), data); err != nil {
+			panic(err)
+		}
+	}
+}
+
+//新建csv文件,输入完整文件名称，包括csv后缀，eg:txt.csv
+func createCsvFile(fileName string, data [][]string) error {
+	f, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	for _, v := range data {
+		for i, val := range v {
+			f.WriteString(val)
+			if i == len(v)-1 {
+				break
+			}
+			f.WriteString(",")
+		}
+		f.WriteString("\r\n")
+	}
+	defer f.Close()
+	return nil
+}
+
+//返回所有文件地址列表
+func getFileList(dir string) ([]string, error) {
+	fList, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return []string{}, err
+	}
+	fileList := []string{}
+	for _, v := range fList {
+		fileList = append(fileList, v.Name())
+		// log.Println(v.Name())
+	}
+	return fileList, nil
 }

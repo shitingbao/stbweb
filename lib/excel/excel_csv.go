@@ -95,23 +95,3 @@ func getRes(recordE [][]string) *map[int]Lod {
 	}
 	return &reMapE
 }
-
-//新建csv文件
-func createFile(fileName string, data [][]string) error {
-	f, err := os.Create(fileName)
-	if err != nil {
-		return err
-	}
-	for _, v := range data {
-		for i, val := range v {
-			f.WriteString(val)
-			if i == len(v)-1 {
-				break
-			}
-			f.WriteString(",")
-		}
-		f.WriteString("\r\n")
-	}
-	defer f.Close()
-	return nil
-}
