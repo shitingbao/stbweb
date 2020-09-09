@@ -30,8 +30,8 @@ func main() {
 	}
 }
 
-//获取第一次的标识，用于匹配两个连接，标识内容为 first+邀请方/控制方+对应标识编号
-//邀请或者控制器，第一次连接后验证是否有对应连接，否则就等待
+//获取第一次的标识，用于匹配两个连接，标识内容为 fi/fc:(邀请方/控制方)+对应标识编号
+//邀请或者控制，第一次连接后验证是否有对应标识编号的另一个连接，否则就等待
 func handleClient(con net.Conn) {
 	con.SetReadDeadline(time.Now().Add(2 * time.Minute))
 	// con.SetReadDeadline(time.Now().Add(2 * time.Second))
@@ -86,6 +86,7 @@ func firstOpera(mes string, con net.Conn, i, c map[string]net.Conn) {
 }
 
 //关闭连接，以及清除保存的连接对应关系
+//其中一个连接关闭时，关闭和他对应的另一个连接
 func close(con net.Conn) {
 	con.Close()
 	conn := contrastList[con]
