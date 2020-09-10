@@ -43,6 +43,8 @@ func getExcelAllCell(fileURL string) error {
 }
 
 //getExcelRows 使用360解析，时间不完美，需要用到时间的地方尽量使用文本
+//当前使用改方法
+//注意，解析出的单个单元格数据中，可能会包含\n标识符导致一些问题，如果使用该数据生成文本文件，使用strings.Replace(your_data, "\n", " ", -1)替换回车符号
 func getExcelRows(excelURL, sheet string) ([][]string, error) {
 	xlsx, err := excelize.OpenFile(excelURL)
 	if err != nil {

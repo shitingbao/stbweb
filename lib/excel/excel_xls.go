@@ -9,7 +9,9 @@ import (
 	"github.com/extrame/xls"
 )
 
-//xls文件解析，反馈数据二维数组
+//xls文件解析，反馈数据二维数组,获取的数据内容
+//有一定bug，在单元格在超过一定行数后，会自动分行（一个单元格中信息突然变成两列），后面一个单元格内容无法获取到，越到后面丢失的数据越多
+//这bug难以处理，就把xls转成xlsx在进行操作，方法待定
 func openXlsFile(url string) [][]string {
 	dataList := [][]string{}
 	xlFile, err := xls.Open(url, "utf-8")
