@@ -2,7 +2,6 @@ package excel
 
 import (
 	"io/ioutil"
-	"os"
 	"path"
 	"strings"
 
@@ -48,30 +47,10 @@ func load(url, pro string) {
 		}
 		fName := strings.Replace(fileName[0], " ", "-", -1)
 		fName = strings.Replace(fileName[0], "_", "-", -1)
-		if err := createCsvFile(path.Join(url, pro+fName+".csv"), data); err != nil {
+		if err := createCsvFile(path.Join(url, pro+fName+".csv"), "", data); err != nil {
 			panic(err)
 		}
 	}
-}
-
-//新建csv文件,输入完整文件名称，包括csv后缀，eg:txt.csv
-func createCsvFile(fileName string, data [][]string) error {
-	f, err := os.Create(fileName)
-	if err != nil {
-		return err
-	}
-	for _, v := range data {
-		for i, val := range v {
-			f.WriteString(val)
-			if i == len(v)-1 {
-				break
-			}
-			f.WriteString(",")
-		}
-		f.WriteString("\r\n")
-	}
-	defer f.Close()
-	return nil
 }
 
 //返回所有文件地址列表
