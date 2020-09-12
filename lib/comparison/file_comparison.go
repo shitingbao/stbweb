@@ -80,7 +80,7 @@ func FileComparison(fn, ofn ParisonFileObject) (ParisonResult, error) {
 	return lineModeComparison(fnData, ofnData), nil
 }
 
-//根据文件类型解析文件，反馈文件内容对象map
+//根据文件类型解析文件，反馈文件内容对象map,csv,txt,xlsx三种文件类型比较
 func getFileDataLists(param ParisonFileObject) (map[int]LineMode, error) {
 	tp, err := checkFile(param.FileName)
 	if err != nil {
