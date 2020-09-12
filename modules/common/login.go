@@ -13,8 +13,9 @@ type login struct{}
 func init() {
 	core.RegisterFun("login", new(login), false)
 }
+
 func (l *login) Post(p *core.ElementHandleArgs) {
-	if p.APIInterceptionPost("login", new(apiUser), loginAPI) {
+	if p.APIInterceptionPost("login", new(apiUser), loginAPI) || p.APIInterceptionPost("check", new(tp), checkLogin) {
 		return
 	}
 }
@@ -27,6 +28,9 @@ type apiUser struct {
 	Phone  string
 	Salt   string
 	// UpdateTime string
+}
+type tp struct {
+	Token string `json:"token"`
 }
 
 func loginAPI(param interface{}, p *core.ElementHandleArgs) error {
@@ -48,5 +52,16 @@ func loginAPI(param interface{}, p *core.ElementHandleArgs) error {
 		return nil
 	}
 	core.SendJSON(p.Res, http.StatusOK, false)
+	return nil
+}
+
+//检查是否在登录状态
+func checkLogin(param interface{}, p *core.ElementHandleArgs) error {
+	pa := param.(*tp)
+	res := false
+	if rediser.CheckLoginUser(core.Rds, pa.Token) {
+		res = true
+	}
+	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": res})
 	return nil
 }

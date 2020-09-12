@@ -57,6 +57,15 @@ func GetUser(rd *redis.Client, userkey string) string {
 	return name
 }
 
+//CheckLoginUser 检查用户状态，并重置活动时间，一般用于前端验证登录
+func CheckLoginUser(rd *redis.Client, userkey string) bool {
+	if GetUser(rd, userkey) == "" {
+		return false
+	}
+	MaintainActivity(rd, userkey)
+	return true
+}
+
 //MaintainActivity 重新设置用户活动时间
 func MaintainActivity(rd *redis.Client, userkey string) {
 	if err := rd.Expire(userkey, time.Minute*5).Err(); err != nil { //设置字符串key
