@@ -12,6 +12,8 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 )
 
 const (
@@ -74,17 +76,25 @@ func readLine(fileName string) {
 //LineMode 列对象
 type LineMode []string
 
+var enc = simplifiedchinese.GBK
+
 //csv,txt获取行组
 //返回的key是行号
 //csv按文本形式解析时，会以最长的行为基准，短的行的列不足也会有空字符，用制表符（逗号）隔开
-func getLineGroup(fileName, sep string) map[int]LineMode {
+func getLineGroup(fileName, sep string, isGBK bool) map[int]LineMode {
 	file, err := os.Open(fileName)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"file error": err.Error()}).Error("parsing file have err")
 		return nil
 	}
 	result := make(map[int]LineMode)
-	scanner := bufio.NewScanner(file)
+	var rf io.Reader
+	if isGBK {
+		rf = transform.NewReader(file, enc.NewDecoder())
+	} else {
+		rf = file
+	}
+	scanner := bufio.NewScanner(rf)
 	i := 1
 	if sep == "" {
 		sep = defaultComma

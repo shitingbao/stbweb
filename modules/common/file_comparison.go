@@ -58,6 +58,8 @@ func comparisonFileCommon(param interface{}, p *core.ElementHandleArgs) error {
 }
 
 //根据传入文件名称标识，文件类型标识，从formdata中获取文件
+//首字母‘l’代表left，左侧文件，参数说明：lsep 分隔符标识，默认为‘,’ listitle 是否首行是标题，默认为true,首行是标题 lisgbk 当是文本格式文件，标识是否是gbk，默认为utf8
+//右侧文件同上
 func getFormFile(p *core.ElementHandleArgs) (comparison.ParisonFileObject, comparison.ParisonFileObject, error) {
 	p.Req.ParseMultipartForm(20 << 20)
 	leftObject, rightObject := comparison.ParisonFileObject{}, comparison.ParisonFileObject{}
@@ -70,10 +72,14 @@ func getFormFile(p *core.ElementHandleArgs) (comparison.ParisonFileObject, compa
 			leftObject.Sep = v[0]
 		case "listitle":
 			leftObject.IsTitle = false
+		case "lisgbk":
+			leftObject.IsGBK = true
 		case "rsep":
 			rightObject.Sep = v[0]
 		case "ristitle":
 			rightObject.IsTitle = false
+		case "risgbk":
+			leftObject.IsGBK = true
 		}
 	}
 	ladree, err := getSaveFilePath("left", p)

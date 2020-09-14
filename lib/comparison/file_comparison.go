@@ -8,11 +8,12 @@ import (
 )
 
 //ParisonFileObject 比较文件对象
-//传入文件名，文件分隔符（excel文件不用，并且默认是","）和第一行是否是标题的标志(true为是标题)
+//传入文件名，文件分隔符（excel文件不用，并且默认是","）和第一行是否是标题的标志(true为是标题),IsGBK标识是否是gbk格式，仅用于文本格式文件中
 type ParisonFileObject struct {
 	FileName string
 	Sep      string
 	IsTitle  bool
+	IsGBK    bool
 }
 
 //FileSameLineList 反馈两个文件之间相同数据集和对应文件内的行号
@@ -88,7 +89,7 @@ func getFileDataLists(param ParisonFileObject) (map[int]LineMode, error) {
 	}
 	switch tp {
 	case ".csv", ".txt":
-		return getLineGroup(param.FileName, param.Sep), nil
+		return getLineGroup(param.FileName, param.Sep, param.IsGBK), nil
 	default:
 		return getExcelLineGroup(param.FileName), nil
 	}
