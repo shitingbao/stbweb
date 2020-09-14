@@ -71,15 +71,23 @@ func getFormFile(p *core.ElementHandleArgs) (comparison.ParisonFileObject, compa
 		case "lsep":
 			leftObject.Sep = v[0]
 		case "listitle":
-			leftObject.IsTitle = false
+			if v[0] == "true" {
+				leftObject.IsTitle = true
+			}
 		case "lisgbk":
-			leftObject.IsGBK = true
+			if v[0] == "true" {
+				leftObject.IsGBK = true
+			}
 		case "rsep":
 			rightObject.Sep = v[0]
 		case "ristitle":
-			rightObject.IsTitle = false
+			if v[0] == "true" {
+				rightObject.IsTitle = true
+			}
 		case "risgbk":
-			leftObject.IsGBK = true
+			if v[0] == "true" {
+				rightObject.IsGBK = true
+			}
 		}
 	}
 	ladree, err := getSaveFilePath("left", p)
