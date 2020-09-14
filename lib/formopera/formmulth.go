@@ -80,19 +80,12 @@ func getAllFormFiles(r *http.Request) []*multipart.FileHeader {
 	r.ParseMultipartForm(20 << 20)
 	//获取表单中的文件
 	//多个同时接受
-	if r.MultipartForm == nil {
+	if r.MultipartForm == nil || r.MultipartForm.File == nil {
 		logrus.WithFields(logrus.Fields{"form": "nil form"}).Warn("formmulth")
 		return []*multipart.FileHeader{}
 	}
 	for _, v := range r.MultipartForm.File {
-		for _, f := range v {
-			// fil, err := f.Open()
-			// if err != nil {
-			// 	return
-			// }
-			// defer fil.Close()
-			files = append(files, f)
-		}
+		files = append(files, v[0])
 	}
 	return files
 }

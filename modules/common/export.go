@@ -1,13 +1,16 @@
 package common
 
 import (
-	"errors"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"stbweb/core"
 	"stbweb/lib/excel"
+	"stbweb/lib/formopera"
+	"strings"
 )
 
 type export struct{}
@@ -27,12 +30,17 @@ func (ap *export) Get(arge *core.ElementHandleArgs) {
 }
 
 func (ap *export) Post(p *core.ElementHandleArgs) {
-	path, err := getCsvFile("tfile", p)
-	if err != nil {
-		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": err.Error()})
-		return
+	fileHeaderList := formopera.GetAllFormFiles(p.Req)
+	resFilePaths := []string{}
+	for _, v := range fileHeaderList {
+		path, err := getCsvFile(v)
+		if err != nil {
+			core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": err.Error()})
+			return
+		}
+		resFilePaths = append(resFilePaths, path)
 	}
-	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "data": path})
+	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true, "filepaths": resFilePaths})
 }
 
 func excelExport(pa interface{}, content *core.ElementHandleArgs) error {
@@ -90,21 +98,13 @@ func csvParase(pa interface{}, content *core.ElementHandleArgs) error {
 }
 
 //获取表单中的文件，保存至默认路径并反馈保存的文件路径
-func getCsvFile(fileName string, p *core.ElementHandleArgs) (string, error) {
-	p.Req.ParseMultipartForm(20 << 20)
-	if p.Req.MultipartForm == nil {
-		return "", errors.New("form is nil")
-	}
-	_, file, err := p.Req.FormFile(fileName)
-	if err != nil {
-		return "", err
-	}
+func getCsvFile(file *multipart.FileHeader) (string, error) {
 	f, err := file.Open()
 	if err != nil {
 		return "", err
 	}
 	defer f.Close()
-	// ft := path.Ext(file.Filename)
+	// ft := path.Ext(file.Filename assets)
 	if err := os.MkdirAll(core.DefaultFilePath, os.ModePerm); err != nil {
 		return "", err
 	}
@@ -116,5 +116,8 @@ func getCsvFile(fileName string, p *core.ElementHandleArgs) (string, error) {
 	if _, err := io.Copy(fl, f); err != nil {
 		return "", err
 	}
-	return fileAdree, nil
+	str, _ := os.Executable() //使用绝对路径给前端
+	workDir := filepath.Dir(str)
+
+	return strings.Replace(path.Join(workDir, fileAdree), "\\", "/", -1), nil
 }
