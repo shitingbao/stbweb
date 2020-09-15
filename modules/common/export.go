@@ -1,15 +1,14 @@
 package common
 
 import (
+	"errors"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path"
-	"path/filepath"
 	"stbweb/core"
 	"stbweb/lib/excel"
-	"stbweb/lib/formopera"
 	"strings"
 )
 
@@ -30,17 +29,96 @@ func (ap *export) Get(arge *core.ElementHandleArgs) {
 }
 
 func (ap *export) Post(p *core.ElementHandleArgs) {
-	fileHeaderList := formopera.GetAllFormFiles(p.Req)
-	resFilePaths := []string{}
-	for _, v := range fileHeaderList {
-		path, err := getCsvFile(v)
-		if err != nil {
+	p.Req.ParseMultipartForm(20 << 20)
+	if p.Req.MultipartForm == nil {
+		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": "MultipartForm is null"})
+		return
+	}
+	_, fHeader, err := p.Req.FormFile("file")
+	if err != nil {
+		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": "get file have error"})
+		return
+	}
+	fileAdree, err := getUpdateFile(fHeader)
+	if err != nil {
+		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": err.Error()})
+		return
+	}
+	sep, createSep, createFileType, isGBK, isCreateGBK := getFormValues(p)
+	switch createFileType {
+	case "csv":
+		if err := fileToCsv(fileAdree, sep, createSep, isGBK, isCreateGBK); err != nil {
 			core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": err.Error()})
 			return
 		}
-		resFilePaths = append(resFilePaths, path)
+	case "excel":
+		if err := fileToExcel(fileAdree, sep, isGBK); err != nil {
+			core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": err.Error()})
+			return
+		}
 	}
-	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true, "filepaths": resFilePaths})
+}
+
+//sep文件分割符，传入文件gbk是否gbk格式，createSep生成文件的分割符， isCreateGBK生成文件是否gbk格式，createFileType 内容为csv或者excel，代表生成哪种文件
+func getFormValues(p *core.ElementHandleArgs) (sep, createSep, createFileType string, isGBK, isCreateGBK bool) {
+	for k, v := range p.Req.MultipartForm.Value { //获取表单字段
+		switch k {
+		case "sep":
+			sep = v[0]
+		case "gbk":
+			if v[0] == "true" {
+				isGBK = true
+			}
+		case "createSep":
+			createSep = v[0]
+		case "isCreateGBK":
+			if v[0] == "true" {
+				isCreateGBK = true
+			}
+		case "createFileType":
+			createFileType = v[0]
+		}
+	}
+	return
+}
+
+//isGBK true标识使用gbk解析,isCreateGBK标识生成的csv是否用gbk，true代表使用,createSep标识生成文件的间隔符
+//只能解析xlsx , csv , txt三种文件，都生成csv
+func fileToCsv(fileURL, sep, createSep string, isGBK, isCreateGBK bool) error {
+	fileData := [][]string{}
+	switch path.Ext(fileURL) {
+	case ".xlsx":
+		fd, err := excel.ExportParse(fileURL)
+		if err != nil {
+			return err
+		}
+		fileData = fd
+	case ".csv", ".txt":
+		fileData = excel.PaseCscOrTxt(fileURL, sep, isGBK)
+	default:
+		return errors.New("file type error")
+	}
+	fileName := strings.TrimSuffix(path.Base(fileURL), path.Ext(fileURL))
+	switch {
+	case isCreateGBK:
+		if err := excel.CreateGBKCsvFile(path.Join(core.DefaultFilePath, fileName+".csv"), createSep, fileData); err != nil {
+			return err
+		}
+	default:
+		if err := excel.CreateCsvFile(path.Join(core.DefaultFilePath, fileName+".csv"), createSep, fileData); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func fileToExcel(fileURL, sep string, isGBK bool) error {
+	fileData := excel.PaseCscOrTxt(fileURL, sep, isGBK)
+	fileName := strings.TrimSuffix(path.Base(fileURL), path.Ext(fileURL))
+	if err := excel.CreateExcelUseList(path.Join(core.DefaultFilePath, fileName+".xlsx"), fileData); err != nil {
+		return err
+	}
+	return nil
 }
 
 func excelExport(pa interface{}, content *core.ElementHandleArgs) error {
@@ -97,14 +175,13 @@ func csvParase(pa interface{}, content *core.ElementHandleArgs) error {
 	return nil
 }
 
-//获取表单中的文件，保存至默认路径并反馈保存的文件路径
-func getCsvFile(file *multipart.FileHeader) (string, error) {
+//获取表单中的文件，保存至默认路径并反馈保存的文件名
+func getUpdateFile(file *multipart.FileHeader) (string, error) {
 	f, err := file.Open()
 	if err != nil {
 		return "", err
 	}
 	defer f.Close()
-	// ft := path.Ext(file.Filename assets)
 	if err := os.MkdirAll(core.DefaultFilePath, os.ModePerm); err != nil {
 		return "", err
 	}
@@ -116,8 +193,5 @@ func getCsvFile(file *multipart.FileHeader) (string, error) {
 	if _, err := io.Copy(fl, f); err != nil {
 		return "", err
 	}
-	str, _ := os.Executable() //使用绝对路径给前端
-	workDir := filepath.Dir(str)
-
-	return strings.Replace(path.Join(workDir, fileAdree), "\\", "/", -1), nil
+	return fileAdree, nil
 }

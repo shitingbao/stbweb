@@ -5,8 +5,6 @@ package excel
 
 import (
 	"errors"
-	"path"
-	"stbweb/core"
 	"strconv"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
@@ -16,7 +14,7 @@ import (
 
 //excel 数据对象
 type excel struct {
-	FileName   string      //文件名称，不需要文件后缀
+	FileName   string      //完整的文件路径
 	SheetDatas []sheetData //sheet的数量,与sheet的数据数组长度对应
 }
 
@@ -85,8 +83,7 @@ func (e *excel) createExcel() error {
 			}
 		}
 	}
-	fname := e.FileName + ".xlsx"
-	if err := file.Save(path.Join(core.DefaultFilePath, fname)); err != nil {
+	if err := file.Save(e.FileName); err != nil {
 		logrus.WithFields(logrus.Fields{"excel": err}).Error("file")
 		return err
 	}
@@ -99,7 +96,7 @@ func (e *excel) createExcel() error {
 //列名称就是map的key值
 //example: CreateExcel("example",data1,data2)
 //执行后生成文件名称为example.xlsx,内部有两个sheet页，sheet1数据内容为dat1，sheet2数据内容为dat2
-func CreateExcel(name string, rowData ...[]map[string]string) error {
+func CreateExcel(fileURL string, rowData ...[]map[string]string) error {
 	sheetDatas := []sheetData{}
 	for _, v := range rowData {
 		sd := sheetData{}
@@ -107,7 +104,7 @@ func CreateExcel(name string, rowData ...[]map[string]string) error {
 		sheetDatas = append(sheetDatas, sd)
 	}
 	el := excel{
-		FileName:   name,
+		FileName:   fileURL,
 		SheetDatas: sheetDatas,
 	}
 	if err := el.createExcel(); err != nil {
@@ -116,17 +113,32 @@ func CreateExcel(name string, rowData ...[]map[string]string) error {
 	return nil
 }
 
+//CreateExcelUseList 使用list作为参数生成excel，第一行为标题行
+func CreateExcelUseList(fileURL string, data [][]string) error {
+	rowData := []map[string]string{}
+	for idx, val := range data {
+		da := make(map[string]string)
+		for i, v := range val {
+			if idx == 0 {
+				da[v] = ""
+				continue
+			}
+			da[data[0][i]] = v
+		}
+	}
+	return CreateExcel(fileURL, rowData)
+}
+
 //ExportParse 解析excel文件
-//filename 为文件路径
+//filename 为文件名
 //sheet为对应excel内部每个sheet的名称，如Sheet1或者Sheet2......,默认使用Sheet1，多个参数只取第一个
-func ExportParse(filename string, sheet ...string) ([][]string, error) {
-	// getExcelRows("./file/stb.xlsx", "Sheet1")
-	if filename == "" {
+func ExportParse(fileURL string, sheet ...string) ([][]string, error) {
+	if fileURL == "" {
 		return nil, errors.New("ExportParse param is not nil")
 	}
 	st := "Sheet1"
 	if len(sheet) > 0 {
 		st = sheet[0]
 	}
-	return getExcelRows(filename, st)
+	return getExcelRows(fileURL, st)
 }

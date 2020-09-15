@@ -79,21 +79,25 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		w.Write(nil)
 		return
 	}
-
+	str, err := os.Getwd()
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"path": err.Error()}).Warn("getwd")
+		return
+	}
 	if paths[0] == "css" || paths[0] == "js" || paths[0] == "fonts" {
-		str, err := os.Getwd()
-		if err != nil {
-			logrus.WithFields(logrus.Fields{"path": err.Error()}).Warn("getwd")
-			return
-		}
 		http.ServeFile(w, r, filepath.Join(str, "dist", paths[0], paths[len(paths)-1]))
+		return
+	}
+	if paths[0] == "assets" {
+		http.ServeFile(w, r, filepath.Join(str, "assets"))
 		return
 	}
 	core.ElementHandle(w, r, paths[0]) //待定，工作元素的名称获取是否来源于路由
 }
-func fileHandler(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "./dist/index.html", http.StatusFound)
-}
+
+// func fileHandler(w http.ResponseWriter, r *http.Request) {
+// 	http.Redirect(w, r, "./dist/index.html", http.StatusFound)
+// }
 
 func parsePaths(u *url.URL) ([]string, error) {
 	paths := []string{}

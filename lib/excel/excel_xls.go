@@ -47,7 +47,7 @@ func load(url, pro string) {
 		}
 		fName := strings.Replace(fileName[0], " ", "-", -1)
 		fName = strings.Replace(fileName[0], "_", "-", -1)
-		if err := createCsvFile(path.Join(url, pro+fName+".csv"), "", data); err != nil {
+		if err := CreateCsvFile(path.Join(url, pro+fName+".csv"), "", data); err != nil {
 			panic(err)
 		}
 	}
