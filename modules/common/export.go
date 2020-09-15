@@ -120,6 +120,10 @@ func fileToCsv(fileURL, sep, createSep string, isGBK, isCreateGBK bool) (string,
 }
 
 func fileToExcel(fileURL, sep string, isGBK bool) (string, error) {
+	ftype := path.Ext(fileURL)
+	if ftype != ".csv" && ftype != ".txt" {
+		return "", errors.New("file type error")
+	}
 	fileData := excel.PaseCscOrTxt(fileURL, sep, isGBK)
 	fileName := strings.TrimSuffix(path.Base(fileURL), path.Ext(fileURL))
 	fileAdree := path.Join(core.DefaultFilePath, fileName+".xlsx")
