@@ -45,18 +45,24 @@ func (ap *export) Post(p *core.ElementHandleArgs) {
 		return
 	}
 	sep, createSep, createFileType, isGBK, isCreateGBK := getFormValues(p)
+	resURL := ""
 	switch createFileType {
 	case "csv":
-		if err := fileToCsv(fileAdree, sep, createSep, isGBK, isCreateGBK); err != nil {
+		fileAdree, err := fileToCsv(fileAdree, sep, createSep, isGBK, isCreateGBK)
+		if err != nil {
 			core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": err.Error()})
 			return
 		}
+		resURL = fileAdree
 	case "excel":
-		if err := fileToExcel(fileAdree, sep, isGBK); err != nil {
+		fileAdree, err := fileToExcel(fileAdree, sep, isGBK)
+		if err != nil {
 			core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": err.Error()})
 			return
 		}
+		resURL = fileAdree
 	}
+	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true, "url": resURL})
 }
 
 //sep文件分割符，传入文件gbk是否gbk格式，createSep生成文件的分割符， isCreateGBK生成文件是否gbk格式，createFileType 内容为csv或者excel，代表生成哪种文件
@@ -84,41 +90,43 @@ func getFormValues(p *core.ElementHandleArgs) (sep, createSep, createFileType st
 
 //isGBK true标识使用gbk解析,isCreateGBK标识生成的csv是否用gbk，true代表使用,createSep标识生成文件的间隔符
 //只能解析xlsx , csv , txt三种文件，都生成csv
-func fileToCsv(fileURL, sep, createSep string, isGBK, isCreateGBK bool) error {
+func fileToCsv(fileURL, sep, createSep string, isGBK, isCreateGBK bool) (string, error) {
 	fileData := [][]string{}
 	switch path.Ext(fileURL) {
 	case ".xlsx":
 		fd, err := excel.ExportParse(fileURL)
 		if err != nil {
-			return err
+			return "", err
 		}
 		fileData = fd
 	case ".csv", ".txt":
 		fileData = excel.PaseCscOrTxt(fileURL, sep, isGBK)
 	default:
-		return errors.New("file type error")
+		return "", errors.New("file type error")
 	}
 	fileName := strings.TrimSuffix(path.Base(fileURL), path.Ext(fileURL))
+	fileAdree := path.Join(core.DefaultFilePath, fileName+".csv")
 	switch {
 	case isCreateGBK:
-		if err := excel.CreateGBKCsvFile(path.Join(core.DefaultFilePath, fileName+".csv"), createSep, fileData); err != nil {
-			return err
+		if err := excel.CreateGBKCsvFile(fileAdree, createSep, fileData); err != nil {
+			return "", err
 		}
 	default:
-		if err := excel.CreateCsvFile(path.Join(core.DefaultFilePath, fileName+".csv"), createSep, fileData); err != nil {
-			return err
+		if err := excel.CreateCsvFile(fileAdree, createSep, fileData); err != nil {
+			return "", err
 		}
 	}
-	return nil
+	return fileAdree, nil
 }
 
-func fileToExcel(fileURL, sep string, isGBK bool) error {
+func fileToExcel(fileURL, sep string, isGBK bool) (string, error) {
 	fileData := excel.PaseCscOrTxt(fileURL, sep, isGBK)
 	fileName := strings.TrimSuffix(path.Base(fileURL), path.Ext(fileURL))
-	if err := excel.CreateExcelUseList(path.Join(core.DefaultFilePath, fileName+".xlsx"), fileData); err != nil {
-		return err
+	fileAdree := path.Join(core.DefaultFilePath, fileName+".xlsx")
+	if err := excel.CreateExcelUseList(fileAdree, fileData); err != nil {
+		return "", err
 	}
-	return nil
+	return fileAdree, nil
 }
 
 func excelExport(pa interface{}, content *core.ElementHandleArgs) error {
