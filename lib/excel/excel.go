@@ -113,26 +113,6 @@ func CreateExcel(fileURL string, rowData ...[][]string) error {
 	return nil
 }
 
-//CreateExcelUseList 使用list作为参数生成excel，第一行为标题行
-func CreateExcelUseList(fileURL string, data [][]string) error {
-	// rowData := []map[string]string{}
-	// for idx, val := range data {
-	// 	if idx == 0 {
-	// 		continue
-	// 	}
-	// 	da := make(map[string]string)
-	// 	for i, v := range val {
-	// 		//这一步防止内容列比标题多引起标题和内容不对应，比标题多的丢弃
-	// 		if i > len(data[0])-1 {
-	// 			continue
-	// 		}
-	// 		da[data[0][i]] = v
-	// 	}
-	// 	rowData = append(rowData, da)
-	// }
-	return CreateExcel(fileURL, data)
-}
-
 //ExportParse 解析excel文件
 //filename 为文件名
 //sheet为对应excel内部每个sheet的名称，如Sheet1或者Sheet2......,默认使用Sheet1，多个参数只取第一个
