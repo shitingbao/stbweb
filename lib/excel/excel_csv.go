@@ -117,14 +117,12 @@ func PaseCscOrTxt(fileURL, sep string, isGBK bool) [][]string {
 		rf = file
 	}
 	scanner := bufio.NewScanner(rf)
-	i := 1
 	if sep == "" {
 		sep = ","
 	}
 	for scanner.Scan() {
 		strList := strings.Split(scanner.Text(), sep)
-		result[i] = deleteStrBlank(strList)
-		i++
+		result = append(result, deleteStrBlank(strList))
 	}
 	return result
 }

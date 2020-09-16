@@ -20,7 +20,7 @@ type excel struct {
 
 //sheetData sheet数据内容
 type sheetData struct {
-	Rows []map[string]string //行，每一行的数据以标题为标准key，存储
+	Rows [][]string //行，每一行的数据以标题为标准key，存储
 }
 
 //getExcelAllCell 使用tealeg解析，时间不完美
@@ -63,20 +63,20 @@ func (e *excel) createExcel() error {
 		if err != nil {
 			return err
 		}
-		for idv, dv := range v.Rows {
-			var trow *xlsx.Row
-			if idv == 0 { //第一行数据需要另外新增一行作为标题
-				trow = sheet.AddRow()
-				trow.SetHeightCM(1) //设置每行的高度
-			}
+		for _, dv := range v.Rows {
+			// var trow *xlsx.Row
+			// if idv == 0 { //第一行数据需要另外新增一行作为标题
+			// 	trow = sheet.AddRow()
+			// 	trow.SetHeightCM(1) //设置每行的高度
+			// }
 
 			row := sheet.AddRow()
-			row.SetHeightCM(1)         //设置每行的高度
-			for key, val := range dv { //这里必须在一个for内部，不然key和val对应不上
-				if idv == 0 {
-					tcell := trow.AddCell()
-					tcell.Value = key
-				}
+			row.SetHeightCM(1)       //设置每行的高度
+			for _, val := range dv { //这里必须在一个for内部，不然key和val对应不上
+				// if idv == 0 {
+				// 	tcell := trow.AddCell()
+				// 	tcell.Value = key
+				// }
 				cell := row.AddCell()
 				cell.SetString(val)
 				// cell.Value = val
@@ -96,7 +96,7 @@ func (e *excel) createExcel() error {
 //列名称就是map的key值
 //example: CreateExcel("example",data1,data2)
 //执行后生成文件名称为example.xlsx,内部有两个sheet页，sheet1数据内容为dat1，sheet2数据内容为dat2
-func CreateExcel(fileURL string, rowData ...[]map[string]string) error {
+func CreateExcel(fileURL string, rowData ...[][]string) error {
 	sheetDatas := []sheetData{}
 	for _, v := range rowData {
 		sd := sheetData{}
@@ -115,18 +115,22 @@ func CreateExcel(fileURL string, rowData ...[]map[string]string) error {
 
 //CreateExcelUseList 使用list作为参数生成excel，第一行为标题行
 func CreateExcelUseList(fileURL string, data [][]string) error {
-	rowData := []map[string]string{}
-	for idx, val := range data {
-		da := make(map[string]string)
-		for i, v := range val {
-			if idx == 0 {
-				da[v] = ""
-				continue
-			}
-			da[data[0][i]] = v
-		}
-	}
-	return CreateExcel(fileURL, rowData)
+	// rowData := []map[string]string{}
+	// for idx, val := range data {
+	// 	if idx == 0 {
+	// 		continue
+	// 	}
+	// 	da := make(map[string]string)
+	// 	for i, v := range val {
+	// 		//这一步防止内容列比标题多引起标题和内容不对应，比标题多的丢弃
+	// 		if i > len(data[0])-1 {
+	// 			continue
+	// 		}
+	// 		da[data[0][i]] = v
+	// 	}
+	// 	rowData = append(rowData, da)
+	// }
+	return CreateExcel(fileURL, data)
 }
 
 //ExportParse 解析excel文件

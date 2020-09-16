@@ -20,8 +20,7 @@ func init() {
 
 //Get 业务处理,get请求的例子
 func (ap *export) Get(arge *core.ElementHandleArgs) {
-	if arge.APIInterceptionGet("excel", nil, excelExport) ||
-		arge.APIInterceptionGet("excelparse", nil, excelParse) ||
+	if arge.APIInterceptionGet("excelparse", nil, excelParse) ||
 		arge.APIInterceptionGet("xlsparse", nil, xlsParse) ||
 		arge.APIInterceptionGet("csvparse", nil, csvParase) {
 		return
@@ -127,35 +126,10 @@ func fileToExcel(fileURL, sep string, isGBK bool) (string, error) {
 	fileData := excel.PaseCscOrTxt(fileURL, sep, isGBK)
 	fileName := strings.TrimSuffix(path.Base(fileURL), path.Ext(fileURL))
 	fileAdree := path.Join(core.DefaultFilePath, fileName+".xlsx")
-	if err := excel.CreateExcelUseList(fileAdree, fileData); err != nil {
+	if err := excel.CreateExcel(fileAdree, fileData); err != nil {
 		return "", err
 	}
 	return fileAdree, nil
-}
-
-func excelExport(pa interface{}, content *core.ElementHandleArgs) error {
-	rowData := []map[string]string{}
-	da := make(map[string]string)
-	da["one"] = "one"
-	da["Two"] = "two"
-	da["三"] = "三"
-	da["4"] = "4"
-	da["date"] = "1994-08-01"
-	rowData = append(rowData, da)
-	rowDatat := []map[string]string{}
-	dc := make(map[string]string)
-	dc["asdf"] = "asdf"
-	dc["asdf"] = "asdf"
-	dc["三"] = "三"
-	dc["4"] = "4"
-	dc["date"] = "1994-08-01"
-	rowDatat = append(rowDatat, dc)
-	if err := excel.CreateExcel("stb", rowData, rowDatat); err != nil {
-		core.SendJSON(content.Res, http.StatusOK, core.SendMap{"msg": err.Error()})
-		return err
-	}
-	core.SendJSON(content.Res, http.StatusOK, core.SendMap{"msg": "this is excel get"})
-	return nil
 }
 
 func excelParse(pa interface{}, content *core.ElementHandleArgs) error {
