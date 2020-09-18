@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"stbweb/lib/external_service/stbserver"
 	"sync"
-	"time"
 )
 
 //StbServe 外部调用结构体
@@ -48,7 +47,7 @@ func (s *StbServe) PutSummonerInfo(cli stbserver.StbServer_PutSummonerInfoServer
 		// }
 		da, err := cli.Recv()
 		if err != nil {
-			log.Println("err:", err)
+			// log.Println("err:", err)
 			return err
 		}
 		log.Println("da:", da)
@@ -99,7 +98,7 @@ func (s *StbServe) ShareSummonerInfo(cli stbserver.StbServer_ShareSummonerInfoSe
 		for {
 			da, err := cli.Recv()
 			if err != nil {
-				log.Println("get mes err:", err)
+				// log.Println("get mes err:", err)
 				break
 			}
 			log.Println("da:", da)
@@ -171,7 +170,7 @@ func (s *StbServe) SendFile(cli stbserver.StbServer_SendFileServer) error {
 			log.Println("err:", err)
 			break
 		}
-		log.Println("name:", da.FileName)
+		// log.Println("name:", da.FileName)
 		f.Write(da.FileData)
 	}
 	return nil
@@ -183,10 +182,10 @@ func (s *StbServe) SendGroupFile(cli stbserver.StbServer_SendGroupFileServer) er
 	for {
 		data, err := cli.Recv()
 		if err != nil {
-			log.Println(err)
+			// log.Println(err)
 			break
 		}
-		log.Println("data:", data.FileType)
+		// log.Println("data:", data.FileType)
 		if data.IsStart {
 			fDir, err := os.Executable()
 			if err != nil {
@@ -205,7 +204,7 @@ func (s *StbServe) SendGroupFile(cli stbserver.StbServer_SendGroupFileServer) er
 			sf.Close()
 		}
 	}
-	time.Sleep(time.Second * 2)
+	// time.Sleep(time.Second * 2)
 	return nil
 }
 

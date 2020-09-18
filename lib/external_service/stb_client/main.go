@@ -244,6 +244,7 @@ func sendGroupFile(c stbserver.StbServerClient) {
 			isStart = true
 		}
 		bufSize := 200
+		//最后一次文件大小可能不满200，引起部分不必要的数据流，这里判断出最后一次，大小用总量减去过去发送的所有bufSize的大小来计算
 		if int64(200*i) > fSize && int64(200*(i-1)) < fSize {
 			bufSize = int(fSize) - ((i - 1) * 200)
 			isCarry = true
