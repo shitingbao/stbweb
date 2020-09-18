@@ -13,3 +13,4 @@ config.json
 *.zip
 dist
 vendor
+assets/
