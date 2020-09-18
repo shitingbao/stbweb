@@ -2,7 +2,6 @@ package core
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -26,18 +25,18 @@ func SendJSON(w http.ResponseWriter, statuscode int, data interface{}) {
 		return
 	}
 	w.Header().Set(ContentType, ContentJSON+";"+defaultCharset)
-	if WebConfig.AllowCORS {
-		allowOrigin := WebConfig.AllowOrigin
-		if len(allowOrigin) == 0 {
-			allowOrigin = "*" //待定，跨域允许的指定地址
-		}
-		w.Header().Set("Access-Control-Allow-Origin", allowOrigin) //设置允许跨域的请求地址
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", fmt.Sprintf(
-			"%s,Origin, X-Requested-With, Content-Type, Accept, Connection, User-Agent, Cookie",
-			WebAPIHanderName)) //这里可以增加对应handle
-	}
+	// if WebConfig.AllowCORS {
+	// 	allowOrigin := WebConfig.AllowOrigin
+	// 	if len(allowOrigin) == 0 {
+	// 		allowOrigin = "*" //待定，跨域允许的指定地址
+	// 	}
+	// 	w.Header().Set("Access-Control-Allow-Origin", allowOrigin) //设置允许跨域的请求地址
+	// 	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	// 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
+	// 	w.Header().Set("Access-Control-Allow-Headers", fmt.Sprintf(
+	// 		"%s,Origin, X-Requested-With, Content-Type, Accept, Connection, User-Agent, Cookie",
+	// 		WebAPIHanderName)) //这里可以增加对应handle
+	// }
 
 	w.WriteHeader(statuscode)
 	w.Write(bt)
