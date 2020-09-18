@@ -171,8 +171,8 @@ func (s *StbServe) SendFile(cli stbserver.StbServer_SendFileServer) error {
 			log.Println("err:", err)
 			break
 		}
-		log.Println("name:", da.Filename)
-		f.Write(da.Filedata)
+		log.Println("name:", da.FileName)
+		f.Write(da.FileData)
 	}
 	return nil
 }
@@ -186,8 +186,8 @@ func (s *StbServe) SendGroupFile(cli stbserver.StbServer_SendGroupFileServer) er
 			log.Println(err)
 			break
 		}
-		log.Println("data:", data.Filetype)
-		if data.Isstart {
+		log.Println("data:", data.FileType)
+		if data.IsStart {
 			fDir, err := os.Executable()
 			if err != nil {
 				panic(err)
@@ -195,13 +195,13 @@ func (s *StbServe) SendGroupFile(cli stbserver.StbServer_SendGroupFileServer) er
 
 			fURL := filepath.Join(filepath.Dir(fDir), "assets")
 			mkdir(fURL)
-			sf, err = os.Create(filepath.Join(fURL, data.Filename))
+			sf, err = os.Create(filepath.Join(fURL, data.FileName))
 			if err != nil {
 				return err
 			}
 		}
-		sf.Write(data.Filedata)
-		if data.Iscarry {
+		sf.Write(data.FileData)
+		if data.IsCarry {
 			sf.Close()
 		}
 	}

@@ -166,10 +166,10 @@ func sendfile(c stbserver.StbServerClient) {
 		}
 
 		res.Send(&stbserver.FileMessage{
-			Filename: strconv.Itoa(i),
-			Filetype: "json",
-			Filedata: buf,
-			Iscarry:  true,
+			FileName: strconv.Itoa(i),
+			FileType: "json",
+			FileData: buf,
+			IsCarry:  true,
 		})
 		i++
 	}
@@ -210,10 +210,10 @@ func sendBigFile(c stbserver.StbServerClient) {
 			break
 		}
 		res.Send(&stbserver.FileMessage{
-			Filename: strconv.Itoa(i),
-			Filetype: "json",
-			Filedata: buf,
-			Iscarry:  true,
+			FileName: strconv.Itoa(i),
+			FileType: "json",
+			FileData: buf,
+			IsCarry:  true,
 		})
 		i++
 	}
@@ -258,13 +258,13 @@ func sendGroupFile(c stbserver.StbServerClient) {
 			break
 		}
 		res.Send(&stbserver.FileMessage{
-			Filename:  filename,
-			Filetype:  strconv.Itoa(i),
-			Filedata:  buf,
-			Iscarry:   isCarry,
-			Isstart:   isStart,
+			FileName:  filename,
+			FileType:  strconv.Itoa(i),
+			FileData:  buf,
+			IsCarry:   isCarry,
+			IsStart:   isStart,
 			User:      "shitingbao",
-			Totalsize: fSize,
+			TotalSize: fSize,
 		})
 		i++
 	}

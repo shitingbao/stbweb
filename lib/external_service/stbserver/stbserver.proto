@@ -32,13 +32,13 @@ message Identity{
 }
 
 message FileMessage{
-    string filename=1;
-    string filetype=2;
-    bytes filedata=3;
-    bool iscarry=4;
-    bool isstart=5;
+    string fileName=1;
+    string fileType=2;
+    bytes fileData=3;
+    bool isCarry=4;
+    bool isStart=5;
     string user=6;
-    int64 totalsize=7;
+    int64 totalSize=7;
 }
 
 message FileResult{
