@@ -89,7 +89,7 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if paths[0] == "assets" {
-		http.FileServer(http.Dir(filepath.Join(str, "assets", paths[len(paths)-1])))
+		http.ServeFile(w, r, filepath.Join(str, "assets", paths[len(paths)-1]))
 		return
 	}
 	core.ElementHandle(w, r, paths[0]) //待定，工作元素的名称获取是否来源于路由
