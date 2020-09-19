@@ -3,6 +3,7 @@ package loader
 import (
 	"encoding/gob"
 	"fmt"
+	"log"
 	"mime"
 	"net/http"
 	"net/url"
@@ -88,7 +89,9 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(str, "dist", paths[0], paths[len(paths)-1]))
 		return
 	}
+	log.Println("path:", filepath.Join(str, "assets", paths[len(paths)-1]))
 	if paths[0] == "assets" {
+		log.Println("into assets")
 		http.ServeFile(w, r, filepath.Join(str, "assets", paths[len(paths)-1]))
 		return
 	}
