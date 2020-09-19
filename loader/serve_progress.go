@@ -91,11 +91,7 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println("path:", filepath.Join(str, "assets", paths[len(paths)-1]))
-	if paths[0] == "assets" {
-		log.Println("into assets")
-		http.ServeFile(w, r, filepath.Join(str, "assets", paths[len(paths)-1]))
-		return
-	}
+
 	core.ElementHandle(w, r, paths[0]) //待定，工作元素的名称获取是否来源于路由
 }
 
