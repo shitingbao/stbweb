@@ -48,7 +48,7 @@ func (e *ElementHandleArgs) APIInterceptionPost(methodName string, param interfa
 		logrus.WithFields(logrus.Fields{
 			"elename": e.Element.Name,
 			"method":  methodName,
-		}).Error(err)
+		}).Error(err.Error())
 	}
 	return true
 }
