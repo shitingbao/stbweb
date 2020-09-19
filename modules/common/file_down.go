@@ -33,5 +33,6 @@ func getFile(param interface{}, p *core.ElementHandleArgs) error {
 	}
 	log.Println(filepath.Join(str, "assets", pm.Base))
 	http.ServeFile(p.Res, p.Req, filepath.Join(str, "assets", pm.Base))
+	core.SendJSON(p.Res, http.StatusOK, "success")
 	return nil
 }
