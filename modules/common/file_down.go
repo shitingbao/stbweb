@@ -19,7 +19,7 @@ func init() {
 }
 
 func (d *downFile) Post(p *core.ElementHandleArgs) {
-	if p.APIInterceptionPost("down", nil, getFile) {
+	if p.APIInterceptionPost("down", new(downFile), getFile) {
 		return
 	}
 }
