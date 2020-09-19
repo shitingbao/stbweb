@@ -23,6 +23,7 @@ func (d *downFile) Post(p *core.ElementHandleArgs) {
 }
 
 func getFile(param interface{}, p *core.ElementHandleArgs) error {
+	log.Println("getfile")
 	pm := param.(*downFile)
 	str, err := os.Getwd()
 	if err != nil {
