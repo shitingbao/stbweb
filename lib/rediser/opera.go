@@ -12,6 +12,8 @@ const (
 	UserMerber = "user@list"
 	//每次用户登录后，都会将用户注册进入usermerber,然后再以字符串形式自己存入redis，分两部分，上述列表只存哪些用户，用户信息自己单独存，这两个对应
 	//这样就可以主动检查所用的用户是否在线，不然直接用get不能查到所有用户，而用hget又不能单独设置过期时间
+
+	dealTime = 15 //用户过期时间
 )
 
 //Open 打开redis连接
@@ -68,7 +70,7 @@ func CheckLoginUser(rd *redis.Client, userkey string) bool {
 
 //MaintainActivity 重新设置用户活动时间
 func MaintainActivity(rd *redis.Client, userkey string) {
-	if err := rd.Expire(userkey, time.Minute*5).Err(); err != nil { //设置字符串key
+	if err := rd.Expire(userkey, time.Minute*dealTime).Err(); err != nil { //设置字符串key
 		logrus.WithFields(logrus.Fields{"MaintainActivity": err}).Error("redisErr")
 	}
 }
@@ -76,7 +78,7 @@ func MaintainActivity(rd *redis.Client, userkey string) {
 //RegisterUser 设置用户信息，userkey就是对应header中的token
 func RegisterUser(rd *redis.Client, userkey, username string) {
 
-	if err := rd.Set(userkey, username, time.Minute*5).Err(); err != nil { //设置字符串key
+	if err := rd.Set(userkey, username, time.Minute*dealTime).Err(); err != nil { //设置字符串key
 		logrus.WithFields(logrus.Fields{"set": err}).Error("redisErr")
 	}
 	if err := rd.HSet(UserMerber, userkey, username).Err(); err != nil { //设置字符串key

@@ -3,7 +3,6 @@ package loader
 import (
 	"encoding/gob"
 	"fmt"
-	"log"
 	"mime"
 	"net/http"
 	"net/url"
@@ -40,7 +39,6 @@ func init() {
 }
 
 func httpProcess(w http.ResponseWriter, r *http.Request) {
-	log.Println("URL:", r.URL.String())
 	if r.Method == "OPTIONS" {
 		if core.WebConfig.AllowCORS {
 			allowOrigin := core.WebConfig.AllowOrigin
@@ -90,7 +88,6 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(str, "dist", paths[0], paths[len(paths)-1]))
 		return
 	}
-	log.Println("path:", filepath.Join(str, "assets", paths[len(paths)-1]))
 
 	core.ElementHandle(w, r, paths[0]) //待定，工作元素的名称获取是否来源于路由
 }
@@ -110,6 +107,5 @@ func parsePaths(u *url.URL) ([]string, error) {
 		}
 		paths = append(paths, s)
 	}
-	log.Println("parsePaths：", paths)
 	return paths, nil
 }

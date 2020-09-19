@@ -40,7 +40,7 @@ func ElementLoad(elementName string) *Element {
 func ElementHandle(w http.ResponseWriter, r *http.Request, elementName string) {
 	usr, err := isExternalCall(elementName, r)
 	if err != nil {
-		SendJSON(w, http.StatusOK, err)
+		SendJSON(w, http.StatusOK, SendMap{"msg": err.Error()})
 		return
 	}
 	ele := ElementLoad(elementName)
