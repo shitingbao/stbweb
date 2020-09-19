@@ -40,6 +40,7 @@ func init() {
 }
 
 func httpProcess(w http.ResponseWriter, r *http.Request) {
+	log.Println("URL:", r.URL.String())
 	if r.Method == "OPTIONS" {
 		if core.WebConfig.AllowCORS {
 			allowOrigin := core.WebConfig.AllowOrigin
