@@ -1,6 +1,7 @@
 package common
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -27,6 +28,7 @@ func getFile(param interface{}, p *core.ElementHandleArgs) error {
 	if err != nil {
 		return err
 	}
+	log.Println("path:", filepath.Join(str, "assets", pm.Base))
 	http.ServeFile(p.Res, p.Req, filepath.Join(str, "assets", pm.Base))
 	core.SendJSON(p.Res, http.StatusOK, "success")
 	return nil
