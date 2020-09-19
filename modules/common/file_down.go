@@ -9,11 +9,11 @@ import (
 )
 
 type downFile struct {
-	Base string `json:"base"`
+	Base string
 }
 
 func init() {
-	core.RegisterFun("down", new(downFile), true)
+	core.RegisterFun("down", new(downFile), true) //??
 }
 
 func (d *downFile) Post(p *core.ElementHandleArgs) {
@@ -29,8 +29,8 @@ func getFile(param interface{}, p *core.ElementHandleArgs) error {
 	if err != nil {
 		return err
 	}
-	log.Println("path:", filepath.Join(str, "assets", pm.Base))
-	http.ServeFile(p.Res, p.Req, filepath.Join(str, "assets", pm.Base))
+	log.Println("path:", filepath.Join(str, pm.Base))
+	http.ServeFile(p.Res, p.Req, filepath.Join(str, pm.Base))
 	core.SendJSON(p.Res, http.StatusOK, "success")
 	return nil
 }

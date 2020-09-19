@@ -34,11 +34,10 @@ func (e *ElementHandleArgs) APIInterceptionPost(methodName string, param interfa
 	cb func(pa interface{}, content *ElementHandleArgs) error) bool {
 	//名称对应判断
 	if methodName != e.apiName() {
-		logrus.WithFields(logrus.Fields{"methodName": methodName, "apiName": e.apiName()}).Error("api name not equal")
 		return false
 	}
 	if e.Req.ContentLength <= 0 || param == nil {
-		logrus.WithFields(logrus.Fields{"param": "nl"}).Error("post")
+		logrus.WithFields(logrus.Fields{"param": "nil"}).Error("post")
 		return false
 	}
 	defer e.Req.Body.Close()
