@@ -113,5 +113,6 @@ func parsePaths(u *url.URL) ([]string, error) {
 		}
 		paths = append(paths, s)
 	}
+	log.Println("parsePaths：", paths)
 	return paths, nil
 }
