@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -23,6 +25,7 @@ func SendJSON(w http.ResponseWriter, statuscode int, data interface{}) {
 
 	bt, err := json.Marshal(data)
 	if err != nil {
+		logrus.WithFields(logrus.Fields{"json Marshal": err.Error()}).Error("SendJson")
 		return
 	}
 	w.Header().Set(ContentType, ContentJSON+";"+defaultCharset)

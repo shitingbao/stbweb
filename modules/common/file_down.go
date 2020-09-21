@@ -35,7 +35,7 @@ func getFile(param interface{}, p *core.ElementHandleArgs) error {
 	log.Println("path:", filepath.Join(str, pm.Base))
 	logrus.Info("path:", filepath.Join(str, pm.Base))
 	http.ServeFile(p.Res, p.Req, filepath.Join(str, pm.Base))
-	core.SendJSON(p.Res, http.StatusOK, "success")
+	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true})
 	logrus.Info("complete")
 	return nil
 }
