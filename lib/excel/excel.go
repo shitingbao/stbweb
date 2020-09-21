@@ -48,7 +48,9 @@ func getExcelRows(excelURL, sheet string) ([][]string, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	if sheet == "" {
+		sheet = xlsx.GetSheetMap()[1]
+	}
 	rows := xlsx.GetRows(sheet)
 	return rows, nil
 }
@@ -120,7 +122,7 @@ func ExportParse(fileURL string, sheet ...string) ([][]string, error) {
 	if fileURL == "" {
 		return nil, errors.New("ExportParse param is not nil")
 	}
-	st := "Sheet1"
+	st := ""
 	if len(sheet) > 0 {
 		st = sheet[0]
 	}
