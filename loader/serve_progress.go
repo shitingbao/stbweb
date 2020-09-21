@@ -90,7 +90,7 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 	}
 	logrus.Info("url:", r.URL.String())
 	if paths[0] == "assets" {
-		http.ServeFile(w, r, r.URL.String())
+		http.ServeFile(w, r, filepath.Join(str, r.URL.String()))
 		return
 	}
 	core.ElementHandle(w, r, paths[0]) //待定，工作元素的名称获取是否来源于路由
