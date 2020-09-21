@@ -8,23 +8,23 @@ import (
 	"stbweb/core"
 )
 
-type downFile struct {
+type DownFile struct {
 	Base string
 }
 
 func init() {
-	core.RegisterFun("down", new(downFile), true) //??
+	core.RegisterFun("down", new(DownFile), true) //??
 }
 
-func (d *downFile) Post(p *core.ElementHandleArgs) {
-	if p.APIInterceptionPost("down", new(downFile), getFile) {
+func (d *DownFile) Post(p *core.ElementHandleArgs) {
+	if p.APIInterceptionPost("down", new(DownFile), getFile) {
 		return
 	}
 }
 
 func getFile(param interface{}, p *core.ElementHandleArgs) error {
 	log.Println("getfile")
-	pm := param.(*downFile)
+	pm := param.(*DownFile)
 	str, err := os.Getwd()
 	if err != nil {
 		return err
