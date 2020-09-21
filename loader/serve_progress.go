@@ -88,6 +88,7 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(str, "dist", paths[0], paths[len(paths)-1]))
 		return
 	}
+	logrus.Info("url:", r.URL.String())
 	if paths[0] == "assets" {
 		http.ServeFile(w, r, r.URL.String())
 		return
