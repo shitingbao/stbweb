@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"stbweb/core"
+
+	"github.com/sirupsen/logrus"
 )
 
 type DownFile struct {
@@ -23,6 +25,7 @@ func (d *DownFile) Post(p *core.ElementHandleArgs) {
 }
 
 func getFile(param interface{}, p *core.ElementHandleArgs) error {
+	logrus.Info("log getfile")
 	log.Println("getfile")
 	pm := param.(*DownFile)
 	str, err := os.Getwd()

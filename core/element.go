@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 	"stbweb/lib/rediser"
+
+	"github.com/sirupsen/logrus"
 )
 
 //Element 工作元素
@@ -51,9 +53,12 @@ func ElementHandle(w http.ResponseWriter, r *http.Request, elementName string) {
 //isExternalCall 判断该操作元素下的api是否可以外部调用
 //？？这里还需要考虑到登录的用户长时间访问不需要登录的接口的情况，这种情况不会更新用户在线时间
 func isExternalCall(elementName string, r *http.Request) (string, error) {
+	logrus.Info("check token")
 	usr := ""
 	if controlleNames[elementName] { //判断该元素是否需要登陆后使用
+
 		tokens := r.Header.Get("token")
+		logrus.Info("token:", tokens)
 		if tokens == "" {
 			return "", errors.New("Refuse")
 		}
