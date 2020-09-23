@@ -104,6 +104,8 @@ func fileToCsv(fileURL, sep, createSep string, isGBK, isCreateGBK bool) (string,
 		return "", errors.New("file type error")
 	}
 	fileName := strings.TrimSuffix(path.Base(fileURL), path.Ext(fileURL))
+	fileName = strings.Replace(fileName, " ", "-", -1)
+	fileName = strings.Replace(fileName, "_", "-", -1)
 	fileAdree := path.Join(core.DefaultFilePath, fileName+".csv")
 	switch {
 	case isCreateGBK:
@@ -125,6 +127,8 @@ func fileToExcel(fileURL, sep string, isGBK bool) (string, error) {
 	}
 	fileData := excel.PaseCscOrTxt(fileURL, sep, isGBK)
 	fileName := strings.TrimSuffix(path.Base(fileURL), path.Ext(fileURL))
+	fileName = strings.Replace(fileName, " ", "-", -1)
+	fileName = strings.Replace(fileName, "_", "-", -1)
 	fileAdree := path.Join(core.DefaultFilePath, fileName+".xlsx")
 	if err := excel.CreateExcel(fileAdree, fileData); err != nil {
 		return "", err
