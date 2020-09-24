@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
+	"github.com/panjf2000/ants"
 	"github.com/sirupsen/logrus"
 )
 
@@ -43,6 +44,8 @@ var (
 	CardHun *ws.Hub
 	//Rds redis连接d
 	Rds *redis.Client
+	//WorkPool 全局工作池
+	WorkPool *ants.Pool
 )
 
 func init() {

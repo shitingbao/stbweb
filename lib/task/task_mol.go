@@ -47,12 +47,14 @@ type Task struct {
 
 func init() {
 	job.Start()
+	core.WorkPool = NewCommonPool()
 }
 
 //Stop job关闭
 func Stop() {
 	job.Stop()
 	workPool.Release()
+	core.WorkPool.Release()
 }
 
 //加入过程，拼装成新的方法，提交入pool当中处理
