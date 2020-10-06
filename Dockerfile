@@ -4,7 +4,9 @@ ENV GO111MODULE=on
 
 ENV GOPROXY=https://goproxy.io
 
-COPY . / 
+WORKDIR /mygo
+
+COPY . mygo
 
 WORKDIR /builds/common
 
