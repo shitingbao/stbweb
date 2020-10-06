@@ -10,7 +10,7 @@ COPY . mygo
 
 WORKDIR /mygo/builds/common
 
-RUN go build main.go
+RUN go build
 
 EXPOSE 3002
 
