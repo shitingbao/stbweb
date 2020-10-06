@@ -9,8 +9,6 @@ COPY core .
 COPY lib .
 COPY loader .
 COPY modules .
-WORKDIR /
-RUN go mod init
 
 WORKDIR /builds/common
 RUN go build
