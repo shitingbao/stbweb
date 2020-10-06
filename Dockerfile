@@ -4,7 +4,7 @@ ENV GO111MODULE=on
 
 ENV GOPROXY=https://goproxy.io
 WORKDIR /stbweb
-COPY ./builds /stbweb/builds
+COPY ./builds/common /stbweb/builds/common
 COPY ./lib /stbweb/lib
 COPY ./loader /stbweb/loader
 COPY ./modules /stbweb/modules
