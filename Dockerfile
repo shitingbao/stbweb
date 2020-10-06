@@ -3,7 +3,7 @@ FROM golang
 ENV GO111MODULE=on
 
 ENV GOPROXY=https://goproxy.io
-
+WORKDIR /stbweb
 COPY . stbweb
 
 WORKDIR /stbweb/builds/common
