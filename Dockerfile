@@ -18,7 +18,7 @@ COPY modules mygo
 
 COPY practice mygo
 
-WORKDIR /builds/common
+WORKDIR /mygo/builds/common
 
 RUN go build
 
