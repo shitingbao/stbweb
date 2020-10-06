@@ -2,20 +2,14 @@ FROM golang
 
 ENV GO111MODULE=on
 
-ENV GOPROXY=https://goproxy.io
+RUN GOPROXY="https://goproxy.cn" go mod download
 
-COPY /builds/common ./builds/common
-COPY /core .
-COPY /lib .
-COPY /loader .
-COPY /modules .
+COPY . .
 
 WORKDIR /builds/common
 
 RUN go build
 
 EXPOSE 3002
-
-
 
 CMD ["common"]
