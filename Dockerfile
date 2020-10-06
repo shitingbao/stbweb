@@ -11,4 +11,4 @@ RUN go build
 
 EXPOSE 3002
 
-CMD ["/stbweb/builds/common/common"]
+ENTRYPOINT ["/stbweb/builds/common/common"]
