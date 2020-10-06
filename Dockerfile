@@ -8,7 +8,7 @@ WORKDIR /mygo
 
 COPY . mygo
 
-WORKDIR /mygo/builds/common
+WORKDIR /builds/common
 
 RUN go build
 
