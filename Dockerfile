@@ -10,7 +10,7 @@ COPY ./lib lib
 COPY ./loader loader
 COPY ./modules modules
 
-WORKDIR /stbweb/builds/common
+WORKDIR /builds/common
 RUN go build
 
 EXPOSE 3002
