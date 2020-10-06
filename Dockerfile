@@ -4,13 +4,13 @@ ENV GO111MODULE=on
 
 ENV GOPROXY=https://goproxy.io
 
-COPY builds/common ./builds/common
-COPY core .
-COPY lib .
-COPY loader .
-COPY modules .
+COPY builds/common stbweb/builds/common
+COPY core stbweb
+COPY lib stbweb
+COPY loader stbweb
+COPY modules stbweb
 
-WORKDIR /builds/common
+WORKDIR /stbweb/builds/common
 RUN go build
 
 EXPOSE 3002
