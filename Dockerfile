@@ -6,7 +6,17 @@ ENV GOPROXY=https://goproxy.io
 
 WORKDIR /mygo
 
-COPY . mygo
+COPY builds mygo
+
+COPY core mygo
+
+COPY lib mygo
+
+COPY loader mygo
+
+COPY modules mygo
+
+COPY practice mygo
 
 WORKDIR /builds/common
 
