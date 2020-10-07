@@ -13,6 +13,6 @@ EXPOSE 3002
 
 FROM ubuntu
 
-COPY --from=0 ./common .
+COPY --from=0 /stbweb/builds/common/common .
 
 ENTRYPOINT ["./common"]
