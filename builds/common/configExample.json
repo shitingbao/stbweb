@@ -9,7 +9,7 @@
     "ExternalPort": "5000",
     "AllowOrigin": "http://124.70.156.31:3001",
     "AccessTokenDate": "2020-02-27 12:12:12",
-    "RedisAdree": "127.0.0.1",
+    "RedisAdree": "124.70.156.31",
     "RedisPort": "6379",
     "RedisPwd": "",
     "Redislevel": 0,
