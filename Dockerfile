@@ -11,4 +11,8 @@ RUN go build
 
 EXPOSE 3002
 
-ENTRYPOINT ["/stbweb/builds/common/common"]
+FROM ubuntu
+
+COPY --from=0 ./common .
+
+ENTRYPOINT ["./common"]
