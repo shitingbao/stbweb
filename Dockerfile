@@ -15,5 +15,6 @@ FROM ubuntu
 
 COPY --from=0 /stbweb/builds/common/common .
 COPY --from=0 /stbweb/builds/common/config.json .
+COPY --from=0 /stbweb/builds/common/dist dist
 
 ENTRYPOINT ["./common"]
