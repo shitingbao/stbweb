@@ -13,10 +13,10 @@ COPY core core
 COPY lib lib
 COPY loader loader
 COPY modules modules
+RUN go mod init stbweb
 
 WORKDIR /stbweb/builds/common
 
-RUN go mod init stbweb
 RUN go build
 
 FROM ubuntu
