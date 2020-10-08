@@ -13,14 +13,11 @@ COPY core core
 COPY lib lib
 COPY loader loader
 COPY modules modules
-RUN ["pwd"]
-RUN ["ls"]
+
 WORKDIR /stbweb/builds/common
 
-RUN ["pwd"]
-RUN ["ls"]
+RUN go mod init
 RUN go build
-
 
 FROM ubuntu
 #重新构建，减少体积，这里只需要编译生成的可执行文件，配置文件，前端dist文件即可
