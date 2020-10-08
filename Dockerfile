@@ -11,7 +11,7 @@ COPY lib /stbweb/lib
 COPY loader /stbweb/loader
 COPY modules /stbweb/modules
 
-WORKDIR /stbweb/builds/common
+WORKDIR /stbweb/builds/common/
 RUN go build
 
 
