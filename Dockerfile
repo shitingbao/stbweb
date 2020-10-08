@@ -5,6 +5,8 @@ ENV GO111MODULE=on
 ENV GOPROXY=https://goproxy.io
 
 WORKDIR /stbweb
+
+RUN ["pwd"]
 COPY builds/common/main.go builds/common/
 COPY builds/common/config.json builds/common/
 COPY builds/common/dist builds/common/dist
@@ -12,8 +14,11 @@ COPY core core
 COPY lib lib
 COPY loader loader
 COPY modules modules
-
+RUN ["pwd"]
+RUN ["ls"]
 WORKDIR /stbweb/builds/common
+
+RUN ["pwd"]
 RUN go build
 
 
