@@ -16,7 +16,7 @@ COPY modules modules
 
 WORKDIR /stbweb/builds/common
 
-RUN go mod init
+RUN go mod init stbweb
 RUN go build
 
 FROM ubuntu
