@@ -24,7 +24,8 @@ FROM ubuntu
 COPY --from=stbbuildstage  /stbweb/builds/common/common /opt
 COPY --from=stbbuildstage  /stbweb/builds/common/config.json /opt
 COPY --from=stbbuildstage  /stbweb/builds/common/dist /opt/dist
-
+WORKDIR /opt
+RUN ["ls"]
 EXPOSE 3002
 
 ENTRYPOINT ["/opt/common"]
