@@ -28,4 +28,4 @@ COPY --from=stbbuildstage  /stbweb/builds/common/dist dist
 
 EXPOSE 3002
 
-ENTRYPOINT ["/opt/common"]
+ENTRYPOINT ["./common"]
