@@ -6,7 +6,6 @@ ENV GOPROXY=https://goproxy.io
 
 WORKDIR /stbweb
 
-RUN ["pwd"]
 COPY builds/common/main.go builds/common/
 COPY builds/common/config.json builds/common/
 COPY builds/common/dist builds/common/dist
@@ -19,6 +18,7 @@ RUN ["ls"]
 WORKDIR /stbweb/builds/common
 
 RUN ["pwd"]
+RUN ["ls"]
 RUN go build
 
 
