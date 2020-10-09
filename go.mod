@@ -13,6 +13,7 @@ require (
 	github.com/golang/protobuf v1.4.2
 	github.com/gorilla/websocket v1.4.2
 	github.com/jinzhu/gorm v1.9.15
+	github.com/johnfercher/maroto v0.27.0
 	github.com/linlexing/dbx v1.1.3
 	github.com/nsqio/go-nsq v1.0.8
 	github.com/onsi/ginkgo v1.14.1 // indirect
