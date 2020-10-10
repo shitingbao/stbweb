@@ -13,15 +13,19 @@ import (
 func pdfHelp() {
 	begin := time.Now()
 	m := pdf.NewMaroto(consts.Portrait, consts.Letter)
-	//m.SetBorder(true)
-	m.Row(40, func() {
+	//m.SetBorder(true)//是否设置边框
+	//Row 第一个参数为高度，增加一行
+	m.Row(100, func() {
+		//col 增加一列，这里的都会排在同一行，第一个参数是宽，这里的宽和高，都是指的是他自己生成的一个背景
+		//这里的图片是依附于他的背景上的，相同的这里的宽会影响左右位置，和上面的高同事i设置会影响显示总大小
+		//比如上面设置100，这里4和下面的8
 		m.Col(4, func() {
 			_ = m.FileImage("./bb.png", props.Rect{
 				Center:  true,
-				Percent: 80,
+				Percent: 80, //显示原来图片的百分比
 			})
 		})
-		m.Col(4, func() {
+		m.Col(8, func() {
 			m.Text("Gopher International Shipping, Inc.", props.Text{
 				Top:         12,
 				Size:        20,
