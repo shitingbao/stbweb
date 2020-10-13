@@ -33,16 +33,17 @@ const (
 
 //Task 任务对象
 type Task struct {
-	TaskID        string       //任务Id
-	User          string       //任务所属user
-	TaskType      string       //任务类型
-	Spec          string       //定时标记
-	Func          func() error //逻辑处理
-	IsSave        bool         //是否保存数据包
-	createTime    time.Time    //任务创建时间
-	complete      bool         //是否成功
-	errorsMes     string       //错误原因
-	executionTime time.Time    //执行时间
+	TaskID         string       //任务Id
+	User           string       //任务所属user
+	TaskType       string       //任务类型
+	Spec           string       //定时标记
+	Func           func() error //逻辑处理
+	IsSave         bool         //是否保存数据包
+	createTime     time.Time    //任务创建时间
+	complete       bool         //是否成功
+	errorsMes      string       //错误原因
+	executionTime  time.Time    //执行时间
+	IsCompleteChan chan bool    //用来主动反馈完成信号，需要一个单位的缓冲，防止阻塞,由于任务时异步，并且在协程池中，不能使用普通的反馈
 }
 
 func init() {
@@ -80,8 +81,10 @@ func (t *Task) submitPoolFunc() func() {
 			if err = t.Func(); err != nil {
 				logrus.WithFields(logrus.Fields{"func": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
 				t.complete = false
+				t.IsCompleteChan <- false
 			} else {
 				t.complete = true
+				t.IsCompleteChan <- true
 			}
 			core.Rds.HDel(t.User, t.TaskType) //
 			mes := ""
@@ -115,17 +118,12 @@ func NewTask(user, tasktype, spec string, function func() error, issave ...bool)
 		sa = issave[0]
 	}
 	return &Task{
-		TaskID:   taskID,
-		User:     user,
-		TaskType: tasktype,
-		Spec:     spec,
-		Func:     function,
-		IsSave:   sa,
+		TaskID:         taskID,
+		User:           user,
+		TaskType:       tasktype,
+		Spec:           spec,
+		Func:           function,
+		IsSave:         sa,
+		IsCompleteChan: make(chan bool, 1),
 	}
 }
-
-// func task() {
-// 	job.AddFunc("", func() {})
-// 	// job.AddJob()
-
-// }
