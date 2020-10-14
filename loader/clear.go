@@ -9,7 +9,7 @@ import (
 func clearInit() {
 	// "@every 5s" 5s执行
 	ts := task.NewTask("sys", "clearMember", "*/5 * * * ?", clearFun) //五分钟执行一次,
-	ts.Run()
+	ts.Run(core.Ddb, core.Rds)
 }
 
 var clearFun = func() error {

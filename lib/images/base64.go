@@ -8,7 +8,8 @@ import (
 	"image/png"
 	"log"
 	"os"
-	"stbweb/core"
+	"strings"
+	"time"
 )
 
 //base64ToPngimage base64转为png图片
@@ -24,7 +25,7 @@ func base64ToPngimage(imagebase64 string) error {
 		log.Println("png 编辑出错")
 		return err
 	}
-	f, err := os.OpenFile("./file/"+core.GetUniqueFileName()+".png", os.O_WRONLY|os.O_CREATE, 0777) //等待拆分
+	f, err := os.OpenFile("./file/"+getUniqueFileName()+".png", os.O_WRONLY|os.O_CREATE, 0777) //等待拆分
 	if err != nil {
 		return err
 	}
@@ -47,7 +48,7 @@ func base64ToJpgimage(imagebase64 string) error {
 		log.Println("jpeg 编辑出错")
 		return err
 	}
-	f, err := os.OpenFile("./file/"+core.GetUniqueFileName()+".jpeg", os.O_WRONLY|os.O_CREATE, 0777) //等待拆分
+	f, err := os.OpenFile("./file/"+getUniqueFileName()+".jpeg", os.O_WRONLY|os.O_CREATE, 0777) //等待拆分
 	if err != nil {
 		return err
 	}
@@ -91,11 +92,20 @@ func ImageHandtoBase64(f *os.File) (string, error) {
 
 //dataTofile 将数据写入记录文档中
 func dataTofile(data string) error {
-	f, err := os.Create("./assets/" + core.GetUniqueFileName() + ".txt")
+	f, err := os.Create("./assets/" + getUniqueFileName() + ".txt")
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 	f.Write([]byte(data))
 	return nil
+}
+
+//getUniqueFileName 返回一个根据时间的唯一数字型字符串
+func getUniqueFileName() string {
+	name := time.Now().Format("2006-01-02 15:04:05")
+	name = strings.Replace(name, "-", "", -1)
+	name = strings.Replace(name, " ", "", -1)
+	name = strings.Replace(name, ":", "", -1)
+	return name
 }

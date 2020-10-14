@@ -2,10 +2,10 @@ package imagetowordapi
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"stbweb/core"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -71,10 +71,11 @@ type imageObject struct {
 //https://ai.baidu.com/docs#/OCR-API-GeneralBasic/top
 //注意：这里的数据不能使用上面那种imageObject形式在body中放json，只能用表单数据提交（下面这种），亲测无效
 //每次一张图片
-func getImageWord(imageBase64 []string) (AcceptResultWord, error) {
-	checkTokenEffect()
+func getImageWord(address, accessToken, accessTokenDate string, imageBase64 []string) (AcceptResultWord, error) {
+	checkTokenEffect(accessTokenDate)
 	client := &http.Client{}
-	res, err := client.PostForm(core.WebConfig.BaidubceAddress+"?access_token="+core.WebConfig.AccessToken, url.Values{
+	// res, err := client.PostForm(core.WebConfig.BaidubceAddress+"?access_token="+core.WebConfig.AccessToken, url.Values{
+	res, err := client.PostForm(address+"?access_token="+accessToken, url.Values{
 		"image": imageBase64,
 	})
 	if err != nil {
@@ -93,8 +94,9 @@ func getImageWord(imageBase64 []string) (AcceptResultWord, error) {
 }
 
 //GetImageWord 输入images base64格式数组，反馈解析内容和err，反馈的解析内容中包含对应word数组
-func GetImageWord(imageBase64 []string) (AcceptResultWord, error) {
-	return getImageWord(imageBase64)
+//address, accessToken 为core.WebConfig.BaidubceAddress  core.WebConfig.AccessToken  core.WebConfig.AccessTokenDate
+func GetImageWord(address, accessToken, accessTokenDate string, imageBase64 []string) (AcceptResultWord, error) {
+	return getImageWord(address, accessToken, accessTokenDate, imageBase64)
 }
 
 //judge30Date 日期是否在30天之内，是返回true
@@ -111,16 +113,18 @@ func judge30Date(date string) bool {
 }
 
 //checkTokenEffect 检查百度接口的token是否过期，如过期，请求新token并保存
-func checkTokenEffect() {
-	if judge30Date(core.WebConfig.AccessTokenDate) {
-		return
+func checkTokenEffect(accessTokenDate string) (string, string, error) {
+	if judge30Date(accessTokenDate) {
+		return "", "", errors.New("date success in 30")
 	}
 	logrus.WithFields(logrus.Fields{"baidu-word-token": "get new wordAPI token"}).Info("wordAPItoken")
 	at, err := getAccessToken()
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"baidu-word-token": err}).Panic("get baidu api err") //出错就直接异常
+		logrus.WithFields(logrus.Fields{"baidu-word-token": err}).Error("get baidu api err") //出错就直接异常
+		return "", "", err
 	}
-	core.WebConfig.AccessToken = at.AccessToken
-	core.WebConfig.AccessTokenDate = time.Now().Format("2006-01-02 15:04:05")
-	core.WebConfig.SaveConfig()
+	return at.AccessToken, time.Now().Format("2006-01-02 15:04:05"), nil
+	// core.WebConfig.AccessToken = at.AccessToken
+	// core.WebConfig.AccessTokenDate = time.Now().Format("2006-01-02 15:04:05")
+	// core.WebConfig.SaveConfig()
 }

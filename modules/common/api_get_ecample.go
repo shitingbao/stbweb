@@ -53,13 +53,13 @@ func sqlExample(pa interface{}, content *core.ElementHandleArgs) error {
 	core.SendJSON(content.Res, http.StatusOK, true)
 	return nil
 }
-func taskExample(pa interface{}, content *core.ElementHandleArgs) error {
+func taskExample(pa interface{}, p *core.ElementHandleArgs) error {
 	log.Println("this is start task")
 	ts := task.NewTask("sys", "clearMember", "0/2 * * * * ? ", func() error {
 		log.Println("this is task==========")
 		return nil
 	})
-	ts.Run()
+	ts.Run(core.Ddb, core.Rds)
 	return nil
 }
 

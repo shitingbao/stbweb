@@ -44,7 +44,7 @@ func getFileHands(p *core.ElementHandleArgs) ([]string, error) {
 		if err != nil {
 			return imageURLs, err
 		}
-		imageURL, err := images.ByteToImage(file)
+		imageURL, err := images.ByteToImage(core.DefaultFilePath, file)
 		if err != nil {
 			return imageURLs, err
 		}
@@ -64,7 +64,7 @@ func imagesOpera(imageURLs []string, p *core.ElementHandleArgs) ([]imagetowordap
 			return result, err
 		}
 		imagesBase64 = append(imagesBase64, base64)
-		res, err := imagetowordapi.GetImageWord(imagesBase64)
+		res, err := imagetowordapi.GetImageWord(core.WebConfig.BaidubceAddress, core.WebConfig.AccessToken, core.WebConfig.AccessTokenDate, imagesBase64)
 		if err != nil {
 			return result, err
 		}

@@ -3,7 +3,6 @@ package game
 import (
 	"encoding/json"
 	"errors"
-	"stbweb/core"
 	"stbweb/lib/ws"
 	"time"
 )
@@ -315,17 +314,17 @@ func deleteBrand(divisor, dividend DeckOfCards) DeckOfCards {
 }
 
 //RegisterAndStart 注册人员，满四人开始
-func RegisterAndStart(user string) {
+func RegisterAndStart(user string, cardHun *ws.Hub) {
 	brandsUser = append(brandsUser, user)
 	allUserBrands.UserBrands[user] = DeckOfCards{}
 	if len(allUserBrands.UserBrands) == 4 {
-		startBrandGame()
+		startBrandGame(cardHun)
 	}
 }
 
 //StartBrandGame 起始，使用map随机的特性，将原始总数据分发给四个用户
 //这里的第一次数据给定一个第一个出的用户，后续待定
-func startBrandGame() {
+func startBrandGame(cardHun *ws.Hub) {
 	totalBrands := dbuck.LicensingCode()
 	// log.Println(totalBrands)
 	vm := make(map[int]Brand)
@@ -352,7 +351,7 @@ func startBrandGame() {
 		ShowData: DeckOfCards{},
 		Success:  true,
 	}
-	core.CardHun.Broadcast <- ws.Message{
+	cardHun.Broadcast <- ws.Message{
 		User:     brandsUser[0],
 		Data:     result,
 		DateTime: time.Now(),

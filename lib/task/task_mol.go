@@ -5,9 +5,12 @@
 package task
 
 import (
-	"stbweb/core"
+	"database/sql"
 	"time"
 
+	"github.com/go-redis/redis"
+
+	"github.com/panjf2000/ants"
 	"github.com/sirupsen/logrus"
 
 	"github.com/pborman/uuid"
@@ -46,24 +49,25 @@ type Task struct {
 	IsCompleteChan chan bool    //用来主动反馈完成信号，需要一个单位的缓冲，防止阻塞,由于任务时异步，并且在协程池中，不能使用普通的反馈
 }
 
-func init() {
+//JobInit star
+func JobInit() *ants.Pool {
 	job.Start()
-	core.WorkPool = NewCommonPool()
+	return NewCommonPool()
 }
 
 //Stop job关闭
-func Stop() {
+func Stop(ap *ants.Pool) {
 	job.Stop()
 	workPool.Release()
-	core.WorkPool.Release()
+	ap.Release()
 }
 
 //加入过程，拼装成新的方法，提交入pool当中处理
-func (t *Task) submitPoolFunc() func() {
+func (t *Task) submitPoolFunc(db *sql.DB, rd *redis.Client) func() {
 	return func() {
 		workPool.Submit(func() {
 			var err error
-			stmt, err := core.Ddb.Prepare(`INSERT INTO task(
+			stmt, err := db.Prepare(`INSERT INTO task(
 				task_id, 
 				user,
 				task_type,
@@ -76,7 +80,7 @@ func (t *Task) submitPoolFunc() func() {
 			if err != nil {
 				logrus.WithFields(logrus.Fields{"sql-prepare": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
 			}
-			core.Rds.HSet(t.User, t.TaskType, t.TaskID) //记录执行，防止重复执行
+			rd.HSet(t.User, t.TaskType, t.TaskID) //记录执行，防止重复执行
 			t.executionTime = time.Now()
 			if err = t.Func(); err != nil {
 				logrus.WithFields(logrus.Fields{"func": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
@@ -86,7 +90,7 @@ func (t *Task) submitPoolFunc() func() {
 				t.complete = true
 				t.IsCompleteChan <- true
 			}
-			core.Rds.HDel(t.User, t.TaskType) //
+			rd.HDel(t.User, t.TaskType) //
 			mes := ""
 			if err != nil {
 				mes = err.Error()
@@ -99,12 +103,12 @@ func (t *Task) submitPoolFunc() func() {
 }
 
 //Run 运行一个task,内部将定时job和异步ants结合使用
-func (t *Task) Run() {
-	if core.Rds.HGet(t.User, t.TaskType).Val() != "" { //说明有相同的任务，不在执行
+func (t *Task) Run(db *sql.DB, rd *redis.Client) {
+	if rd.HGet(t.User, t.TaskType).Val() != "" { //说明有相同的任务，不在执行
 		return
 	}
 	t.createTime = time.Now()
-	if err := job.AddFunc(t.Spec, t.submitPoolFunc()); err != nil {
+	if err := job.AddFunc(t.Spec, t.submitPoolFunc(db, rd)); err != nil {
 		logrus.WithFields(logrus.Fields{"Spec": err}).Error("job") //增加错误反馈，该任务不执行应当反馈
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"stbweb/lib/config"
 	"stbweb/lib/ddb"
 	"stbweb/lib/rediser"
+	"stbweb/lib/task"
 	"stbweb/lib/ws"
 	"sync"
 	"time"
@@ -50,6 +51,7 @@ var (
 
 func init() {
 	checkLog()
+	WorkPool = task.JobInit()
 }
 func checkConfig() {
 	WebConfig = config.ReadConfig("./config.json") //配置准备

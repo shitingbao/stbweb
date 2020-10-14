@@ -57,7 +57,7 @@ func serve() {
 func Shutdown() {
 	core.Ddb.Close()
 	core.Rds.Close()
-	task.Stop()
+	task.Stop(core.WorkPool)
 }
 
 func externalServer() {
