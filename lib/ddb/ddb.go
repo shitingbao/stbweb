@@ -12,7 +12,7 @@ func open(driver, connect string) (*sql.DB, error) {
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
-	// db.Close()
+	db.SetConnMaxLifetime(0) //这里设置一下超时
 	return db, nil
 }
 
