@@ -9,11 +9,14 @@ import (
 
 //ZipParse 解析zip文件
 //baseURL为zip路径，flagURL目标文件解析路径（就是解析在哪个路径下）
-func ZipParse(baseURL, flagURL string) error {
+//并反馈所有文件具体路径列表
+func ZipParse(baseURL, flagURL string) ([]string, error) {
+	pathList := []string{}
 	r, err := zip.OpenReader(baseURL)
 	if err != nil {
-		return err
+		return pathList, err
 	}
+
 	defer r.Close()
 	for _, f := range r.File {
 		if f.FileInfo().IsDir() {
@@ -21,21 +24,22 @@ func ZipParse(baseURL, flagURL string) error {
 		}
 		rc, err := f.Open()
 		if err != nil {
-			return err
+			return pathList, err
 		}
 		ph := path.Join(flagURL, f.Name)
 		os.MkdirAll(path.Dir(ph), os.ModePerm)
 		fInfo, err := os.Create(ph)
 		if err != nil {
-			return err
+			return pathList, err
 		}
 
 		if _, err = io.CopyN(fInfo, rc, f.FileInfo().Size()); err != nil {
-			return err
+			return pathList, err
 		}
 		rc.Close()
+		pathList = append(pathList, ph)
 	}
-	return nil
+	return pathList, nil
 }
 
 // CreateZipFiles compresses one or many files into a single zip archive file.
