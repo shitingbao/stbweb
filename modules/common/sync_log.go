@@ -27,7 +27,11 @@ func (*syncLog) Get(p *core.ElementHandleArgs) {
 }
 
 func logUpdata(param interface{}, p *core.ElementHandleArgs) error {
-	ts := task.NewTask(p.Usr, "log_into", "0 0 1 * * ?", operaFunc) //晚上1点执行
+	m := p.Req.URL.Query().Get("starttime")
+	if m == "" {
+		m = "0 0 1 * * ?"
+	}
+	ts := task.NewTask(p.Usr, "log_into", m, operaFunc) //默认晚上1点执行
 	ts.Run(core.Ddb, core.Rds)
 	return nil
 }
