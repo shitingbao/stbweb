@@ -31,19 +31,20 @@ func logUpdata(param interface{}, p *core.ElementHandleArgs) error {
 	if m == "" {
 		m = "0 0 1 * * ?"
 	}
-	ts := task.NewTask(p.Usr, "log_into", m, operaFunc) //默认晚上1点执行
+	f := func() error {
+		//带守护进程的分布式锁
+		if core.DistributeLock(p.Usr, opera) {
+			return nil
+		}
+		return errors.New("执行失败")
+	}
+	ts := task.NewTask(p.Usr, "log_into", m, f) //默认晚上1点执行
 	ts.Run(core.Ddb, core.Rds)
 	return nil
 }
-func operaFunc() error {
-	//带守护进程的分布式锁
-	if core.DistributeLock("shitingbao", opera) {
-		return nil
-	}
-	return errors.New("执行失败")
-}
-func opera() {
-	fileList, err := ioutil.ReadDir(core.DefaultFilePath)
+
+func opera(user string) {
+	fileList, err := ioutil.ReadDir(path.Join(core.DefaultFilePath, user))
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"ReadDir": err.Error()}).Error("opera")
 		return
@@ -52,10 +53,10 @@ func opera() {
 		if v.IsDir() {
 			continue
 		}
-		//解析出数据包中的文件，依次载入
+		//解析出数据包中的文件，依次载入,注意数据文件在分别不同的用户路径下
 		switch path.Ext(path.Base(v.Name())) {
-		case "zip":
-			paseZip(v.Name())
+		case ".zip":
+			paseZip(path.Join(user, v.Name()))
 		}
 	}
 }

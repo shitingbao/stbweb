@@ -13,7 +13,7 @@ const (
 )
 
 //DistributeLock 用户，执行逻辑函数，带守护进程的分布式锁,成功执行反馈true
-func DistributeLock(user string, fc func()) bool {
+func DistributeLock(user string, fc func(name string)) bool {
 	//锁的标识得是有一个身份辨认,锁获取成功才继续
 	ok, err := Rds.SetNX(lockNx, "shitingbao", baseTime).Result()
 	if err != nil {
@@ -49,7 +49,7 @@ func DistributeLock(user string, fc func()) bool {
 			logrus.WithFields(logrus.Fields{"Execution function": err}).Error("DistributeLock")
 		}
 	}()
-	fc()
+	fc(user)
 	go func() { out <- true; close(out) }() //直接退出守护进程,这里要关闭out，防止select中两个同时到期
 	//唯一不足就是上面这两步中，在刚好延时操作和out信号同时发生时，out信号被忽略，select选择执行select的第一个选项，然而，这里的close还没执行到的时候
 	//这时候就发生out信号被忽略，关闭管道没执行，导致select第一步仍然续命一次，知道下一次检查超时，发现通道关闭才会释放锁（就是可能锁的占用时间多一个延时检查的时间）

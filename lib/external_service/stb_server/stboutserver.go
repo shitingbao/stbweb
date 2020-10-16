@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"stbweb/lib/external_service/stbserver"
 	"sync"
+
+	"github.com/sirupsen/logrus"
 )
 
 //StbServe 外部调用结构体
@@ -192,7 +194,7 @@ func (s *StbServe) SendGroupFile(cli stbserver.StbServer_SendGroupFileServer) er
 				panic(err)
 			}
 
-			fURL := filepath.Join(filepath.Dir(fDir), "assets")
+			fURL := filepath.Join(filepath.Dir(fDir), data.User)
 			mkdir(fURL)
 			sf, err = os.Create(filepath.Join(fURL, data.FileName))
 			if err != nil {
@@ -214,7 +216,7 @@ func mkdir(url string) {
 		return
 	}
 	if os.IsNotExist(err) {
-		log.Println("创建目录")
+		logrus.WithFields(logrus.Fields{"创建目录": url}).Info("stboutserver")
 		os.MkdirAll(url, os.ModePerm)
 	}
 }
