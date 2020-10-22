@@ -6,6 +6,7 @@ import (
 	"stbweb/lib/formopera"
 	"stbweb/lib/images"
 	imagetowordapi "stbweb/lib/imagetowordAPI"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -54,9 +55,19 @@ func getFileHands(p *core.ElementHandleArgs) ([]string, error) {
 	return imageURLs, nil
 }
 
-//imagesOpera 传入图片路径，亲求三方接口反馈文字对象
+//imagesOpera 传入图片路径，亲求三方接口反馈文字对象,需要先检查token可用性
 func imagesOpera(imageURLs []string, p *core.ElementHandleArgs) ([]imagetowordapi.AcceptResultWord, error) {
 	result := []imagetowordapi.AcceptResultWord{}
+	token, err := imagetowordapi.CheckTokenEffect(core.WebConfig.AccessTokenDate)
+	if err != nil {
+		return result, err
+	}
+	if token != "" {
+		core.WebConfig.AccessToken = token
+		core.WebConfig.AccessTokenDate = time.Now().Format("2006-01-02 15:04:05")
+		core.WebConfig.SaveConfig()
+	}
+
 	for _, v := range imageURLs {
 		imagesBase64 := []string{}
 		base64, err := images.ImageToBase64(v)
