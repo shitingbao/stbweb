@@ -26,6 +26,9 @@ COPY --from=stbbuildstage  /stbweb/builds/common/common .
 COPY --from=stbbuildstage  /stbweb/builds/common/config.json .
 COPY --from=stbbuildstage  /stbweb/builds/common/dist dist
 
+RUN apt-get -qq update \
+    && apt-get -qq install -y --no-install-recommends ca-certificates curl
+
 EXPOSE 3002
 
 ENTRYPOINT ["/opt/common"]
