@@ -25,7 +25,8 @@ WORKDIR /opt
 COPY --from=stbbuildstage  /stbweb/builds/common/common .
 COPY --from=stbbuildstage  /stbweb/builds/common/config.json .
 COPY --from=stbbuildstage  /stbweb/builds/common/dist dist
-
+RUN apk --no-cache add ca-certificates \
+  && update-ca-certificates
 EXPOSE 3002
 
 ENTRYPOINT ["/opt/common"]
