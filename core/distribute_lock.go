@@ -13,9 +13,11 @@ const (
 )
 
 //DistributeLock 用户，执行逻辑函数，带守护进程的分布式锁,成功执行反馈true
+//user标识谁在使用这把锁，fc为该锁执行的逻辑，name对应user
+//同步操作中尽量不使用该锁机制，因为可能遇到上一步操作已经完成，但是锁还没释放（因为释放锁的操作是异步操作），这个情况会导致虽然是同步调用该锁，但是还是会获取锁失败
 func DistributeLock(user string, fc func(name string)) bool {
 	//锁的标识得是有一个身份辨认,锁获取成功才继续
-	ok, err := Rds.SetNX(lockNx, "shitingbao", baseTime).Result()
+	ok, err := Rds.SetNX(lockNx, user, baseTime).Result()
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"setnx": err.Error()}).Error("redis")
 		return false
@@ -29,7 +31,7 @@ func DistributeLock(user string, fc func(name string)) bool {
 		for {
 			select {
 			case <-time.After(outTime):
-				if Rds.Get(lockNx).Val() != "shitingbao" { //只有自己的锁，才能给他续命//保险操作，非必须
+				if Rds.Get(lockNx).Val() != user { //只有自己的锁，才能给他续命//保险操作，非必须
 					return
 				}
 				//判断out是否关闭，因为这里可能两个都符合，随机执行的时候，其实已经完成任务，但是选择了续命锁的操作
@@ -46,6 +48,7 @@ func DistributeLock(user string, fc func(name string)) bool {
 	}()
 	defer func() { //fc错误收集
 		if err := recover(); err != nil {
+			go func() { out <- true; close(out) }() //说明执行fc异常了，释放锁
 			logrus.WithFields(logrus.Fields{"Execution function": err}).Error("DistributeLock")
 		}
 	}()

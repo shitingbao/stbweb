@@ -60,7 +60,6 @@ func checkConfig() {
 //初始化日志文件，如果已经初始化则跳过,并获取配置参数
 //重定向日志输出的文件
 func checkLog() {
-	// if LOG == nil {
 	checkConfig()
 	str, err := os.Executable()
 	if err != nil {
