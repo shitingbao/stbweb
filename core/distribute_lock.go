@@ -14,7 +14,6 @@ const (
 
 //DistributeLock 用户，执行逻辑函数，带守护进程的分布式锁,成功执行反馈true
 //user标识谁在使用这把锁，fc为该锁执行的逻辑，name对应user
-//同步操作中尽量不使用该锁机制，因为可能遇到上一步操作已经完成，但是锁还没释放（因为释放锁的操作是异步操作），这个情况会导致虽然是同步调用该锁，但是还是会获取锁失败
 func DistributeLock(user string, fc func(name string)) bool {
 	//锁的标识得是有一个身份辨认,锁获取成功才继续
 	ok, err := Rds.SetNX(lockNx, user, baseTime).Result()
