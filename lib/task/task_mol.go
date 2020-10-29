@@ -104,6 +104,10 @@ func (t *Task) submitPoolFunc(db *sql.DB, rd *redis.Client) func() {
 
 //Run 运行一个task,内部将定时job和异步ants结合使用
 func (t *Task) Run(db *sql.DB, rd *redis.Client) {
+	if cap(t.IsCompleteChan) != 1 {
+		logrus.WithFields(logrus.Fields{"IsCompleteChan": "Capacity should be 1"}).Error("job") //增加错误反馈，该任务不执行应当反馈
+		return
+	}
 	if rd.HGet(t.User, t.TaskType).Val() != "" { //说明有相同的任务，不在执行
 		return
 	}
