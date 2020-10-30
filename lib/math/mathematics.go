@@ -1,6 +1,8 @@
 package math
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // 第一种写法
 func quickSort(values []int, left, right int) {
@@ -85,4 +87,40 @@ func Quick3Sort(a []int, left int, right int) {
 	Quick3Sort(a, left, explodeIndex-1)
 	Quick3Sort(a, explodeIndex+1, right)
 
+}
+
+//快排
+
+func querySort(list []int) {
+	if len(list) < 2 {
+		return
+	}
+	start, stop := 0, len(list)-1
+	flag := true //标识中间值在前还是在后
+	for start != stop {
+		for list[start] <= list[stop] && start != stop {
+			if flag {
+				stop--
+			} else {
+				start++
+			}
+		}
+		if start == stop {
+			break
+		}
+		p := list[stop]
+		list[stop] = list[start]
+		list[start] = p
+		flag = !flag //交换过一次后，不是标识的位置需要去除
+		if flag {
+			stop--
+		} else {
+			start++
+		}
+		if start == stop {
+			break
+		}
+	}
+	querySort(list[:start])
+	querySort(list[start+1:])
 }
