@@ -108,9 +108,7 @@ func querySort(list []int) {
 		if start == stop {
 			break
 		}
-		p := list[stop]
-		list[stop] = list[start]
-		list[start] = p
+		list[start], list[stop] = list[stop], list[start]
 		flag = !flag //交换过一次后，不是标识的位置需要去除
 		if flag {
 			stop--
