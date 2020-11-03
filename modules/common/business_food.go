@@ -3,35 +3,74 @@ package common
 import (
 	"net/http"
 	"stbweb/core"
+	"time"
 )
 
 //商品信息操作
-type food struct {
-	ID   string
-	Name string
+type commodity struct {
+	ID          int64     `json:"id"`
+	Name        string    `json:"name"`
+	Category    string    `json:"category"`
+	Description string    `json:"description"`
+	Image       string    `json:"image"`
+	Price       float64   `json:"price"`
+	CreateTime  time.Time `json:"create_time"`
 }
 
 func init() {
-	core.RegisterFun("food", new(food), false)
+	core.RegisterFun("commodity", new(commodity), false)
 }
 
-func (c *food) Get(p *core.ElementHandleArgs) {
-	if p.APIInterceptionGet("info", nil, getFood) ||
-		p.APIInterceptionGet("del", nil, delFood) {
+func (c *commodity) Get(p *core.ElementHandleArgs) {
+	if p.APIInterceptionGet("del", nil, delCommodity) {
 		return
 	}
 }
 
-func getFood(pa interface{}, p *core.ElementHandleArgs) error {
-	var results []food
-	sql := `SELECT id,name FROM food`
-	rows, err := core.Ddb.Query(sql)
+func delCommodity(pa interface{}, p *core.ElementHandleArgs) error {
+	codeid := p.Req.URL.Query()["id"]
+	//默认会有一个空字符串，数组索引0不会为nil log.Println("codeid:", codeid[0])
+	if len(codeid) == 0 {
+		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"msg": "id can not null"})
+		return nil
+	}
+	stmt, err := core.Ddb.Prepare(`delete from commodity where id=?`)
+	if err != nil {
+		return err
+	}
+	if _, err := stmt.Exec(codeid[0]); err != nil {
+		return err
+	}
+	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true})
+	return nil
+}
+
+func (c *commodity) Post(p *core.ElementHandleArgs) {
+	if p.APIInterceptionPost("info", new(commodityWhere), getCommodity) ||
+		p.APIInterceptionPost("add", new(commodity), addCommodity) ||
+		p.APIInterceptionPost("update", new(commodity), updateCommodity) {
+		return
+	}
+}
+
+//搜索条件待定
+type commodityWhere struct {
+	Page  int64 `json:"page"`
+	Limit int64 `json:"limit"`
+}
+
+func getCommodity(pa interface{}, p *core.ElementHandleArgs) error {
+	param := pa.(*commodityWhere)
+	startLimit := (param.Page - 1) * param.Limit
+	var results []commodity
+	sql := `SELECT id,name,category,description,image,price,create_time FROM commodity limit ?,?`
+	rows, err := core.Ddb.Query(sql, startLimit, param.Limit)
 	if err != nil {
 		return err
 	}
 	for rows.Next() {
-		var result food
-		rows.Scan(&result.ID, &result.Name)
+		var result commodity
+		rows.Scan(&result.ID, &result.Name, &result.Category, &result.Description, &result.Image, &result.Price, &result.CreateTime)
 		results = append(results, result)
 	}
 	if err := rows.Err(); err != nil {
@@ -42,54 +81,28 @@ func getFood(pa interface{}, p *core.ElementHandleArgs) error {
 	return nil
 }
 
-func delFood(pa interface{}, p *core.ElementHandleArgs) error {
-	codeid := p.Req.URL.Query()["id"]
-	//默认会有一个空字符串，数组索引0不会为nil log.Println("codeid:", codeid[0])
-
-	if len(codeid[0]) == 0 {
-		core.SendJSON(p.Res, http.StatusOK, map[string]string{"msg": "id can not null"})
-		return nil
-	}
-	stmt, err := core.Ddb.Prepare(`delete from food where id=?`)
+func updateCommodity(param interface{}, p *core.ElementHandleArgs) error {
+	pa := param.(*commodity)
+	stmt, err := core.Ddb.Prepare(`UPDATE commodity SET name=?,category=?,description=?,image=?,price=? WHERE id=?`)
 	if err != nil {
 		return err
 	}
-	if _, err := stmt.Exec(codeid[0]); err != nil {
+	if _, err := stmt.Exec(pa.Name, pa.Category, pa.Description, pa.Image, pa.Price, pa.ID); err != nil {
 		return err
 	}
-	core.SendJSON(p.Res, http.StatusOK, map[string]bool{"success": true})
+	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true})
 	return nil
 }
 
-func (c *food) Post(p *core.ElementHandleArgs) {
-	if p.APIInterceptionPost("add", new(food), addFood) ||
-		p.APIInterceptionPost("update", new(food), updateFood) {
-		return
-	}
-}
-
-func updateFood(param interface{}, p *core.ElementHandleArgs) error {
-	pa := param.(*food)
-	stmt, err := core.Ddb.Prepare(`UPDATE food SET name=? WHERE id=?`)
+func addCommodity(param interface{}, p *core.ElementHandleArgs) error {
+	pa := param.(*commodity)
+	stmt, err := core.Ddb.Prepare(`INSERT INTO commodity(name,category,description,price,create_time) VALUES(?,?,?,?,?)`)
 	if err != nil {
 		return err
 	}
-	if _, err := stmt.Exec(pa.Name, pa.ID); err != nil {
+	if _, err := stmt.Exec(pa.Name, pa.Category, pa.Description, pa.Price, time.Now()); err != nil {
 		return err
 	}
-	core.SendJSON(p.Res, http.StatusOK, map[string]bool{"success": true})
-	return nil
-}
-
-func addFood(param interface{}, p *core.ElementHandleArgs) error {
-	pa := param.(*food)
-	stmt, err := core.Ddb.Prepare(`INSERT INTO food(name) VALUES(?)`)
-	if err != nil {
-		return err
-	}
-	if _, err := stmt.Exec(pa.Name); err != nil {
-		return err
-	}
-	core.SendJSON(p.Res, http.StatusOK, map[string]bool{"success": true})
+	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true})
 	return nil
 }
