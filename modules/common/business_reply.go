@@ -1,29 +1,48 @@
 package common
 
 import (
-	"fmt"
 	"net/http"
 	"stbweb/core"
 	"time"
 )
 
-//回复信息
-//每次只查询一部分，不管一级回复还是二级回复，前端点击展开，再次查询下一步的分页信息
+//评论，回复消息
+//（参考抖音回复）
+//它里面的评论结构，一个视频里面，首先是一级评论（根据点赞，时间，如果是本用户的评论，显示在最前面，排序）
+//二级评论，在一级下面展开，二级评论里面的回复就是指定用户，不再向下划分层次了，排序同理
+//他的层次其实就两层,下面都是i指定，就像@那种，谁对谁说,这样的话，在增加，删除都查一次就行,前端只要点击展开更多，根据这个条件，向下再取几条即可,然后加进去展示
+
+//完整的回复数据结构
+type replyResult struct {
+	ID         int64     `json:"id"`
+	LikeNumber int64     `json:"like_number"`
+	CreateTime time.Time `json:"create_time"`
+	Name       string    `json:"name"`
+	AimName    string    `json:"aim_name"`
+	reply
+}
+
+//部分数据结构，用于接受数据
 type reply struct {
-	ID          int64 `json:"id"`
+	CommodityID int64  `json:"commodity_id"`
+	ParentID    int64  `json:"parent_id"`
+	Common      string `json:"common"`
+	UserID      int64  `json:"user_id"`
+	AimsUserID  int64  `json:"aims_user_id"`
+}
+
+//搜索条件结构
+type replyWhere struct {
+	Limit       int64 `json:"limit"`
 	CommodityID int64 `json:"commodity_id"`
 	ParentID    int64 `json:"parent_id"`
-	LikeNumber  int64 `json:"like_number"`
-	Common      int64 `json:"common"`
-	CreateTime  int64 `json:"create_time"`
-	UserID      int64 `json:"user_id"`
 }
 
 func init() {
-	core.RegisterFun("reply", new(reply), false)
+	core.RegisterFun("reply", new(replyResult), false)
 }
 
-func (c *reply) Get(p *core.ElementHandleArgs) {
+func (c *replyResult) Get(p *core.ElementHandleArgs) {
 	if p.APIInterceptionGet("del", nil, delReply) {
 		return
 	}
@@ -31,7 +50,6 @@ func (c *reply) Get(p *core.ElementHandleArgs) {
 
 func delReply(pa interface{}, p *core.ElementHandleArgs) error {
 	codeid := p.Req.URL.Query()["id"]
-	//默认会有一个空字符串，数组索引0不会为nil log.Println("codeid:", codeid[0])
 	if len(codeid) == 0 {
 		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"msg": "id can not null"})
 		return nil
@@ -47,37 +65,35 @@ func delReply(pa interface{}, p *core.ElementHandleArgs) error {
 	return nil
 }
 
-func (c *reply) Post(p *core.ElementHandleArgs) {
+func (c *replyResult) Post(p *core.ElementHandleArgs) {
 	if p.APIInterceptionPost("info", new(replyWhere), getReply) ||
 		p.APIInterceptionPost("add", new(reply), addReply) {
 		return
 	}
 }
 
-//搜索条件待定
-type replyWhere struct {
-	Limit    int64 `json:"limit"`
-	FlagID   int64 `json:"flag_id"`   //commodity_id,或者是parent_id,根据is_parent，true为commodity_id
-	IsParent bool  `json:"is_parent"` //是否是一级回复
-}
-
+//获取一部分评论信息
 func getReply(pa interface{}, p *core.ElementHandleArgs) error {
 	param := pa.(*replyWhere)
-	var results []reply
-
-	sql := `SELECT id,commodity_id,parent_id,like_number,common,create_time,user_id FROM reply where %s=? order by create_time desc limit ?,?`
-	flagWhere := "commodity_id"
-	if !param.IsParent {
-		flagWhere = "parent_id"
-	}
-	//因为是评论，默认从头拿，所以是1开始
-	rows, err := core.Ddb.Query(fmt.Sprintf(sql, flagWhere), 1, param.Limit)
+	var results []replyResult
+	sql := `SELECT id,commodity_id,parent_id,like_number,common,create_time,user_id,
+				IFNULL(aims_user_id,0),
+				IFNULL((SELECT NAME FROM user WHERE id=user_id),'') as NAME,
+				IFNULL((SELECT NAME FROM user WHERE id=aims_user_id),'')	as aim_name  
+			FROM reply 
+			WHERE commodity_id=? AND parent_id=? 
+			order BY like_number DESC,create_time asc 
+			LIMIT 0,?`
+	//因为是评论，默认从头拿，所以是limit 0开始
+	rows, err := core.Ddb.Query(sql, param.CommodityID, param.ParentID, param.Limit)
 	if err != nil {
 		return err
 	}
 	for rows.Next() {
-		var result reply
-		rows.Scan(&result.ID, &result.CommodityID, &result.ParentID, &result.LikeNumber, &result.Common, &result.CreateTime, &result.UserID)
+		var result replyResult
+		if err := rows.Scan(&result.ID, &result.CommodityID, &result.ParentID, &result.LikeNumber, &result.Common, &result.CreateTime, &result.UserID, &result.AimsUserID, &result.Name, &result.AimName); err != nil {
+			return err
+		}
 		results = append(results, result)
 	}
 	if err := rows.Err(); err != nil {
@@ -90,11 +106,11 @@ func getReply(pa interface{}, p *core.ElementHandleArgs) error {
 
 func addReply(param interface{}, p *core.ElementHandleArgs) error {
 	pa := param.(*reply)
-	stmt, err := core.Ddb.Prepare(`INSERT INTO reply(commodity_id,parent_id,common,create_time,user_id) VALUES(?,?,?,?,?)`)
+	stmt, err := core.Ddb.Prepare(`INSERT INTO reply(commodity_id,parent_id,common,create_time,user_id,aims_user_id) VALUES(?,?,?,?,?,?)`)
 	if err != nil {
 		return err
 	}
-	if _, err := stmt.Exec(pa.CommodityID, pa.ParentID, pa.Common, time.Now(), pa.UserID); err != nil {
+	if _, err := stmt.Exec(pa.CommodityID, pa.ParentID, pa.Common, time.Now(), pa.UserID, pa.AimsUserID); err != nil {
 		return err
 	}
 	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true})
