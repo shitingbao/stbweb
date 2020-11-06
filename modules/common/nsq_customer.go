@@ -106,7 +106,7 @@ func startCustomerChannel2() {
 
 //使用封装方法
 func startCustomerChannel3() {
-	if err := snsq.NewNsqCustomer(tcpNsqdAddrr, "Insert", "channel3", &nsqHandler{nsqHandlerID: "three"}); err != nil {
+	if _, err := snsq.NewNsqCustomer(tcpNsqdAddrr, "Insert", "channel3", &nsqHandler{nsqHandlerID: "three"}); err != nil {
 		log.Println("ustomer3:", err)
 		return
 	}
