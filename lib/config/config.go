@@ -25,6 +25,10 @@ type Config struct {
 	Redislevel     int    //redis等级
 	RedisPort      string //redis端口号
 	ExternalServer bool   //是否开启外置服务，需要nsq支持，true为开启
+
+	MongoDriver   string //mongodb driver
+	MongoDatabase string //mongodb database
+	ChatNsqAddree string //nsq
 }
 
 //ReadConfig 读取本地config,传入config地址路径，反馈配置对象

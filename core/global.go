@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"stbweb/lib/config"
 	"stbweb/lib/ddb"
+	"stbweb/lib/mongodb"
 	"stbweb/lib/rediser"
 	"stbweb/lib/task"
 	"stbweb/lib/ws"
@@ -43,10 +44,15 @@ var (
 	CtrlHub *ws.Hub
 	//CardHun 牌hub对象
 	CardHun *ws.Hub
+	//RoomChatHub 新聊天室对象
+	RoomChatHub *ws.ChatHub
 	//Rds redis连接d
 	Rds *redis.Client
 	//WorkPool 全局工作池
 	WorkPool *ants.Pool
+
+	//Mdb mongodb连接对象
+	Mdb *mongodb.Mongodb
 )
 
 func init() {
@@ -96,10 +102,11 @@ func checkLog() {
 }
 
 //Initinal 函数初始化日志及数据库链接，以及以后的消息频道
-func Initinal(chatHub, ctrlHub, cardHun *ws.Hub) {
+func Initinal(chatHub, ctrlHub, cardHun *ws.Hub, roomChatHub *ws.ChatHub) {
 	ChatHub = chatHub
 	CtrlHub = ctrlHub
 	CardHun = cardHun
+	RoomChatHub = roomChatHub
 	pathExists()
 	if err := openx(WebConfig.Driver, WebConfig.ConnectString); err != nil {
 		logrus.WithFields(logrus.Fields{"Driver": WebConfig.Driver, "ConnectString": WebConfig.ConnectString}).Panic("database")
@@ -107,7 +114,16 @@ func Initinal(chatHub, ctrlHub, cardHun *ws.Hub) {
 	}
 	openRdis(WebConfig.RedisAdree+":"+WebConfig.RedisPort, WebConfig.RedisPwd, WebConfig.Redislevel)
 	// restoreConnect()
+	openMongodb(WebConfig.MongoDriver, WebConfig.MongoDatabase)
 	return
+}
+
+func openMongodb(driver, database string) {
+	mongo, err := mongodb.OpenMongoDb(driver, database)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"ConnectString": driver, "database": database}).Panic("mongodb")
+	}
+	Mdb = mongo
 }
 
 //Openx 打开一个数据库连接，返回一个包装过的DB对象，其能返回DriverName

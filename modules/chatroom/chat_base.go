@@ -1,11 +1,10 @@
 package chatroom
 
 import (
-	"encoding/json"
-	"stbweb/lib/snsq"
 	"sync"
 
 	"github.com/nsqio/go-nsq"
+	"github.com/pborman/uuid"
 )
 
 //技术选型
@@ -18,23 +17,35 @@ import (
 //一个房间对象，包含基本信息和连接
 //一个房间，对应一个nsq连接主题
 type chatRoom struct {
-	RoomID     string
-	RoomName   string
-	HostName   string
-	NumTotle   int
-	Num        int
-	RoomType   string
-	Common     string
-	roomClient *nsq.Consumer
+	chatRoomBase
+	// hub        hubClient
+	roomClient *nsq.Consumer //每个房间对应的队列连接，销毁房间时断开
+}
+
+//保存所有成员，以及对应tcp连接,用户user对应自己的tcp连接对象，这个是客户端连接
+// type hubClient map[string]*net.TCPConn
+
+//mongodb只保存这部分，用于查询即可
+type chatRoomBase struct {
+	RoomID   string //房间唯一id
+	HostName string //房主名称，user
+	chatRoomBaseInfo
+}
+
+type chatRoomBaseInfo struct {
+	RoomName string //房间名称
+	NumTotle int    //房间容量总人数
+	RoomType string //房间类型
+	Common   string //房间描述
 }
 
 var (
-	//房间池，新建房间应该从这里获取
+	//房间池，新建房间应该从这里获取，放回前需要先调用clear
 	roomPool *sync.Pool
 	//房间id，也从这里取，因为保存关系使用的是map，长度关系需要考虑
 	roomIDPool *sync.Pool
-	//tcp连接地址
-	tcpNsqAddree = "127.0.0.1:4150"
+	//tcp连接复用，退出房间放回,分配一个连接，退出房间或者超时都应该断开
+
 )
 
 func init() {
@@ -43,6 +54,12 @@ func init() {
 			return new(chatRoom)
 		},
 	}
+	roomIDPool = &sync.Pool{
+		New: func() interface{} {
+			return uuid.NewUUID().String()
+		},
+	}
+
 }
 
 //清理房间后，加入池（回收）,并且关闭nsq连接
@@ -51,33 +68,10 @@ func (c *chatRoom) clear() {
 	c.RoomName = ""
 	c.HostName = ""
 	c.NumTotle = 0
-	c.Num = 0
 	c.RoomType = ""
 	c.Common = ""
-	roomPool.Put(c)
+	// c.hub = make(hubClient)
 	c.roomClient.Stop()
-}
+	roomPool.Put(c)
 
-//nsq 消息handle
-type nsqHandle struct{}
-
-//nsq 消息传递结构
-type nsqMes struct {
-	ID   string
-	Name string
-}
-
-func (s *nsqHandle) HandleMessage(mes nsq.Message) error {
-	res := &nsqMes{}
-	if err := json.Unmarshal(mes.Body, res); err != nil {
-		return err
-	}
-	return nil
-}
-
-//只对应用户进入房间的逻辑操作，解决竞争关系使用队列
-//删除房间时，清除该主题,主题使用唯一uuid编码，生成时机待定
-//主题和通道统一使用一样的唯一号，方便对应，唯一号应该在生成房间时先生成
-func newRoomClient(tc string) (*nsq.Consumer, error) {
-	return snsq.NewNsqCustomer(tcpNsqAddree, tc, tc, &nsqHandle{})
 }
