@@ -200,16 +200,27 @@ func (h *ChatHub) Run() {
 	}
 }
 
-//Len 返回连接数量
+//Len 返回房间数量
 func (h *ChatHub) Len() int {
 	return len(h.clients)
 }
 
+//RoomUserNum 反馈房间内人数
+func (h *ChatHub) RoomUserNum(roomid string) int {
+	return len(h.clients[roomid])
+}
+
 //Unregister 主动退出一个连接
-func (c *ChatClient) Unregister() {
-	c.hub.unregister <- c //注销该client
-	c.conn.Close()
-	logrus.Info("websocket Close")
+func (h *ChatHub) Unregister(roomid, user string) {
+	for i, v := range h.clients[roomid] {
+		if v.name == user {
+			h.clients[roomid][i].hub.unregister <- h.clients[roomid][i] //注销该client
+			h.clients[roomid][i].conn.Close()
+		}
+	}
+	// c.hub.unregister <- c //注销该client
+	// c.conn.Close()
+	// logrus.Info("websocket Close")
 }
 
 // ServeChatWs handles websocket requests from the peer.
