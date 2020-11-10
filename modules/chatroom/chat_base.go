@@ -3,6 +3,10 @@ package chatroom
 import (
 	"sync"
 
+	"stbweb/core"
+
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/nsqio/go-nsq"
 	"github.com/pborman/uuid"
 )
@@ -73,5 +77,24 @@ func (c *chatRoom) clear() {
 	// c.hub = make(hubClient)
 	c.roomClient.Stop()
 	roomPool.Put(c)
+
+}
+
+//保存房间后，加入mongodb
+func (c *chatRoom) save() error {
+	bm := bson.M{"roomID": c.RoomID,
+		"RoomName": c.RoomName,
+		"NumTotle": c.NumTotle,
+		"RoomType": c.RoomType,
+		"Common":   c.Common,
+	}
+	if _, err := core.Mdb.InsertOne("room", bm); err != nil {
+		return err
+	}
+	return nil
+}
+
+//删除一个房间，删除mongodb，删除nsq主题，清理chatRoom对象
+func (c *chatRoom) delete() {
 
 }

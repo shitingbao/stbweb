@@ -1,14 +1,13 @@
 package chatroom
 
 import (
+	"log"
 	"net/http"
 	"stbweb/core"
-
-	"gopkg.in/mgo.v2/bson"
 )
 
 var (
-	//romid对应一个room,保存所有的房间唯一号和房间对象的对应关系
+	//romid对应一个room,保存所有的房间唯一号和房间对象的对应关系,主要是保存对应的nsq队列连接
 	roomNsqClients map[string]chatRoom
 )
 
@@ -19,7 +18,7 @@ func init() {
 	core.RegisterFun("chat", new(chat), true)
 }
 
-//Post 业务处理,post请求的例子
+//Post
 func (ap *chat) Post(arge *core.ElementHandleArgs) {
 	if arge.APIInterceptionPost("create", new(chatRoomBaseInfo), createRoom) {
 		return
@@ -48,22 +47,30 @@ func createRoom(param interface{}, p *core.ElementHandleArgs) error {
 
 	roomNsqClients[roomID] = room
 
-	if err := saveRoom(roomID); err != nil {
+	if err := room.save(); err != nil {
 		return err
-	} //存入mongodb//为了排序
+	}
 	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true, "room_id": roomID})
 	return nil
 }
 
-func saveRoom(roomID string) error {
-	if _, err := core.Mdb.InsertOne("room", bson.M{"roomID": roomID}); err != nil {
-		return err
+func (*chat) Get(p *core.ElementHandleArgs) {
+	if p.APIInterceptionGet("enter", nil, userEnterRoom) ||
+		p.APIInterceptionGet("leave", nil, userLeaveRoom) {
+		return
 	}
+}
+
+//进入房间,竞争关系，使用nsq获取前几个值，反馈成功的标识和房间唯一号，如何在服务端将房间号和服务端收到的连接对应上
+func userEnterRoom(param interface{}, p *core.ElementHandleArgs) error {
+	roomID := p.Req.URL.Query().Get("roomid")
+	log.Println("id:", roomID)
 	return nil
 }
 
-//进入房间，如何在服务端将房间号和服务端收到的连接对应上
-func userIntoRoom() {}
-
 //离开房间，注意如果是最后一个人，需要销毁对应nsq主题，删除对应mongodb中的房间数据
-func userLeaveRoom() {}
+func userLeaveRoom(param interface{}, p *core.ElementHandleArgs) error {
+	roomID := p.Req.URL.Query().Get("roomid")
+	log.Println("id:", roomID)
+	return nil
+}

@@ -9,11 +9,6 @@ import (
 	"github.com/nsqio/go-nsq"
 )
 
-var (
-//chat nsq连接地址
-// chatNsqAddree = "127.0.0.1:4150"
-)
-
 func handleConnect(con net.Conn) {
 	//处理消息逻辑
 }

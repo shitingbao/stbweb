@@ -182,20 +182,20 @@ func (h *ChatHub) Run() {
 
 		case mes := <-h.BroadcastUser: //将数据发给连接中的send，用来发送
 			data, err := json.Marshal(mes)
-			if err != nil {
-				logrus.Panic(err)
-			}
-			ct := h.clients[mes.RoomID]
-			for i, client := range ct { //clients中保存了所有的客户端连接，循环所有连接给与要发送的数据
-				select {
-				case client.send <- data: //将需要发送的数据放入send中，在write函数中实际发送
-				default:
-					//如果这个client不通,message无法进行发送，说明这个client已经关闭，接下来就去除对应client列表中的client，
-					//虽然在unregister中已经做了这个操作，但是防止某些非正常断开连接的操作的影响
-					close(client.send)               //关闭发送通道
-					ct = append(ct[:i], ct[i+1:]...) //删除连接
+			if err == nil {
+				ct := h.clients[mes.RoomID]
+				for i, client := range ct { //clients中保存了所有的客户端连接，循环所有连接给与要发送的数据
+					select {
+					case client.send <- data:
+					default:
+						close(client.send)
+						ct = append(ct[:i], ct[i+1:]...)
+					}
 				}
+			} else {
+				logrus.WithFields(logrus.Fields{"json": err}).Error("BroadcastUser")
 			}
+
 		}
 	}
 }
@@ -203,6 +203,13 @@ func (h *ChatHub) Run() {
 //Len 返回连接数量
 func (h *ChatHub) Len() int {
 	return len(h.clients)
+}
+
+//Unregister 主动退出一个连接
+func (c *ChatClient) Unregister() {
+	c.hub.unregister <- c //注销该client
+	c.conn.Close()
+	logrus.Info("websocket Close")
 }
 
 // ServeChatWs handles websocket requests from the peer.
@@ -215,6 +222,7 @@ func ServeChatWs(user, roomID string, hub *ChatHub, w http.ResponseWriter, r *ht
 		logrus.WithFields(logrus.Fields{"connect": err}).Info("websocket")
 		return
 	}
+
 	//生成一个client，里面包含用户信息连接信息等信息
 	client := &ChatClient{hub: hub, name: user, roomID: roomID, conn: conn, send: make(chan []byte, 256)}
 	client.hub.register <- client //将这个连接放入注册，在run中会加一个
