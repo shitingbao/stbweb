@@ -15,8 +15,10 @@ import (
 var (
 	//romid对应一个room,保存所有的房间唯一号和房间对象的对应关系,主要是保存对应的nsq队列连接
 	roomNsqClients map[string]chatRoom
-	//用于每个用户从队列中获取反馈值
+	//用于每个用户从队列中获取反馈值，nsq和接口的通讯方式，接口中提交，队列中反馈是否成功获取进入房间的资格（true/false），最后用redis保持资格时效性
 	userRoomChannel map[string]chan bool
+	//redis中保持进入房间资格的前缀的key，后面跟上对应user
+	roomChanPrefix = "room_chan_"
 )
 
 //基本chat接口结构
@@ -83,10 +85,9 @@ func userEnterRoomQualification(param interface{}, p *core.ElementHandleArgs) er
 		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"msg": "roomid is nil", "isEnter": false})
 		return errors.New("roomid not nil")
 	}
-	// core.Rds.SetNX("room_chan_"+p.Usr, "", time.Second)
 	//判断是否该用户已经有资格连接，重置该连接即可
-	if u := core.Rds.Get("room_chan_" + p.Usr).Val(); u != "" {
-		core.Rds.SetNX("room_chan_"+p.Usr, "", time.Second)
+	if u := core.Rds.Get(roomChanPrefix + p.Usr).Val(); u != "" {
+		core.Rds.SetNX(roomChanPrefix+p.Usr, u, time.Second)
 		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"isEnter_repeat": true, "qual": u})
 		return nil
 	}
@@ -122,7 +123,7 @@ func userEnterRoomQualification(param interface{}, p *core.ElementHandleArgs) er
 	case isEnter := <-cn:
 		if isEnter {
 			qualification := uuid.NewUUID().String()
-			core.Rds.SetNX("room_chan_"+p.Usr, "", time.Second) //设置过期时间，websocket使用时应该先判断该值是否过期
+			core.Rds.SetNX(roomChanPrefix+p.Usr, qualification, time.Second) //设置过期时间，websocket使用时应该先判断该值是否过期
 			core.SendJSON(p.Res, http.StatusOK, core.SendMap{"isEnter": true, "qual": qualification})
 		} else {
 			core.SendJSON(p.Res, http.StatusOK, core.SendMap{"msg": "enter room fail", "isEnter": false})
