@@ -165,7 +165,7 @@ func (c *ChatClient) readPump() {
 		}
 		if c.hub.OnMessage != nil { //执行回调函数
 			if err := c.hub.OnMessage(message, c.hub); err != nil {
-				logrus.WithFields(logrus.Fields{"ReadOnMessageError": err}).Info("websocket")
+				logrus.WithFields(logrus.Fields{"ReadOnMessageError": err}).Error("websocket")
 				break
 			}
 		}
@@ -178,7 +178,7 @@ func (h *RoomChatHubSet) Run() {
 		select {
 		case client := <-h.register: //客户端有新的连接就加入一个
 			h.clients[client.roomID] = append(h.clients[client.roomID], client)
-			logrus.Info("当前连接增加，", "总连接数为：", len(h.clients))
+			// logrus.Info("当前连接增加，", "总连接数为：", len(h.clients))
 		case client := <-h.unregister: //客户端断开连接，client会进入unregister中，直接在这里获取，删除一个
 			ct := h.clients[client.roomID]
 			delete(h.clients, client.roomID) //在map中根据对应value值，使用delete删除对应client
@@ -189,22 +189,22 @@ func (h *RoomChatHubSet) Run() {
 			}
 		case mes := <-h.Broadcast: //将数据发给所有连接中的send，用来发送全局消息，如系统提示消息或者全世界喊话
 			data, err := json.Marshal(mes)
-			if err != nil {
-				logrus.Panic(err)
-			}
-			for idx, cts := range h.clients {
-				for i, vclient := range cts {
-					select {
-					case vclient.send <- data: //将需要发送的数据放入send中，在write函数中实际发送
-					default:
-						//如果这个client不通,message无法进行发送，说明这个client已经关闭，接下来就去除对应client列表中的client，
-						//虽然在unregister中已经做了这个操作，但是防止某些非正常断开连接的操作的影响
-						close(vclient.send)                                                  //关闭发送通道
-						h.clients[idx] = append(h.clients[idx][:i], h.clients[idx][i+1:]...) //删除连接
+			if err == nil {
+				for idx, cts := range h.clients {
+					for i, vclient := range cts {
+						select {
+						case vclient.send <- data: //将需要发送的数据放入send中，在write函数中实际发送
+						default:
+							//如果这个client不通,message无法进行发送，说明这个client已经关闭，接下来就去除对应client列表中的client，
+							//虽然在unregister中已经做了这个操作，但是防止某些非正常断开连接的操作的影响
+							close(vclient.send)                                                  //关闭发送通道
+							h.clients[idx] = append(h.clients[idx][:i], h.clients[idx][i+1:]...) //删除连接
+						}
 					}
 				}
+			} else {
+				logrus.WithFields(logrus.Fields{"json Marshal": err}).Error("websocket")
 			}
-
 		case mes := <-h.BroadcastUser: //将数据发给连接中的send，用来发送
 			data, err := json.Marshal(mes)
 			if err == nil {
