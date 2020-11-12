@@ -7,7 +7,6 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 
-	"github.com/nsqio/go-nsq"
 	"github.com/pborman/uuid"
 )
 
@@ -18,19 +17,8 @@ import (
 
 //适当使用sync.pool重用chatRoom
 
-//一个房间对象，包含基本信息和连接
-//一个房间，对应一个nsq连接主题
+//一个房间对象，包含基本信息
 type chatRoom struct {
-	chatRoomBase
-	// hub        hubClient
-	roomClient *nsq.Consumer //每个房间对应的队列连接，销毁房间时断开
-}
-
-//保存所有成员，以及对应tcp连接,用户user对应自己的tcp连接对象，这个是客户端连接
-// type hubClient map[string]*net.TCPConn
-
-//mongodb只保存这部分，用于查询即可
-type chatRoomBase struct {
 	RoomID   string //房间唯一id
 	HostName string //房主名称，user
 	chatRoomBaseInfo
@@ -74,8 +62,6 @@ func (c *chatRoom) clear() {
 	c.NumTotle = 0
 	c.RoomType = ""
 	c.Common = ""
-	// c.hub = make(hubClient)
-	c.roomClient.Stop()
 	roomPool.Put(c)
 
 }

@@ -8,6 +8,7 @@ import (
 	"stbweb/lib/rediser"
 	"stbweb/lib/ws"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -50,13 +51,13 @@ func initChatWebsocket() (chatHub, ctrlHub, cardHun *ws.Hub, roomChatHub *ws.Cha
 	go roomChatHub.Run()
 	http.HandleFunc("/room/chat", func(w http.ResponseWriter, r *http.Request) {
 		// rediser.GetUser(core.Rds, r.Header.Get("Sec-WebSocket-Protocol"))
-		//Sec中的值含义：用户名，房间号，标识，用分号隔开，需要检查标识的时效性，代表是否能进入房间，在chat模块中通过获取进入房间资格接口获取
+		//Sec中的值含义：用户名，房间号，用分号隔开，需要检查标识的时效性，代表是否能进入房间，在chat模块中通过获取进入房间资格接口获取
 		info := strings.Split(r.Header.Get("Sec-WebSocket-Protocol"), ":")
-		if len(info) != 3 {
+		if len(info) != 2 {
 			logrus.WithFields(logrus.Fields{"Sec-WebSocket-Protocol": "len should 2"}).Error("roomChatHub")
 			return
 		}
-		if u := core.Rds.Get(roomChanPrefix + info[0]).Val(); u == "" {
+		if err := core.Rds.SetNX(info[0], info[0], time.Second).Err(); err == nil { //如果设置成功了，说明该锁已经过期了
 			logrus.WithFields(logrus.Fields{"连接资格无效": info[0], "房间号": info[1]}).Error("chat")
 			return
 		}

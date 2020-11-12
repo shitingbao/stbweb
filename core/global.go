@@ -53,6 +53,9 @@ var (
 
 	//Mdb mongodb连接对象
 	Mdb *mongodb.Mongodb
+
+	//RoomLocks 房间号对应的锁结构，key为roomid
+	RoomLocks map[string]*CustomizeLock
 )
 
 func init() {
