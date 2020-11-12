@@ -11,11 +11,9 @@ import (
 )
 
 //技术选型
-//nsq消息队列，解决竞争
-//mongodb频繁请求和松散的数据关系
-//tcp连接，自由管理连接以及用户活动状态
-
-//适当使用sync.pool重用chatRoom
+//mongodb频繁请求和松散的数据关系，获取房间列表等
+//自定义锁机制，类似java分段锁，一个房间内一把锁给一个用户使用，解决进入房间的竞争关系
+//适当使用sync.pool重用RoomID和chatRoom，因为RoomID作为key在房间对象和锁key中都用到，并且使用了map保持关系，防止map没有释放，复用该值可适当减少并提升效率
 
 //一个房间对象，包含基本信息
 type chatRoom struct {

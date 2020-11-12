@@ -29,10 +29,18 @@ func (ap *chat) Post(arge *core.ElementHandleArgs) {
 //新建一个room对象，注意唯一号和房间对象都应该从对应池中获取，因为全局使用map保存，聊天websocket中也使用了map，考虑实际长度
 func createRoom(param interface{}, p *core.ElementHandleArgs) error {
 	pm := param.(*chatRoomBaseInfo)
-
+	if pm.NumTotle < 2 {
+		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": "房间人数不能少于两人"})
+		return nil
+	}
 	roomID := roomIDPool.Get().(string)
 	room := roomPool.Get().(chatRoom)
 
+	ck := core.NewLock(pm.NumTotle, roomID)
+	if !ck.GetLock(p.Usr) {
+		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": "获取进入房间资格失败"})
+		return nil
+	}
 	room.RoomID = roomID
 	room.HostName = p.Usr
 	room.RoomName = pm.RoomName

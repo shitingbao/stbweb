@@ -1,4 +1,4 @@
-package ws
+package core
 
 //改进以前发送某个特定消息的逻辑，需要轮询查找所有连接
 //重写websocket，为了将连接分类，根据roomid，将每个房间的连接根据房间号来分，便于直接找到对应房间内的连接
@@ -12,6 +12,31 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	// Time allowed to write a message to the peer.
+	writeWait = 10 * time.Second
+
+	// Time allowed to read the next pong message from the peer.
+	pongWait = 5 * time.Minute
+
+	// Send pings to peer with this period. Must be less than pongWait.
+	pingPeriod = (pongWait * 9) / 10
+
+	// Maximum message size allowed from peer.
+	maxMessageSize = 512
+)
+
+var (
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+	pongWaitSet = time.Now()
+)
+
 //ChatMessage 管道中的消息
 //user中为空"",则为全体发送，写入username则为指定发送，包括自己的信息
 type ChatMessage struct {
@@ -22,8 +47,8 @@ type ChatMessage struct {
 }
 
 //NewChatHub 分配一个新的Hub，使用前先获取这个hub对象
-func NewChatHub(onEvent OnMessageFuncChat) *ChatHub {
-	return &ChatHub{
+func NewChatHub(onEvent OnMessageFuncChat) *RoomChatHubSet {
+	return &RoomChatHubSet{
 		Broadcast:  make(chan ChatMessage),           //包含要想向前台传递的数据，内部使用chan通道传输
 		register:   make(chan *ChatClient),           //有新的连接，将放入这里
 		unregister: make(chan *ChatClient),           //断开连接加入这
@@ -33,14 +58,14 @@ func NewChatHub(onEvent OnMessageFuncChat) *ChatHub {
 }
 
 //OnMessageFuncChat 接收到消息触发的事件
-type OnMessageFuncChat func(message []byte, hub *ChatHub) error
+type OnMessageFuncChat func(message []byte, hub *RoomChatHubSet) error
 
 // ChatClient is a middleman between the websocket connection and the hub.
 //可增加一个用户属性，用来区分不同的连接，便于在发送的时候区分发送，不走同一个频道，这样就可以分为全局频道和局部频道
 //需要登录配合，可以将用户登陆时保存在cookie中，在注册client时获取
 type ChatClient struct {
-	hub    *ChatHub
-	name   string
+	hub    *RoomChatHubSet
+	user   string
 	roomID string
 	// The websocket connection.
 	conn *websocket.Conn
@@ -49,9 +74,9 @@ type ChatClient struct {
 	send chan []byte
 }
 
-//ChatHub maintains the set of active clients and broadcasts messages to the
+//RoomChatHubSet maintains the set of active clients and broadcasts messages to the
 //clients.
-type ChatHub struct {
+type RoomChatHubSet struct {
 	// Registered clients.
 	clients map[string]([]*ChatClient)
 
@@ -79,6 +104,7 @@ func (c *ChatClient) writePump() {
 	defer func() {
 		ticker.Stop()
 		c.conn.Close()
+		RoomLocks[c.roomID].FreedLock(c.user) //退出并释放锁
 	}()
 	for {
 		select {
@@ -115,11 +141,10 @@ func (c *ChatClient) writePump() {
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
 func (c *ChatClient) readPump() {
-	logrus.Info("star read message")
 	defer func() {
 		c.hub.unregister <- c //读取完毕后注销该client
 		c.conn.Close()
-		logrus.Info("websocket Close")
+		RoomLocks[c.roomID].FreedLock(c.user) //退出并释放锁
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
 	pongTime := time.Now().Add(pongWait)
@@ -148,7 +173,7 @@ func (c *ChatClient) readPump() {
 }
 
 //Run 开始消息读写队列，无限循环，应该用go func的方式调用
-func (h *ChatHub) Run() {
+func (h *RoomChatHubSet) Run() {
 	for {
 		select {
 		case client := <-h.register: //客户端有新的连接就加入一个
@@ -201,30 +226,26 @@ func (h *ChatHub) Run() {
 }
 
 //Len 返回房间数量
-func (h *ChatHub) Len() int {
+func (h *RoomChatHubSet) Len() int {
 	return len(h.clients)
 }
 
 //RoomUserNum 反馈房间内人数
-func (h *ChatHub) RoomUserNum(roomid string) int {
+func (h *RoomChatHubSet) RoomUserNum(roomid string) int {
 	return len(h.clients[roomid])
 }
 
 //Unregister 主动退出一个连接
-func (h *ChatHub) Unregister(roomid, user string) {
+func (h *RoomChatHubSet) Unregister(roomid, user string) {
 	for i, v := range h.clients[roomid] {
-		if v.name == user {
+		if v.user == user {
 			h.clients[roomid][i].hub.unregister <- h.clients[roomid][i] //注销该client
-			h.clients[roomid][i].conn.Close()
 		}
 	}
-	// c.hub.unregister <- c //注销该client
-	// c.conn.Close()
-	// logrus.Info("websocket Close")
 }
 
 // ServeChatWs handles websocket requests from the peer.
-func ServeChatWs(user, roomID string, hub *ChatHub, w http.ResponseWriter, r *http.Request) {
+func ServeChatWs(user, roomID string, hub *RoomChatHubSet, w http.ResponseWriter, r *http.Request) {
 	h := http.Header{}
 	pro := r.Header.Get("Sec-WebSocket-Protocol")
 	h.Add("Sec-WebSocket-Protocol", pro)   //带有websocket的Protocol子header需要传入对应header，不然会有1006错误
@@ -235,7 +256,7 @@ func ServeChatWs(user, roomID string, hub *ChatHub, w http.ResponseWriter, r *ht
 	}
 
 	//生成一个client，里面包含用户信息连接信息等信息
-	client := &ChatClient{hub: hub, name: user, roomID: roomID, conn: conn, send: make(chan []byte, 256)}
+	client := &ChatClient{hub: hub, user: user, roomID: roomID, conn: conn, send: make(chan []byte, 256)}
 	client.hub.register <- client //将这个连接放入注册，在run中会加一个
 	go client.writePump()         //新开一个写入，因为有一个用户连接就新开一个，相互不影响，在内部实现心跳包检测连接，详细看函数内部
 	client.readPump()             //读取websocket中的信息，详细看函数内部

@@ -45,7 +45,7 @@ var (
 	//CardHun 牌hub对象
 	CardHun *ws.Hub
 	//RoomChatHub 新聊天室对象
-	RoomChatHub *ws.ChatHub
+	RoomChatHub *RoomChatHubSet
 	//Rds redis连接d
 	Rds *redis.Client
 	//WorkPool 全局工作池
@@ -105,7 +105,7 @@ func checkLog() {
 }
 
 //Initinal 函数初始化日志及数据库链接，以及以后的消息频道
-func Initinal(chatHub, ctrlHub, cardHun *ws.Hub, roomChatHub *ws.ChatHub) {
+func Initinal(chatHub, ctrlHub, cardHun *ws.Hub, roomChatHub *RoomChatHubSet) {
 	ChatHub = chatHub
 	CtrlHub = ctrlHub
 	CardHun = cardHun

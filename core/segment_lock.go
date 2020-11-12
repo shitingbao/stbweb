@@ -5,8 +5,6 @@ package core
 
 import (
 	"time"
-
-	"github.com/sirupsen/logrus"
 )
 
 //SegmentLockPro 锁标识前缀
@@ -19,20 +17,24 @@ type CustomizeLock struct {
 	flag  chan bool
 }
 
-//NewLock 新建一个锁，放入需要使用的长度
+//NewLock 新建一个锁，放入需要使用的长度,以及对应roomid的标识
+//长度应当不能少于2，对应房间人数
 //同时在flag队列里面放满标识待用
-//注意这里不能关闭标识通道，因为需要复用，重新加入标识（比如超时没有使用该锁）
-func NewLock(cap int) *CustomizeLock {
+//注意这里不能关闭标识通道，因为需要复用，重新加入标识（比如使用完毕或者超时，重新放入，等待下一次使用）
+//这里生成后直接加入对应全局房间锁列表中
+func NewLock(cap int, roomID string) *CustomizeLock {
 	flag := make(chan bool, cap)
 	for i := 0; i < cap; i++ {
 		flag <- true
 	}
-	// close(flag)
-	return &CustomizeLock{
+	ck := &CustomizeLock{
 		cap:   cap,
 		locks: make(map[string]bool),
 		flag:  flag,
 	}
+	RoomLocks[roomID] = ck
+	// close(flag)
+	return ck
 }
 
 //GetLock 从标识队列中获取一个锁,并加入使用对象，同时开始计时
@@ -62,10 +64,10 @@ func (c *CustomizeLock) GetLock(user string) bool {
 // FreedLock 释放锁
 func (c *CustomizeLock) FreedLock(user string) {
 	delete(c.locks, user)
-	if err := Rds.Del(user).Err(); err != nil {
-		logrus.WithFields(logrus.Fields{"del lock": err}).Error("segment_lock")
+	if err := Rds.Del(SegmentLockPro + user).Err(); err == nil {
+		// 因为websocket中读，写都会可能断开连接，这里保险，只有删除成功才放回标识，防止多次放回
+		c.flag <- true //记得放回标识、
 	}
-	c.flag <- true //记得放回标识、
 }
 
 //ResetLockOutTime 重置过期时间

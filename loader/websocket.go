@@ -16,7 +16,7 @@ import (
 var roomChanPrefix = "room_chan_"
 
 //initChatWebsocket 初始化websocket hub，开启消息处理循环
-func initChatWebsocket() (chatHub, ctrlHub, cardHun *ws.Hub, roomChatHub *ws.ChatHub) {
+func initChatWebsocket() (chatHub, ctrlHub, cardHun *ws.Hub, roomChatHub *core.RoomChatHubSet) {
 	chatHub = ws.NewHub(func(data []byte, hub *ws.Hub) error {
 		msg := ws.Message{}
 		if err := json.Unmarshal(data, &msg); err != nil {
@@ -46,7 +46,7 @@ func initChatWebsocket() (chatHub, ctrlHub, cardHun *ws.Hub, roomChatHub *ws.Cha
 		ws.ServeWs(rediser.GetUser(core.Rds, r.Header.Get("Sec-WebSocket-Protocol")), ctrlHub, w, r)
 	})
 
-	roomChatHub = ws.NewChatHub(nil)
+	roomChatHub = core.NewChatHub(nil)
 	//ctrl 控制消息
 	go roomChatHub.Run()
 	http.HandleFunc("/room/chat", func(w http.ResponseWriter, r *http.Request) {
@@ -57,11 +57,12 @@ func initChatWebsocket() (chatHub, ctrlHub, cardHun *ws.Hub, roomChatHub *ws.Cha
 			logrus.WithFields(logrus.Fields{"Sec-WebSocket-Protocol": "len should 2"}).Error("roomChatHub")
 			return
 		}
-		if err := core.Rds.SetNX(info[0], info[0], time.Second).Err(); err == nil { //如果设置成功了，说明该锁已经过期了
+		if err := core.Rds.SetNX(core.SegmentLockPro+info[0], info[0], time.Second).Err(); err == nil { //如果设置成功了，说明该锁已经过期了
+			//这里注意的是，并不需要保持这个redis中的锁信息，只需要在这个时间内检查一下即可，检查该次连接是否在这个时间段内连接
 			logrus.WithFields(logrus.Fields{"连接资格无效": info[0], "房间号": info[1]}).Error("chat")
 			return
 		}
-		ws.ServeChatWs(info[0], info[1], roomChatHub, w, r)
+		core.ServeChatWs(info[0], info[1], roomChatHub, w, r)
 	})
 	return
 }
