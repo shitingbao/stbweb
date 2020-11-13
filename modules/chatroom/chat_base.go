@@ -68,6 +68,7 @@ func (c *chatRoom) clear() {
 func (c *chatRoom) save() error {
 	bm := bson.M{"roomID": c.RoomID,
 		"RoomName": c.RoomName,
+		"HostName": c.HostName,
 		"NumTotle": c.NumTotle,
 		"RoomType": c.RoomType,
 		"Common":   c.Common,
@@ -77,6 +78,17 @@ func (c *chatRoom) save() error {
 	}
 	return nil
 }
+
+func (c *chatRoom) add() error {
+	// res, err := core.Mdb.Selectone("room", bson.M{"roomID": c.RoomID})
+	// if err != nil {
+	// 	return err
+	// }
+
+	return nil
+}
+
+func (c *chatRoom) done() {}
 
 //删除一个房间，删除mongodb，删除nsq主题，清理chatRoom对象
 func (c *chatRoom) delete() {

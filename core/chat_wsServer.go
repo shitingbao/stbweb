@@ -109,6 +109,7 @@ func (c *ChatClient) writePump() {
 	for {
 		select {
 		case message, ok := <-c.send: //这里send里面的值时run里面获取的，在这里才开始实际向前台传值
+			//这里add时间，逻辑上是因为发言越多，可持续超时时间就越长，一句话都不说，那就5分钟就滚犊子了
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait)) //设置写入的死亡时间，相当于http的超时
 			if !ok {
 				// The hub closed the channel.

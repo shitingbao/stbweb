@@ -45,16 +45,6 @@ func (c *CustomizeLock) GetLock(user string) bool {
 	select {
 	case <-c.flag:
 		c.locks[user] = true
-		go func() {
-			tm := time.NewTicker(time.Second)
-			select {
-			case <-tm.C:
-				if err := Rds.SetNX(SegmentLockPro+user, user, time.Second).Err(); err == nil { //这里设置成功说明使用者在规定时间段内没有使用这把锁
-					delete(c.locks, user)
-					c.flag <- true //记得放回标识
-				}
-			}
-		}()
 		return true
 	default:
 		return false
@@ -64,10 +54,7 @@ func (c *CustomizeLock) GetLock(user string) bool {
 // FreedLock 释放锁
 func (c *CustomizeLock) FreedLock(user string) {
 	delete(c.locks, user)
-	if err := Rds.Del(SegmentLockPro + user).Err(); err == nil {
-		// 因为websocket中读，写都会可能断开连接，这里保险，只有删除成功才放回标识，防止多次放回
-		c.flag <- true //记得放回标识、
-	}
+	c.flag <- true //记得放回标识
 }
 
 //ResetLockOutTime 重置过期时间
