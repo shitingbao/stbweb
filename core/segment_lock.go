@@ -3,14 +3,13 @@
 //2.在使用时，应该给他设置以user为key的setnx
 package core
 
-import (
-	"time"
-)
-
 //SegmentLockPro 锁标识前缀
 var SegmentLockPro = "segment_lock_pro_"
 
 //CustomizeLock cap总长度，锁实际内容，key标识所属（user），bool代表是否已经使用，true标识已经使用，超时删除map内的对应key关系
+//flag标识过程的锁，用户限制连接数
+//OutLock自己的锁，用于释放该锁对象时锁定，防止在释放过程中，有连接加入，连接前先测试该锁（比如执行释放锁的同时，有连接加入的情况）
+//OutLock只有在连接，以及该整体锁释放（解散房间）的时候使用，和flag分开
 type CustomizeLock struct {
 	cap   int
 	locks map[string]bool
@@ -37,13 +36,14 @@ func NewLock(cap int, roomID string) *CustomizeLock {
 	return ck
 }
 
-//GetLock 从标识队列中获取一个锁,并加入使用对象，同时开始计时
-//使用该锁时，应当设置setnx，给超时检查一个信号，说明已经使用
-//使用过程中应该给setnx延续时间，以本身的user为key
-//同理，在使用时如果setnx发生错误，说明已经超时，需要重新获取锁
+//GetLock 从标识队列中获取一个锁,并加入使用对象
+//关闭通道说明房间移除，临界情况为，过程中加入丽连接
 func (c *CustomizeLock) GetLock(user string) bool {
 	select {
-	case <-c.flag:
+	case _, ok := <-c.flag:
+		if !ok {
+			return false
+		}
 		c.locks[user] = true
 		return true
 	default:
@@ -57,7 +57,8 @@ func (c *CustomizeLock) FreedLock(user string) {
 	c.flag <- true //记得放回标识
 }
 
-//ResetLockOutTime 重置过期时间
-func (c *CustomizeLock) ResetLockOutTime(user string) {
-	Rds.Expire(SegmentLockPro+user, time.Second)
+//Clear 清理锁
+func (c *CustomizeLock) Clear(roomID string) {
+	close(c.flag)
+	delete(RoomLocks, roomID)
 }

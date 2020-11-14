@@ -3,15 +3,20 @@ package chatroom
 import (
 	"net/http"
 	"stbweb/core"
-)
-
-var (
-	//romid对应一个room,保存所有的房间唯一号和房间对象的对应关系
-	roomSets map[string]chatRoom
+	"stbweb/lib/chatroom"
+	"time"
 )
 
 //基本chat接口结构
 type chat struct{}
+
+//chatRoomBaseInfo 基本信息
+type chatRoomBaseInfo struct {
+	RoomName string //房间名称
+	NumTotle int    //房间容量总人数
+	RoomType string //房间类型
+	Common   string //房间描述
+}
 
 func init() {
 	core.RegisterFun("chat", new(chat), true)
@@ -31,25 +36,27 @@ func createRoom(param interface{}, p *core.ElementHandleArgs) error {
 		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": "房间人数不能少于两人"})
 		return nil
 	}
-	roomID := roomIDPool.Get().(string)
-	room := roomPool.Get().(chatRoom)
+	roomID := chatroom.RoomIDPool.Get().(string)
+	room := chatroom.RoomPool.Get().(chatroom.ChatRoom)
 
 	ck := core.NewLock(pm.NumTotle, roomID)
 	if !ck.GetLock(p.Usr) {
 		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": "获取进入房间资格失败"})
 		return nil
 	}
+
 	room.RoomID = roomID
 	room.HostName = p.Usr
 	room.RoomName = pm.RoomName
 	room.NumTotle = pm.NumTotle
 	room.RoomType = pm.RoomType
 	room.Common = pm.Common
+	room.CreateTime = time.Now()
 
-	roomSets[roomID] = room
-	if err := room.save(); err != nil {
-		return err
-	}
+	core.RoomSets[roomID] = room
+	// if err := room.save(); err != nil {//mongdodb保存，待定
+	// 	return err
+	// }
 	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true, "room_id": roomID})
 	return nil
 }
@@ -60,10 +67,60 @@ func (*chat) Get(p *core.ElementHandleArgs) {
 	}
 }
 
-//离开房间，注意如果是最后一个人，需要销毁对应nsq主题，删除对应mongodb中的房间数据
-//注意房主退出，替换房主
+//解散房间，这个功能待定，可能发生的问题是：在解散过程中，新来了一个连接，这时候该连接是正常进入，但是这个房间被解散了，变成了“孤儿”连接，
+//连接是用map保存关系的，非线程安全
+//这个人进入房间啥也没有，虽然可以退出再进，或者显示房间已解散，但是多个“孤儿”同时出现就是逻辑漏洞了，
+//还有就是房间id又是复用的，可能出现刚新建一个房间，里面已经有个人了
+// func clearRoom(param interface{}, p *core.ElementHandleArgs) error {
+// 	roomID := p.Req.URL.Query().Get("roomid")
+// 	if roomID == "" {
+// 		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": "roomID is nil"})
+// 		return nil
+// 	}
+// 	core.RoomChatHub.UnregisterALL(roomID)
+// 	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true})
+// 	return nil
+// }
+
+//离开房间，注意如果是最后一个人，删除对应mongodb中的房间数据
+//注意房主退出，直接清除所有成员
 func userLeaveRoom(param interface{}, p *core.ElementHandleArgs) error {
 	roomID := p.Req.URL.Query().Get("roomid")
+	if roomID == "" {
+		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": "roomID is nil"})
+		return nil
+	}
 	core.RoomChatHub.Unregister(roomID, p.Usr)
+	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true})
 	return nil
+}
+
+//移交房主
+func transferRoomHost(param interface{}, p *core.ElementHandleArgs) error {
+	nextuser := p.Req.URL.Query().Get("nextuser")
+	roomID := p.Req.URL.Query().Get("roomid")
+	room := core.RoomSets[roomID]
+	if p.Usr == room.HostName {
+		room.HostName = nextuser
+		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true})
+		return nil
+	}
+	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false})
+	return nil
+}
+
+//清理房间分三步，清理房间对象数据和对应的房间锁对象，以及断开房间内的连接
+func clearRoom(param interface{}, p *core.ElementHandleArgs) error {
+	roomID := p.Req.URL.Query().Get("roomid")
+	freedRoom(roomID)
+	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true})
+	return nil
+}
+
+func freedRoom(roomID string) {
+	room := core.RoomSets[roomID]
+	room.Clear()
+	ck := core.RoomLocks[roomID]
+	ck.Clear(roomID)
+	core.RoomChatHub.UnregisterALL(roomID)
 }

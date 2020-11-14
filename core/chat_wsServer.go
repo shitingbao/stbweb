@@ -245,8 +245,23 @@ func (h *RoomChatHubSet) Unregister(roomid, user string) {
 	}
 }
 
+//UnregisterALL 主动退出一个房间内的所有连接
+//做这一步不用当心过程中有新连接，room对象中使用了锁，并在连接前后判断，在清理前连接，这里直接清除，清理后连接，逻辑中判断room内容为空，不将连接加入，直接return，行260
+func (h *RoomChatHubSet) UnregisterALL(roomid string) {
+	for i := range h.clients[roomid] {
+		h.clients[roomid][i].hub.unregister <- h.clients[roomid][i]
+	}
+}
+
 // ServeChatWs handles websocket requests from the peer.
 func ServeChatWs(user, roomID string, hub *RoomChatHubSet, w http.ResponseWriter, r *http.Request) {
+	room := RoomSets[roomID]
+	room.RoomLock.Lock()
+	if room.HostName == "" || room.RoomID == "" {
+		//房主为空说明该房间已经销毁了，id为空说明该房间不存在，或者已经被清理了
+		room.RoomLock.Unlock()
+		return
+	}
 	h := http.Header{}
 	pro := r.Header.Get("Sec-WebSocket-Protocol")
 	h.Add("Sec-WebSocket-Protocol", pro)   //带有websocket的Protocol子header需要传入对应header，不然会有1006错误
@@ -261,5 +276,6 @@ func ServeChatWs(user, roomID string, hub *RoomChatHubSet, w http.ResponseWriter
 	client.hub.register <- client //将这个连接放入注册，在run中会加一个
 	go client.writePump()         //新开一个写入，因为有一个用户连接就新开一个，相互不影响，在内部实现心跳包检测连接，详细看函数内部
 	client.readPump()             //读取websocket中的信息，详细看函数内部
-
+	//这一步解锁注意，上面已经有判断
+	room.RoomLock.Unlock()
 }

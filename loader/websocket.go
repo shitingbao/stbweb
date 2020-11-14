@@ -49,18 +49,28 @@ func initChatWebsocket() (chatHub, ctrlHub, cardHun *ws.Hub, roomChatHub *core.R
 	//ctrl 控制消息
 	go roomChatHub.Run()
 	http.HandleFunc("/room/chat", func(w http.ResponseWriter, r *http.Request) {
-		// rediser.GetUser(core.Rds, r.Header.Get("Sec-WebSocket-Protocol"))
-		//Sec中的值含义：用户名，房间号，用分号隔开，需要检查标识的时效性，代表是否能进入房间，在chat模块中通过获取进入房间资格接口获取
+		//Sec中的值含义：用户名，房间号，用分号隔开,这里获取锁，不能超过房间限定的人数
 		info := strings.Split(r.Header.Get("Sec-WebSocket-Protocol"), ":")
 		if len(info) != 2 {
 			logrus.WithFields(logrus.Fields{"Sec-WebSocket-Protocol": "len should 2"}).Error("roomChatHub")
 			return
 		}
-		ck := core.RoomLocks[info[1]]
-		if !ck.GetLock(info[0]) { //获取锁
+		user, roomID := info[0], info[1]
+		room := core.RoomSets[roomID]
+		if room.RoomID == "" {
+			//id为空说明该房间不存在，或者已经被清理了
 			return
 		}
-		core.ServeChatWs(info[0], info[1], roomChatHub, w, r)
+		if room.HostName != user { //如果是房主本人连接不用获取锁，这是保证创建房间第一次房主连接，免得刚创建出来，位置都被其他人连接了
+			ck, ok := core.RoomLocks[roomID]
+			if !ok {
+				return
+			}
+			if !ck.GetLock(user) { //获取锁
+				return
+			}
+		}
+		core.ServeChatWs(user, roomID, roomChatHub, w, r)
 	})
 	return
 }
