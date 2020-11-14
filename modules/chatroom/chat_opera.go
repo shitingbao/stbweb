@@ -67,21 +67,6 @@ func (*chat) Get(p *core.ElementHandleArgs) {
 	}
 }
 
-//解散房间，这个功能待定，可能发生的问题是：在解散过程中，新来了一个连接，这时候该连接是正常进入，但是这个房间被解散了，变成了“孤儿”连接，
-//连接是用map保存关系的，非线程安全
-//这个人进入房间啥也没有，虽然可以退出再进，或者显示房间已解散，但是多个“孤儿”同时出现就是逻辑漏洞了，
-//还有就是房间id又是复用的，可能出现刚新建一个房间，里面已经有个人了
-// func clearRoom(param interface{}, p *core.ElementHandleArgs) error {
-// 	roomID := p.Req.URL.Query().Get("roomid")
-// 	if roomID == "" {
-// 		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": "roomID is nil"})
-// 		return nil
-// 	}
-// 	core.RoomChatHub.UnregisterALL(roomID)
-// 	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true})
-// 	return nil
-// }
-
 //离开房间，注意如果是最后一个人，删除对应mongodb中的房间数据
 //注意房主退出，直接清除所有成员
 func userLeaveRoom(param interface{}, p *core.ElementHandleArgs) error {
@@ -90,7 +75,11 @@ func userLeaveRoom(param interface{}, p *core.ElementHandleArgs) error {
 		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": "roomID is nil"})
 		return nil
 	}
-	core.RoomChatHub.Unregister(roomID, p.Usr)
+	if p.Usr == core.RoomSets[roomID].HostName {
+		freedRoom(roomID)
+	} else {
+		core.RoomChatHub.Unregister(roomID, p.Usr)
+	}
 	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true})
 	return nil
 }

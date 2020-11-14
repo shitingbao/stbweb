@@ -104,7 +104,7 @@ func (c *ChatClient) writePump() {
 	defer func() {
 		ticker.Stop()
 		c.conn.Close()
-		RoomLocks[c.roomID].FreedLock(c.user) //退出并释放锁
+		RoomLocks[c.roomID].FreedLock(c.user) //退出并释放锁，这个函数在读或者写中执行一次即可，不然就会每次端断开都有两次信号放回
 	}()
 	for {
 		select {
@@ -145,7 +145,7 @@ func (c *ChatClient) readPump() {
 	defer func() {
 		c.hub.unregister <- c //读取完毕后注销该client
 		c.conn.Close()
-		RoomLocks[c.roomID].FreedLock(c.user) //退出并释放锁
+		// RoomLocks[c.roomID].FreedLock(c.user) //退出并释放锁,这个函数在读或者写中执行一次即可，不然就会每次端断开都有两次
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
 	pongTime := time.Now().Add(pongWait)

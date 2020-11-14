@@ -17,8 +17,6 @@ var (
 	RoomPool *sync.Pool
 	//RoomIDPool 房间id，也从这里取，因为保存关系使用的是map，长度关系需要考虑
 	RoomIDPool *sync.Pool
-	//tcp连接复用，退出房间放回,分配一个连接，退出房间或者超时都应该断开
-
 )
 
 func init() {

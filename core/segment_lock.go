@@ -3,13 +3,8 @@
 //2.在使用时，应该给他设置以user为key的setnx
 package core
 
-//SegmentLockPro 锁标识前缀
-var SegmentLockPro = "segment_lock_pro_"
-
-//CustomizeLock cap总长度，锁实际内容，key标识所属（user），bool代表是否已经使用，true标识已经使用，超时删除map内的对应key关系
+//CustomizeLock cap总长度，锁实际内容，key标识所属（user）
 //flag标识过程的锁，用户限制连接数
-//OutLock自己的锁，用于释放该锁对象时锁定，防止在释放过程中，有连接加入，连接前先测试该锁（比如执行释放锁的同时，有连接加入的情况）
-//OutLock只有在连接，以及该整体锁释放（解散房间）的时候使用，和flag分开
 type CustomizeLock struct {
 	cap   int
 	locks map[string]bool
