@@ -32,7 +32,7 @@ func NewLock(cap int, roomID string) *CustomizeLock {
 }
 
 //GetLock 从标识队列中获取一个锁,并加入使用对象
-//关闭通道说明房间移除，临界情况为，过程中加入丽连接
+//关闭通道说明房间移除，临界情况为，过程中加入该连接
 func (c *CustomizeLock) GetLock(user string) bool {
 	select {
 	case _, ok := <-c.flag:
