@@ -13,5 +13,9 @@
     "RedisPort": "6379",
     "RedisPwd": "",
     "Redislevel": 0,
-    "ExternalServer": false
+    "ExternalServer": false,
+    
+    "MongoDriver"   :"mongodb://root:123456@127.0.0.1:27017", 
+    "MongoDatabase" :"stb", 
+    "ChatNsqAddree":"127.0.0.1:4150"
 }

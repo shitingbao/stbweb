@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 )
@@ -105,6 +107,9 @@ func (c *ChatClient) writePump() {
 		ticker.Stop()
 		c.conn.Close()
 		RoomLocks[c.roomID].FreedLock(c.user) //退出并释放锁，这个函数在读或者写中执行一次即可，不然就会每次端断开都有两次信号放回
+		if err := Mdb.DeleteDocument("chat", bson.M{"user": c.user}); err != nil {
+			logrus.WithFields(logrus.Fields{"mongo delete chat": err}).Error("websocket")
+		}
 	}()
 	for {
 		select {
@@ -278,4 +283,7 @@ func ServeChatWs(user, roomID string, hub *RoomChatHubSet, w http.ResponseWriter
 	client.readPump()             //读取websocket中的信息，详细看函数内部
 	//这一步解锁注意，上面已经有判断
 	room.RoomLock.Unlock()
+	if _, err := Mdb.InsertOne("chat", bson.M{"roomId": room.RoomID, "user": user}); err != nil {
+		logrus.WithFields(logrus.Fields{"mongo": err}).Error("websocket")
+	}
 }

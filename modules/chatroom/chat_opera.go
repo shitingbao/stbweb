@@ -5,6 +5,10 @@ import (
 	"stbweb/core"
 	"stbweb/lib/chatroom"
 	"time"
+
+	"gopkg.in/mgo.v2/bson"
+
+	"github.com/sirupsen/logrus"
 )
 
 //基本chat接口结构
@@ -52,11 +56,12 @@ func createRoom(param interface{}, p *core.ElementHandleArgs) error {
 	room.RoomType = pm.RoomType
 	room.Common = pm.Common
 	room.CreateTime = time.Now()
-
 	core.RoomSets[roomID] = room
-	// if err := room.save(); err != nil {//mongdodb保存，待定
-	// 	return err
-	// }
+
+	if _, err := core.Mdb.InsertOne("chatroom", bson.M{"room_id": roomID, "host_name": p.Usr, "room_name": pm.RoomName, "room_type": pm.RoomType, "common": pm.Common}); err != nil {
+		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": err})
+		return err
+	}
 	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true, "room_id": roomID})
 	return nil
 }
@@ -91,6 +96,9 @@ func transferRoomHost(param interface{}, p *core.ElementHandleArgs) error {
 	room := core.RoomSets[roomID]
 	if p.Usr == room.HostName {
 		room.HostName = nextuser
+		if _, err := core.Mdb.UpdateOne("chatroom", bson.M{"roomID": roomID}, bson.M{"$set": bson.M{"host_name": nextuser}}); err != nil {
+			logrus.WithFields(logrus.Fields{"mongo delete chat": err}).Error("freeRoom")
+		}
 		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true})
 		return nil
 	}
@@ -112,4 +120,8 @@ func freedRoom(roomID string) {
 	ck := core.RoomLocks[roomID]
 	ck.Clear(roomID)
 	core.RoomChatHub.UnregisterALL(roomID)
+	//删除mongo房间
+	if err := core.Mdb.DeleteDocument("chatroom", bson.M{"roomID": roomID}); err != nil {
+		logrus.WithFields(logrus.Fields{"mongo delete chat": err}).Error("freeRoom")
+	}
 }

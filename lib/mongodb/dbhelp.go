@@ -106,7 +106,7 @@ func (m *Mongodb) SelectAll(collect string, where bson.M, opts ...*options.FindO
 }
 
 //UpdateOne 更新一条数据
-func (m *Mongodb) UpdateOne(collect string, update interface{}, where bson.M, opts ...*options.UpdateOptions) (interface{}, error) {
+func (m *Mongodb) UpdateOne(collect string, where, update bson.M, opts ...*options.UpdateOptions) (interface{}, error) {
 	res, err := m.CollectionDB.Collection(collect).UpdateOne(m.Ctx, where, update, opts...)
 	if err != nil {
 		return nil, err
