@@ -130,6 +130,7 @@ func openMongodb(driver, database string) {
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"ConnectString": driver, "database": database}).Panic("mongodb")
 	}
+	logrus.WithFields(logrus.Fields{"Connect": driver + "/" + database}).Info("mongodb")
 	Mdb = mongo
 }
 

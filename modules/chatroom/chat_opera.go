@@ -1,10 +1,14 @@
 package chatroom
 
 import (
+	"log"
 	"net/http"
 	"stbweb/core"
 	"stbweb/lib/chatroom"
+	"strconv"
 	"time"
+
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"gopkg.in/mgo.v2/bson"
 
@@ -28,7 +32,8 @@ func init() {
 
 //Post
 func (ap *chat) Post(arge *core.ElementHandleArgs) {
-	if arge.APIInterceptionPost("create", new(chatRoomBaseInfo), createRoom) {
+	if arge.APIInterceptionPost("create", new(chatRoomBaseInfo), createRoom) ||
+		arge.APIInterceptionPost("condition", new(conditionWhere), selectCondition) {
 		return
 	}
 }
@@ -67,7 +72,8 @@ func createRoom(param interface{}, p *core.ElementHandleArgs) error {
 }
 
 func (*chat) Get(p *core.ElementHandleArgs) {
-	if p.APIInterceptionGet("leave", nil, userLeaveRoom) {
+	if p.APIInterceptionGet("leave", nil, userLeaveRoom) ||
+		p.APIInterceptionGet("select", nil, selectRoom) {
 		return
 	}
 }
@@ -124,4 +130,91 @@ func freedRoom(roomID string) {
 	if err := core.Mdb.DeleteDocument("chatroom", bson.M{"roomID": roomID}); err != nil {
 		logrus.WithFields(logrus.Fields{"mongo delete chat": err}).Error("freeRoom")
 	}
+}
+
+//
+func selectRoom(param interface{}, p *core.ElementHandleArgs) error {
+	page := p.Req.URL.Query().Get("page")
+	t, err := strconv.Atoi(page)
+	if err != nil {
+		return err
+	}
+	skip := (t - 1) * 6
+	res, err := core.Mdb.SelectAll("chatroom", bson.M{}, options.Find().SetSkip(int64(skip)))
+	if err != nil {
+		return err
+	}
+	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true, "data": res})
+	return nil
+}
+
+// type condition struct {
+// 	Page      int
+// 	Skip      int
+// 	Limit     int
+// 	OrderCol  string
+// 	OrderType string
+
+// 	Where interface{}
+// }
+
+// where中最多包含这些条件，用户对应表中字段，直接断言成bson.M
+type conditionWhere struct {
+
+	// RoomID     string
+	// HostName   string
+	RoomName string
+	RoomType string
+	Num      int
+	// Common     string
+	// CreateTime string
+
+	Limit int
+	Skip  int
+	Sort  string
+}
+
+//这里直接使用options中条件方法来接受
+func selectCondition(param interface{}, p *core.ElementHandleArgs) error {
+	pm := param.(*conditionWhere)
+	res, err := core.Mdb.SelectAll("chatroom", setCondition(pm), setOption(pm))
+	if err != nil {
+		return err
+	}
+	log.Println(res)
+	return nil
+}
+
+func setOption(wh *conditionWhere) *options.FindOptions {
+	op := &options.FindOptions{}
+
+	switch {
+	case wh.Limit == 0:
+		op.SetLimit(int64(wh.Limit))
+		fallthrough
+	case wh.Skip == 0:
+		op.SetSkip(int64(wh.Skip))
+		fallthrough
+	case wh.Sort != "":
+		op.SetSort(wh.Sort)
+	}
+	log.Println("op:", op)
+	return op
+}
+
+func setCondition(wh *conditionWhere) bson.M {
+	op := map[string]interface{}{}
+	switch {
+	case wh.Num != 0:
+		op["Num"] = wh.Num
+		fallthrough
+	// case wh.RoomName == "":
+	// 	log.Println("wh.RoomName:", wh.RoomName)
+	// 	op["name"] = wh.RoomName
+	// 	fallthrough
+	case wh.RoomType != "":
+		op["RoomType"] = wh.RoomType
+	}
+	log.Println("op:", op)
+	return op
 }

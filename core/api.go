@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"net/http"
 
 	"github.com/sirupsen/logrus"
 )
@@ -14,6 +15,12 @@ var (
 //APIInterceptionGet 拦截api请求，统一处理
 func (e *ElementHandleArgs) APIInterceptionGet(methodName string, param interface{},
 	cb func(pa interface{}, content *ElementHandleArgs) error) bool {
+	defer func() {
+		if err := recover(); err != nil { //意外异常处理
+			logrus.WithFields(logrus.Fields{"method-opera": methodName, "elementName": e.Element.Name}).Error(err)
+			SendJSON(e.Res, http.StatusInternalServerError, SendMap{"success": false})
+		}
+	}()
 	//名称对应判断
 	if methodName != e.apiName() {
 		return false
@@ -32,6 +39,12 @@ func (e *ElementHandleArgs) APIInterceptionGet(methodName string, param interfac
 //内部需要判断比get多一个body内容不为空和接收类型不为空的判断
 func (e *ElementHandleArgs) APIInterceptionPost(methodName string, param interface{},
 	cb func(pa interface{}, content *ElementHandleArgs) error) bool {
+	defer func() {
+		if err := recover(); err != nil {
+			logrus.WithFields(logrus.Fields{"method-opera": methodName, "elementName": e.Element.Name}).Error(err)
+			SendJSON(e.Res, http.StatusInternalServerError, SendMap{"success": false})
+		}
+	}()
 	//名称对应判断
 	if methodName != e.apiName() {
 		return false

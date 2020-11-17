@@ -64,3 +64,24 @@ func selectOne(ctx context.Context, db *mongo.Database) {
 	}
 	log.Println(result)
 }
+
+func selectWhere(ctx context.Context, db *mongo.Database) {
+	var result []bson.M
+	cur, err := db.Collection("chartroom").Find(ctx, bson.M{}, options.Find().SetSkip(2))
+	if err != nil {
+		return
+	}
+	defer cur.Close(ctx)
+
+	for cur.Next(ctx) {
+		var res bson.M
+		if err := cur.Decode(&res); err != nil {
+			return
+		}
+		result = append(result, res)
+	}
+	if err := cur.Err(); err != nil {
+		return
+	}
+	log.Println(result)
+}

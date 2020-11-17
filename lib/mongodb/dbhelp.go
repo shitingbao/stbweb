@@ -21,19 +21,18 @@ import (
 var defaultTimeout = 10 * time.Second
 
 //Mongodb 一个mongo连接对象
-//保存数据库名称（Database），集合名称（Collect），集合对象（CollectionDB用于操作），过期时间（OutTime，默认10S,可以重新指定），Cancelf取消函数（释放资源函数）
+//保存数据库名称（Database），集合对象（CollectionDB用于操作），Client基本连接
 type Mongodb struct {
 	Database     string
 	Client       *mongo.Client
 	CollectionDB *mongo.Database
-	Cancelf      context.CancelFunc
 	Ctx          context.Context
 }
 
 //OpenMongoDb 连接一个mongodb
 //输入连接字符串，待连接数据库，集合名称，反馈该集合对象和error
 func OpenMongoDb(driver, database string) (*Mongodb, error) {
-	ctx, canf := context.WithCancel(context.Background())
+	ctx := context.TODO()
 	// defer canf()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(driver))
 	if err != nil {
@@ -42,12 +41,11 @@ func OpenMongoDb(driver, database string) (*Mongodb, error) {
 	if err := client.Ping(ctx, readpref.Primary()); err != nil {
 		return nil, err
 	}
-	// clo := client.Database(database).Collection(collect)
 	clo := client.Database(database)
 	return &Mongodb{
+		Client:       client,
 		Database:     database,
 		CollectionDB: clo,
-		Cancelf:      canf,
 		Ctx:          ctx,
 	}, nil
 }
@@ -137,14 +135,6 @@ func (m *Mongodb) DeleteDocument(collect string, where bson.M, opts ...*options.
 		return res.Err()
 	}
 	return nil
-}
-
-//UpOutTime 更新过期时间
-func (m *Mongodb) UpOutTime(outime time.Duration) {
-	m.Cancelf()
-	ctx, canf := context.WithTimeout(context.Background(), outime)
-	m.Ctx = ctx
-	m.Cancelf = canf
 }
 
 //CloseCtx monggodb释放ctx资源
