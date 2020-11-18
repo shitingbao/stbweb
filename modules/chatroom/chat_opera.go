@@ -1,6 +1,7 @@
 package chatroom
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"stbweb/core"
@@ -25,6 +26,19 @@ type chatRoomBaseInfo struct {
 	RoomType string //房间类型
 	Common   string //房间描述
 }
+type conditionWhere struct {
+	RoomID     string
+	HostName   string
+	RoomName   string
+	RoomType   string
+	Num        int
+	Common     string
+	CreateTime string
+
+	Limit int
+	Skip  int
+	Sort  string
+}
 
 func init() {
 	core.RegisterFun("chat", new(chat), true)
@@ -33,7 +47,7 @@ func init() {
 //Post
 func (ap *chat) Post(arge *core.ElementHandleArgs) {
 	if arge.APIInterceptionPost("create", new(chatRoomBaseInfo), createRoom) ||
-		arge.APIInterceptionPost("condition", new(conditionWhere), selectCondition) {
+		arge.APIInterceptionPost("condition", new(map[string]interface{}), selectCondition) {
 		return
 	}
 }
@@ -69,6 +83,70 @@ func createRoom(param interface{}, p *core.ElementHandleArgs) error {
 	}
 	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true, "room_id": roomID})
 	return nil
+}
+
+//这里直接使用options中条件方法来接受
+func selectCondition(param interface{}, p *core.ElementHandleArgs) error {
+	pm := param.(*map[string]interface{})
+	dic, opt, err := setOption(pm)
+	if err != nil {
+		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": err.Error()})
+		return err
+	}
+	res, err := core.Mdb.SelectAll("chatroom", dic, opt)
+	if err != nil {
+		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": err.Error()})
+		return err
+	}
+	log.Println(pm, res)
+	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true, "data": res})
+	return nil
+}
+
+// where中最多包含这些条件，用户对应表中字段，直接断言成bson.M
+//暂定这些条件，聚合条件和模糊查询待定
+func setOption(wh *map[string]interface{}) (bson.M, *options.FindOptions, error) {
+	op := &options.FindOptions{}
+	opCon := make(map[string]interface{})
+	for k, v := range *wh {
+		switch k {
+		case "Limit":
+			limit, ok := (*wh)[k].(float64)
+			if !ok || limit < 1 {
+				return opCon, op, errors.New("limit should int and greater than 0")
+			}
+			op.SetLimit(int64(limit))
+		case "Skip":
+			skip, ok := v.(float64)
+			if !ok || skip < 1 {
+				return opCon, op, errors.New("skip should int and greater than 0")
+			}
+			op.SetSkip(int64(skip))
+		case "Sort":
+			sort, ok := v.(string)
+			if !ok {
+				return opCon, op, errors.New("sort should string or not nil")
+			}
+			if sort != "" {
+				op.SetSort(sort)
+			}
+		case "RoomID", "HostName", "RoomName", "RoomType", "Common", "CreateTime":
+			t, ok := v.(string)
+			if !ok {
+				return opCon, op, errors.New("column should string or not nil")
+			}
+			if t != "" {
+				opCon[k] = t
+			}
+		case "Num":
+			t, ok := v.(float64)
+			if !ok {
+				return opCon, op, errors.New("Num should int")
+			}
+			opCon[k] = t
+		}
+	}
+	return opCon, op, nil
 }
 
 func (*chat) Get(p *core.ElementHandleArgs) {
@@ -157,64 +235,3 @@ func selectRoom(param interface{}, p *core.ElementHandleArgs) error {
 
 // 	Where interface{}
 // }
-
-// where中最多包含这些条件，用户对应表中字段，直接断言成bson.M
-type conditionWhere struct {
-
-	// RoomID     string
-	// HostName   string
-	RoomName string
-	RoomType string
-	Num      int
-	// Common     string
-	// CreateTime string
-
-	Limit int
-	Skip  int
-	Sort  string
-}
-
-//这里直接使用options中条件方法来接受
-func selectCondition(param interface{}, p *core.ElementHandleArgs) error {
-	pm := param.(*conditionWhere)
-	res, err := core.Mdb.SelectAll("chatroom", setCondition(pm), setOption(pm))
-	if err != nil {
-		return err
-	}
-	log.Println(res)
-	return nil
-}
-
-func setOption(wh *conditionWhere) *options.FindOptions {
-	op := &options.FindOptions{}
-
-	switch {
-	case wh.Limit == 0:
-		op.SetLimit(int64(wh.Limit))
-		fallthrough
-	case wh.Skip == 0:
-		op.SetSkip(int64(wh.Skip))
-		fallthrough
-	case wh.Sort != "":
-		op.SetSort(wh.Sort)
-	}
-	log.Println("op:", op)
-	return op
-}
-
-func setCondition(wh *conditionWhere) bson.M {
-	op := map[string]interface{}{}
-	switch {
-	case wh.Num != 0:
-		op["Num"] = wh.Num
-		fallthrough
-	// case wh.RoomName == "":
-	// 	log.Println("wh.RoomName:", wh.RoomName)
-	// 	op["name"] = wh.RoomName
-	// 	fallthrough
-	case wh.RoomType != "":
-		op["RoomType"] = wh.RoomType
-	}
-	log.Println("op:", op)
-	return op
-}
