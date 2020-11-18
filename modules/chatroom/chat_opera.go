@@ -2,7 +2,6 @@ package chatroom
 
 import (
 	"errors"
-	"log"
 	"net/http"
 	"stbweb/core"
 	"stbweb/lib/chatroom"
@@ -98,7 +97,6 @@ func selectCondition(param interface{}, p *core.ElementHandleArgs) error {
 		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": err.Error()})
 		return err
 	}
-	log.Println(pm, res)
 	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true, "data": res})
 	return nil
 }
