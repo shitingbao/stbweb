@@ -67,10 +67,10 @@ func externalServer() {
 		logrus.Info("外置服务开启失败:", err)
 		panic(err)
 	}
-	s := grpc.NewServer()
-	stbserver.RegisterStbServerServer(s, &stboutserver.StbServe{})
-	s.Serve(lis)
 	logrus.WithFields(logrus.Fields{
 		"tcp": core.WebConfig.ExternalPort,
 	}).Info("external server")
+	s := grpc.NewServer()
+	stbserver.RegisterStbServerServer(s, &stboutserver.StbServe{})
+	s.Serve(lis)
 }
