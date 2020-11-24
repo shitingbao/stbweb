@@ -70,4 +70,7 @@ func externalServer() {
 	s := grpc.NewServer()
 	stbserver.RegisterStbServerServer(s, &stboutserver.StbServe{})
 	s.Serve(lis)
+	logrus.WithFields(logrus.Fields{
+		"tcp": core.WebConfig.ExternalPort,
+	}).Info("external server")
 }
