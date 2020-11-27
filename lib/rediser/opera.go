@@ -64,15 +64,19 @@ func CheckLoginUser(rd *redis.Client, userkey string) bool {
 	if GetUser(rd, userkey) == "" {
 		return false
 	}
-	MaintainActivity(rd, userkey)
+	if err := MaintainActivity(rd, userkey); err != nil {
+		return false
+	}
 	return true
 }
 
 //MaintainActivity 重新设置用户活动时间
-func MaintainActivity(rd *redis.Client, userkey string) {
+func MaintainActivity(rd *redis.Client, userkey string) error {
 	if err := rd.Expire(userkey, time.Minute*dealTime).Err(); err != nil { //设置字符串key
 		logrus.WithFields(logrus.Fields{"MaintainActivity": err}).Error("redisErr")
+		return err
 	}
+	return nil
 }
 
 //RegisterUser 设置用户信息，userkey就是对应header中的token

@@ -61,7 +61,9 @@ func isExternalCall(elementName string, r *http.Request) (string, error) {
 		if usr == "" {
 			return "", errors.New("token失效，请登录或者重新登录")
 		}
-		rediser.MaintainActivity(Rds, tokens)
+		if err := rediser.MaintainActivity(Rds, tokens); err != nil {
+			return "", errors.New("token失效，请登录或者重新登录")
+		}
 	}
 	return usr, nil
 }
