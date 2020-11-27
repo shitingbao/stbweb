@@ -52,6 +52,9 @@ func GetOnlineMember(rd *redis.Client) []string {
 
 //GetUser 获取用户信息,无用户为空字符串
 func GetUser(rd *redis.Client, userkey string) string {
+	if userkey == "" {
+		return ""
+	}
 	name, err := rd.Get(userkey).Result()
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"getuser": err}).Error("redisErr")

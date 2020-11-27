@@ -49,21 +49,24 @@ func ElementHandle(w http.ResponseWriter, r *http.Request, elementName string) {
 }
 
 //isExternalCall 判断该操作元素下的api是否可以外部调用
-//？？这里还需要考虑到登录的用户长时间访问不需要登录的接口的情况，这种情况不会更新用户在线时间
+//这里还需要考虑到登录的用户长时间访问不需要登录的接口的情况
+//接口中如果有token，应该都带上，这样就算访问非登录功能，也更新对应token状态，只不过不反馈是否成功更新标识
 func isExternalCall(elementName string, r *http.Request) (string, error) {
-	usr := ""
+
+	tokens := r.Header.Get("token")
+	usr := rediser.GetUser(Rds, tokens)
 	if controlleNames[elementName] { //判断该元素是否需要登陆后使用
-		tokens := r.Header.Get("token")
 		if tokens == "" {
 			return "", errors.New("Refuse")
 		}
-		usr = rediser.GetUser(Rds, tokens)
 		if usr == "" {
 			return "", errors.New("token失效，请登录或者重新登录")
 		}
 		if err := rediser.MaintainActivity(Rds, tokens); err != nil {
 			return "", errors.New("token失效，请登录或者重新登录")
 		}
+	} else {
+		rediser.MaintainActivity(Rds, tokens)
 	}
 	return usr, nil
 }
