@@ -45,7 +45,6 @@ func serve() {
 	}()
 	chatHub, ctrlHub, cardHun, roomChatHub := initChatWebsocket()
 	core.Initinal(chatHub, ctrlHub, cardHun, roomChatHub)
-	// http.HandleFunc("/", httpProcess) //设置访问的路由
 	clearInit()
 	if core.WebConfig.ExternalServer {
 		go externalServer() //开启外置服务
