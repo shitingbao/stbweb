@@ -80,9 +80,9 @@ func (m *Mongodb) Selectone(collect string, where bson.M, opts ...*options.FindO
 	return result, nil
 }
 
-//SelectAll 查询所有，输入集合和条件（bson.D中包含条件数组），反馈所有数据和error
+//SelectMany 查询所有，输入集合和条件（bson.M中包含条件数组），反馈所有数据和error
 //opt是限制函数
-func (m *Mongodb) SelectAll(collect string, where bson.M, opts ...*options.FindOptions) ([]bson.M, error) {
+func (m *Mongodb) SelectMany(collect string, where bson.M, opts ...*options.FindOptions) ([]bson.M, error) {
 	var result []bson.M
 	cur, err := m.CollectionDB.Collection(collect).Find(m.Ctx, where, opts...)
 	if err != nil {

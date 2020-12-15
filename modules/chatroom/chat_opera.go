@@ -39,6 +39,10 @@ type conditionWhere struct {
 	Sort  string
 }
 
+type chatList struct {
+	RoomID []string
+}
+
 func init() {
 	core.RegisterFun("chat", new(chat), true)
 }
@@ -46,7 +50,8 @@ func init() {
 //Post
 func (ap *chat) Post(arge *core.ElementHandleArgs) {
 	if arge.APIInterceptionPost("create", new(chatRoomBaseInfo), createRoom) ||
-		arge.APIInterceptionPost("condition", new(map[string]interface{}), selectCondition) {
+		arge.APIInterceptionPost("condition", new(map[string]interface{}), selectCondition) ||
+		arge.APIInterceptionPost("randselect", new(chatList), randSelectRoom) {
 		return
 	}
 }
@@ -92,7 +97,7 @@ func selectCondition(param interface{}, p *core.ElementHandleArgs) error {
 		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": err.Error()})
 		return err
 	}
-	res, err := core.Mdb.SelectAll("chatroom", dic, opt)
+	res, err := core.Mdb.SelectMany("chatroom", dic, opt)
 	if err != nil {
 		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": false, "msg": err.Error()})
 		return err
@@ -145,6 +150,43 @@ func setOption(wh *map[string]interface{}) (bson.M, *options.FindOptions, error)
 		}
 	}
 	return opCon, op, nil
+}
+
+//排除传入的房间id，其他的随机选几条反馈
+//eg:db.chatroom.aggregate([{$match:{name:{$nin:["aa","bb"]}}},{$sample:{size:3}}])
+func randSelectRoom(param interface{}, p *core.ElementHandleArgs) error {
+	pm := param.(*chatList)
+	where := []bson.M{
+		{
+			"$match": bson.M{
+				"name": bson.M{
+					"$nin": pm.RoomID},
+			},
+		},
+		{
+			"$sample": bson.M{
+				"size": 3,
+			},
+		},
+	}
+	cur, err := core.Mdb.CollectionDB.Collection("chatroom").Aggregate(core.Mdb.Ctx, where)
+	if err != nil {
+		return err
+	}
+	var result []bson.M
+	defer cur.Close(core.Mdb.Ctx)
+	for cur.Next(core.Mdb.Ctx) {
+		var res bson.M
+		if err := cur.Decode(&res); err != nil {
+			return err
+		}
+		result = append(result, res)
+	}
+	if err := cur.Err(); err != nil {
+		return err
+	}
+	core.SendJSON(p.Res, http.StatusOK, core.SendMap{"success": true, "data": result})
+	return nil
 }
 
 func (*chat) Get(p *core.ElementHandleArgs) {
@@ -216,7 +258,7 @@ func selectRoom(param interface{}, p *core.ElementHandleArgs) error {
 		return err
 	}
 	skip := (t - 1) * 6
-	res, err := core.Mdb.SelectAll("chatroom", bson.M{}, options.Find().SetSkip(int64(skip)))
+	res, err := core.Mdb.SelectMany("chatroom", bson.M{}, options.Find().SetSkip(int64(skip)))
 	if err != nil {
 		return err
 	}
