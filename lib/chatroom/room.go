@@ -49,7 +49,9 @@ type ChatRoom struct {
 }
 
 //Clear 清理房间后，加入池（回收）
-func (c *ChatRoom) Clear() {
+//cf反调函数，为了等待mongo中删除完成，以及对应锁的释放
+//如果在外部删除，可能出现的情况是，锁释放后，还没删除该roomid的数据，这时候该roomid复用并写入数据库，造成数据丢失，非线程安全
+func (c *ChatRoom) Clear(cf func()) {
 	c.RoomLock.Lock()
 	defer c.RoomLock.Unlock()
 	RoomIDPool.Put(c.RoomID)
@@ -61,6 +63,7 @@ func (c *ChatRoom) Clear() {
 	c.Common = ""
 	c.RoomLock = nil
 	RoomPool.Put(c)
+	cf()
 }
 
 // //保存房间后，加入mongodb

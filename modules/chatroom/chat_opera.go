@@ -240,14 +240,16 @@ func clearRoom(param interface{}, p *core.ElementHandleArgs) error {
 
 func freedRoom(roomID string) {
 	room := core.RoomSets[roomID]
-	room.Clear()
-	ck := core.RoomLocks[roomID]
-	ck.Clear(roomID)
-	core.RoomChatHub.UnregisterALL(roomID)
-	//删除mongo房间
-	if err := core.Mdb.DeleteDocument("chatroom", bson.M{"roomID": roomID}); err != nil {
-		logrus.WithFields(logrus.Fields{"mongo delete chat": err}).Error("freeRoom")
+	cf := func() {
+		ck := core.RoomLocks[roomID]
+		ck.Clear(roomID)
+		core.RoomChatHub.UnregisterALL(roomID)
+		//删除mongo房间
+		if err := core.Mdb.DeleteDocument("chatroom", bson.M{"roomID": roomID}); err != nil {
+			logrus.WithFields(logrus.Fields{"mongo delete chat": err}).Error("freeRoom")
+		}
 	}
+	room.Clear(cf)
 }
 
 //
