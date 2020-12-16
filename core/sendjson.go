@@ -38,7 +38,7 @@ func SendJSON(w http.ResponseWriter, statuscode int, data interface{}) {
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers", fmt.Sprintf(
-			"%s,Origin, X-Requested-With, Content-Type, Accept, Connection, User-Agent, Cookie",
+			"%s,Origin, X-Requested-With, Content-Type, Accept, Connection, User-Agent, Cookie,token",
 			WebAPIHanderName)) //这里可以增加对应handle
 	}
 
