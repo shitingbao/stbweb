@@ -265,6 +265,7 @@ func ServeChatWs(user, roomID string, hub *RoomChatHubSet, w http.ResponseWriter
 	if room.HostName == "" || room.RoomID == "" {
 		//房主为空说明该房间已经销毁了，id为空说明该房间不存在，或者已经被清理了
 		room.RoomLock.Unlock()
+		logrus.WithFields(logrus.Fields{"room": "HostName or RoomID is nil"}).Error("websocket")
 		return
 	}
 	h := http.Header{}
