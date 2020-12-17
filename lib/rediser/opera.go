@@ -55,11 +55,7 @@ func GetUser(rd *redis.Client, userkey string) string {
 	if userkey == "" {
 		return ""
 	}
-	name, err := rd.Get(userkey).Result()
-	if err != nil {
-		logrus.WithFields(logrus.Fields{"getuser": err}).Error("redisErr")
-	}
-	return name
+	return rd.Get(userkey).Val()
 }
 
 //CheckLoginUser 检查用户状态，并重置活动时间，一般用于前端验证登录
