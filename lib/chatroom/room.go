@@ -38,9 +38,9 @@ func init() {
 
 //ChatRoom 一个房间对象，包含基本信息
 type ChatRoom struct {
-	RoomID     string      //房间唯一id
-	HostName   string      //房主名称，user
-	RoomLock   sync.Locker //主要是为了房间的销毁，该锁是每个房间的局部锁
+	RoomID     string     //房间唯一id
+	HostName   string     //房主名称，user
+	RoomLock   sync.Mutex //主要是为了房间的销毁，该锁是每个房间的局部锁
 	CreateTime time.Time
 	RoomName   string //房间名称
 	NumTotle   int    //房间容量总人数
@@ -61,7 +61,7 @@ func (c *ChatRoom) Clear(cf func()) {
 	c.NumTotle = 0
 	c.RoomType = ""
 	c.Common = ""
-	c.RoomLock = nil
+	c.RoomLock = sync.Mutex{}
 	RoomPool.Put(c)
 	cf()
 }

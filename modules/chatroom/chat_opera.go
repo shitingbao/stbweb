@@ -6,6 +6,7 @@ import (
 	"stbweb/core"
 	"stbweb/lib/chatroom"
 	"strconv"
+	"sync"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -64,7 +65,7 @@ func createRoom(param interface{}, p *core.ElementHandleArgs) error {
 		return nil
 	}
 	roomID := chatroom.RoomIDPool.Get().(string)
-	room := chatroom.RoomPool.Get().(chatroom.ChatRoom)
+	room := chatroom.RoomPool.Get().(*chatroom.ChatRoom)
 
 	ck := core.NewLock(pm.NumTotle, roomID)
 	if !ck.GetLock(p.Usr) {
@@ -79,6 +80,7 @@ func createRoom(param interface{}, p *core.ElementHandleArgs) error {
 	room.RoomType = pm.RoomType
 	room.Common = pm.Common
 	room.CreateTime = time.Now()
+	room.RoomLock = sync.Mutex{}
 	core.RoomSets[roomID] = room
 
 	if _, err := core.Mdb.InsertOne("chatroom", bson.M{"room_id": roomID, "host_name": p.Usr, "room_name": pm.RoomName, "room_type": pm.RoomType, "common": pm.Common}); err != nil {

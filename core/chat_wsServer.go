@@ -51,11 +51,12 @@ type ChatMessage struct {
 //NewChatHub 分配一个新的Hub，使用前先获取这个hub对象
 func NewChatHub(onEvent OnMessageFuncChat) *RoomChatHubSet {
 	return &RoomChatHubSet{
-		Broadcast:  make(chan ChatMessage),           //包含要想向前台传递的数据，内部使用chan通道传输
-		register:   make(chan *ChatClient),           //有新的连接，将放入这里
-		unregister: make(chan *ChatClient),           //断开连接加入这
-		clients:    make(map[string]([]*ChatClient)), //包含所有的client连接信息
-		OnMessage:  onEvent,
+		Broadcast:     make(chan ChatMessage),           //包含要想向前台传递的数据，内部使用chan通道传输
+		BroadcastUser: make(chan ChatMessage),           //包含对应指定房间的消息
+		register:      make(chan *ChatClient),           //有新的连接，将放入这里
+		unregister:    make(chan *ChatClient),           //断开连接加入这
+		clients:       make(map[string]([]*ChatClient)), //包含所有的client连接信息
+		OnMessage:     onEvent,
 	}
 }
 
@@ -280,11 +281,13 @@ func ServeChatWs(user, roomID string, hub *RoomChatHubSet, w http.ResponseWriter
 	//生成一个client，里面包含用户信息连接信息等信息
 	client := &ChatClient{hub: hub, user: user, roomID: roomID, conn: conn, send: make(chan []byte, 256)}
 	client.hub.register <- client //将这个连接放入注册，在run中会加一个
-	go client.writePump()         //新开一个写入，因为有一个用户连接就新开一个，相互不影响，在内部实现心跳包检测连接，详细看函数内部
-	client.readPump()             //读取websocket中的信息，详细看函数内部
-	//这一步解锁注意，上面已经有判断
 	room.RoomLock.Unlock()
 	if _, err := Mdb.InsertOne("chat", bson.M{"roomId": room.RoomID, "user": user}); err != nil {
 		logrus.WithFields(logrus.Fields{"mongo": err}).Error("websocket")
 	}
+	//注意这俩个读写方法都是持续监听的，一定要放最后
+	go client.writePump() //新开一个写入，因为有一个用户连接就新开一个，相互不影响，在内部实现心跳包检测连接，详细看函数内部
+	client.readPump()     //读取websocket中的信息，详细看函数内部
+	//这一步解锁注意，上面已经有判断
+
 }

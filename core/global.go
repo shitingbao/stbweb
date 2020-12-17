@@ -56,10 +56,10 @@ var (
 	Mdb *mongodb.Mongodb
 
 	//RoomLocks 房间号对应的锁结构，key为roomid
-	RoomLocks map[string]*CustomizeLock
+	RoomLocks = make(map[string]*CustomizeLock)
 
 	//RoomSets 房间集合对象，Romid对应一个room,保存所有的房间唯一号和房间对象的对应关系
-	RoomSets map[string]chatroom.ChatRoom
+	RoomSets = make(map[string]*chatroom.ChatRoom)
 )
 
 func init() {

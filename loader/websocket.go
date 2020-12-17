@@ -45,7 +45,15 @@ func initChatWebsocket() (chatHub, ctrlHub, cardHun *ws.Hub, roomChatHub *core.R
 		ws.ServeWs(rediser.GetUser(core.Rds, r.Header.Get("Sec-WebSocket-Protocol")), ctrlHub, w, r)
 	})
 
-	roomChatHub = core.NewChatHub(nil)
+	roomChatHub = core.NewChatHub(func(data []byte, hub *core.RoomChatHubSet) error {
+		msg := core.ChatMessage{}
+		if err := json.Unmarshal(data, &msg); err != nil {
+			return err
+		}
+		//原样消息发公告,注意这用BroadcastUser，只对该房间的人发送
+		hub.BroadcastUser <- msg
+		return nil
+	})
 	//ctrl 控制消息
 	go roomChatHub.Run()
 	http.HandleFunc("/room/chat", func(w http.ResponseWriter, r *http.Request) {
@@ -62,9 +70,9 @@ func initChatWebsocket() (chatHub, ctrlHub, cardHun *ws.Hub, roomChatHub *core.R
 			return
 		}
 		room := core.RoomSets[roomID]
-		if room.RoomID == "" {
+		if room == nil || room.RoomID == "" {
 			//id为空说明该房间不存在，或者已经被清理了
-			logrus.WithFields(logrus.Fields{"RoomID": "nil"}).Error("roomChatHub")
+			logrus.WithFields(logrus.Fields{"Room": "nil"}).Error("roomChatHub")
 			return
 		}
 		if room.HostName != user { //如果是房主本人连接不用获取锁，这是保证创建房间第一次房主连接，免得刚创建出来，位置都被其他人连接了
