@@ -65,7 +65,7 @@ func createRoom(param interface{}, p *core.ElementHandleArgs) error {
 		return nil
 	}
 	roomID := chatroom.RoomIDPool.Get().(string)
-	room := chatroom.RoomPool.Get().(*chatroom.ChatRoom)
+	room := &chatroom.ChatRoom{}
 
 	ck := core.NewLock(pm.NumTotle, roomID)
 	if !ck.GetLock(p.Usr) {
@@ -242,13 +242,17 @@ func clearRoom(param interface{}, p *core.ElementHandleArgs) error {
 
 func freedRoom(roomID string) {
 	room := core.RoomSets[roomID]
+	if room == nil {
+		return
+	}
 	cf := func() {
 		ck := core.RoomLocks[roomID]
 		ck.Clear(roomID)
 		core.RoomChatHub.UnregisterALL(roomID)
 		//删除mongo房间
-		if err := core.Mdb.DeleteDocument("chatroom", bson.M{"roomID": roomID}); err != nil {
-			logrus.WithFields(logrus.Fields{"mongo delete chat": err}).Error("freeRoom")
+		if err := core.Mdb.DeleteDocument("chatroom", bson.M{"room_id": roomID}); err != nil {
+			logrus.WithFields(logrus.Fields{"mongo delete chat": roomID}).Error(err)
+			return
 		}
 	}
 	room.Clear(cf)

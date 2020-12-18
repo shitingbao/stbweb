@@ -16,6 +16,7 @@ type CustomizeLock struct {
 //同时在flag队列里面放满标识待用
 //注意这里不能关闭标识通道，因为需要复用，重新加入标识（比如使用完毕或者超时，重新放入，等待下一次使用）
 //这里生成后直接加入对应全局房间锁列表中
+//注意，注意，注意，调用该函数后，应该调用一次GetLock，对应业务场景是房主应该先获取一次进入资格，再给别人
 func NewLock(cap int, roomID string) *CustomizeLock {
 	flag := make(chan bool, cap)
 	for i := 0; i < cap; i++ {

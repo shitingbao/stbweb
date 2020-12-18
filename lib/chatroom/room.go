@@ -16,18 +16,13 @@ import (
 //适当使用sync.pool重用RoomID和chatRoom，因为RoomID作为key在房间对象和锁key中都用到，并且使用了map保持关系，防止map没有释放，复用该值可适当减少并提升效率
 
 var (
-	//RoomPool 房间池，新建房间应该从这里获取，放回前需要先调用clear
-	RoomPool *sync.Pool
+
 	//RoomIDPool 房间id，也从这里取，因为保存关系使用的是map，长度关系需要考虑
 	RoomIDPool *sync.Pool
 )
 
 func init() {
-	RoomPool = &sync.Pool{
-		New: func() interface{} {
-			return new(ChatRoom)
-		},
-	}
+
 	RoomIDPool = &sync.Pool{
 		New: func() interface{} {
 			return uuid.NewUUID().String()
@@ -48,21 +43,13 @@ type ChatRoom struct {
 	Common     string //房间描述
 }
 
-//Clear 清理房间后，加入池（回收）
+//Clear 清理房间后,放回roomid以及删除对应mongo内的数据
 //cf反调函数，为了等待mongo中删除完成，以及对应锁的释放
 //如果在外部删除，可能出现的情况是，锁释放后，还没删除该roomid的数据，这时候该roomid复用并写入数据库，造成数据丢失，非线程安全
 func (c *ChatRoom) Clear(cf func()) {
 	c.RoomLock.Lock()
 	defer c.RoomLock.Unlock()
 	RoomIDPool.Put(c.RoomID)
-	c.RoomID = ""
-	c.RoomName = ""
-	c.HostName = ""
-	c.NumTotle = 0
-	c.RoomType = ""
-	c.Common = ""
-	c.RoomLock = sync.Mutex{}
-	RoomPool.Put(c)
 	cf()
 }
 

@@ -107,7 +107,9 @@ func (c *ChatClient) writePump() {
 	defer func() {
 		ticker.Stop()
 		c.conn.Close()
-		RoomLocks[c.roomID].FreedLock(c.user) //退出并释放锁，这个函数在读或者写中执行一次即可，不然就会每次端断开都有两次信号放回
+		if lk := RoomLocks[c.roomID]; lk != nil { //可能在退出的时候，整个room对象都被清理了，就不用去放回了，业务情况是房主退出
+			lk.FreedLock(c.user) //退出并释放锁，这个函数在读或者写中执行一次即可，不然就会每次端断开都有两次信号放回
+		}
 		if err := Mdb.DeleteDocument("chat", bson.M{"user": c.user}); err != nil {
 			logrus.WithFields(logrus.Fields{"mongo delete chat": err}).Error("websocket")
 		}
