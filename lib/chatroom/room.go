@@ -49,8 +49,8 @@ type ChatRoom struct {
 func (c *ChatRoom) Clear(cf func()) {
 	c.RoomLock.Lock()
 	defer c.RoomLock.Unlock()
-	RoomIDPool.Put(c.RoomID)
 	cf()
+	RoomIDPool.Put(c.RoomID)
 }
 
 // //保存房间后，加入mongodb

@@ -75,6 +75,11 @@ type ChatClient struct {
 
 	// Buffered channel of outbound messages.
 	send chan []byte
+
+	//服务端主动退出的标识
+	//由于write和read只能等待超时后释放，当服务端主动关闭socket连接时，并不能及时清理conn
+	//该信号在run中的unregister中放入，注册时保留一位缓存
+	outSign chan bool
 }
 
 //RoomChatHubSet maintains the set of active clients and broadcasts messages to the
@@ -140,6 +145,8 @@ func (c *ChatClient) writePump() {
 			if err := c.conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
 				return
 			}
+		case <-c.outSign:
+			return
 		}
 	}
 }
@@ -183,6 +190,9 @@ func (c *ChatClient) readPump() {
 
 //Run 开始消息读写队列，无限循环，应该用go func的方式调用
 func (h *RoomChatHubSet) Run() {
+	if err := recover(); err != nil {
+		logrus.WithFields(logrus.Fields{"run": err}).Error("RoomChatHubSet")
+	}
 	for {
 		select {
 		case client := <-h.register: //客户端有新的连接就加入一个
@@ -190,25 +200,18 @@ func (h *RoomChatHubSet) Run() {
 			// logrus.Info("当前连接增加，", "总连接数为：", len(h.clients))
 		case client := <-h.unregister: //客户端断开连接，client会进入unregister中，直接在这里获取，删除一个
 			ct := h.clients[client.roomID]
-			delete(h.clients, client.roomID) //在map中根据对应value值，使用delete删除对应client
-			for _, v := range ct {
-				if v == client {
+			for i, v := range ct {
+				if v.user == client.user {
 					close(client.send) //关闭对应连接
+					h.clients[client.roomID] = append(h.clients[client.roomID][:i], h.clients[client.roomID][i+1:]...)
 				}
 			}
 		case mes := <-h.Broadcast: //将数据发给所有连接中的send，用来发送全局消息，如系统提示消息或者全世界喊话
 			data, err := json.Marshal(mes)
 			if err == nil {
-				for idx, cts := range h.clients {
-					for i, vclient := range cts {
-						select {
-						case vclient.send <- data: //将需要发送的数据放入send中，在write函数中实际发送
-						default:
-							//如果这个client不通,message无法进行发送，说明这个client已经关闭，接下来就去除对应client列表中的client，
-							//虽然在unregister中已经做了这个操作，但是防止某些非正常断开连接的操作的影响
-							close(vclient.send)                                                  //关闭发送通道
-							h.clients[idx] = append(h.clients[idx][:i], h.clients[idx][i+1:]...) //删除连接
-						}
+				for _, cts := range h.clients {
+					for _, vclient := range cts {
+						vclient.send <- data
 					}
 				}
 			} else {
@@ -218,18 +221,12 @@ func (h *RoomChatHubSet) Run() {
 			data, err := json.Marshal(mes)
 			if err == nil {
 				ct := h.clients[mes.RoomID]
-				for i, client := range ct { //clients中保存了所有的客户端连接，循环所有连接给与要发送的数据
-					select {
-					case client.send <- data:
-					default:
-						close(client.send)
-						ct = append(ct[:i], ct[i+1:]...)
-					}
+				for _, client := range ct { //clients中保存了所有的客户端连接，循环所有连接给与要发送的数据
+					client.send <- data
 				}
 			} else {
 				logrus.WithFields(logrus.Fields{"json": err}).Error("BroadcastUser")
 			}
-
 		}
 	}
 }
@@ -248,7 +245,7 @@ func (h *RoomChatHubSet) RoomUserNum(roomid string) int {
 func (h *RoomChatHubSet) Unregister(roomid, user string) {
 	for i, v := range h.clients[roomid] {
 		if v.user == user {
-			h.clients[roomid][i].hub.unregister <- h.clients[roomid][i] //注销该client
+			h.clients[roomid][i].outSign <- true
 		}
 	}
 }
@@ -257,13 +254,16 @@ func (h *RoomChatHubSet) Unregister(roomid, user string) {
 //做这一步不用当心过程中有新连接，room对象中使用了锁，并在连接前后判断，在清理前连接，这里直接清除，清理后连接，逻辑中判断room内容为空，不将连接加入，直接return，行260
 func (h *RoomChatHubSet) UnregisterALL(roomid string) {
 	for i := range h.clients[roomid] {
-		h.clients[roomid][i].hub.unregister <- h.clients[roomid][i]
+		h.clients[roomid][i].outSign <- true
 	}
 }
 
 // ServeChatWs handles websocket requests from the peer.
 func ServeChatWs(user, roomID string, hub *RoomChatHubSet, w http.ResponseWriter, r *http.Request) {
 	room := RoomSets[roomID]
+	if room == nil {
+		return
+	}
 	room.RoomLock.Lock()
 	if room.HostName == "" || room.RoomID == "" {
 		//房主为空说明该房间已经销毁了，id为空说明该房间不存在，或者已经被清理了
@@ -277,11 +277,12 @@ func ServeChatWs(user, roomID string, hub *RoomChatHubSet, w http.ResponseWriter
 	conn, err := upgrader.Upgrade(w, r, h) //返回一个websocket连接
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"connect": err}).Info("websocket")
+		room.RoomLock.Unlock()
 		return
 	}
 
 	//生成一个client，里面包含用户信息连接信息等信息
-	client := &ChatClient{hub: hub, user: user, roomID: roomID, conn: conn, send: make(chan []byte, 256)}
+	client := &ChatClient{hub: hub, user: user, roomID: roomID, conn: conn, send: make(chan []byte, 256), outSign: make(chan bool, 1)}
 	client.hub.register <- client //将这个连接放入注册，在run中会加一个
 	room.RoomLock.Unlock()
 	if _, err := Mdb.InsertOne("chat", bson.M{"roomId": room.RoomID, "user": user}); err != nil {

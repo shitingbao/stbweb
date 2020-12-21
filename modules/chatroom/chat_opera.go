@@ -167,7 +167,7 @@ func randSelectRoom(param interface{}, p *core.ElementHandleArgs) error {
 		},
 		{
 			"$sample": bson.M{
-				"size": 3,
+				"size": 9,
 			},
 		},
 	}
