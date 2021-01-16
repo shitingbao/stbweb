@@ -12,18 +12,30 @@ var (
 	inviteWaitList  = make(map[string]net.Conn)   //邀请方连接列表
 	contrastList    = make(map[net.Conn]net.Conn) //对应表，两边都对应
 	loopWait        = make(map[string]chan bool)  //用于两方等待时的阻塞，key为两边对应标识
+	port            = ":1200"
+	// ConReadDeadline = 15 * time.Minute
+	ConReadDeadline = 5 * time.Second
 )
 
 func main() {
-	tcpAdree, err := net.ResolveTCPAddr("tcp4", ":1200")
+	tcpAdree, err := net.ResolveTCPAddr("tcp4", port)
 	if err != nil {
+		log.Println("ResolveTCPAddr err", err)
+		return
 	}
 	listener, err := net.ListenTCP("tcp", tcpAdree)
 	if err != nil {
+		log.Println("ListenTCP err", err)
+		return
 	}
+	defer func() {
+		log.Println("stop")
+	}()
+	log.Println("start listen :1200")
 	for {
 		con, err := listener.Accept()
 		if err != nil {
+			log.Println("listener.Accept err", err)
 			continue
 		}
 		go handleClient(con)
@@ -33,19 +45,26 @@ func main() {
 //获取第一次的标识，用于匹配两个连接，标识内容为 fi/fc:(邀请方/控制方)+对应标识编号
 //邀请或者控制，第一次连接后验证是否有对应标识编号的另一个连接，否则就等待
 func handleClient(con net.Conn) {
-	con.SetReadDeadline(time.Now().Add(2 * time.Minute))
-	// con.SetReadDeadline(time.Now().Add(2 * time.Second))
+	log.Println("con.RemoteAddr:", con.RemoteAddr().String())
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println("handleClient:", err)
+		}
+	}()
+	con.SetReadDeadline(time.Now().Add(ConReadDeadline))
 	defer close(con)
 	for {
 		request := make([]byte, 128)
 		readLine, err := con.Read(request)
 		if err != nil {
+			log.Println("con.Read:", err)
 			break
 		}
 		if readLine == 0 { //out
 			break
 		}
 		mes := string(request[:readLine])
+		log.Println("total into:", mes)
 		switch {
 		//fi fc都为第一次处理
 		case strings.HasPrefix(mes, "fi:"):
@@ -56,7 +75,11 @@ func handleClient(con net.Conn) {
 			firstOpera(mes, con, inviteWaitList, controlWaitList)
 		default:
 			operaCon := contrastList[con]
+			if operaCon == nil {
+				break
+			}
 			operaCon.Write(request[:readLine])
+			con.SetReadDeadline(time.Now().Add(ConReadDeadline))
 		}
 	}
 }
