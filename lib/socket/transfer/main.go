@@ -65,17 +65,17 @@ func handleClient(con net.Conn) {
 			log.Println("handleClient:", err)
 		}
 	}()
-	user, _, err := firstOpera(con)
+	user, role, err := firstOpera(con)
 	defer close(user)
 	if err != nil {
 		return
 	}
 	con.SetReadDeadline(time.Now().Add(ConReadDeadline))
 	//控制方连接后，操作一个数据读取即可，邀请方不需要，只需要加入超时时间即可
-	client(user, con)
+	client(user, role, con)
 }
 
-func client(user string, con net.Conn) {
+func client(user, role string, con net.Conn) {
 	for {
 		request := make([]byte, 128)
 		readLine, err := con.Read(request)
@@ -86,11 +86,17 @@ func client(user string, con net.Conn) {
 		if tp.Invite == nil {
 			break
 		}
-		if _, err := tp.Invite.Write(request[:readLine]); err != nil {
-			return
+		if role == ControlFlag { //因为两方连接都是从自己一方接收，发送到另一边
+			if _, err := tp.Invite.Write(request[:readLine]); err != nil {
+				return
+			}
+		} else {
+			if _, err := tp.Control.Write(request[:readLine]); err != nil {
+				return
+			}
 		}
-		(tp.Control).SetReadDeadline(time.Now().Add(ConReadDeadline))
-		(tp.Invite).SetReadDeadline(time.Now().Add(ConReadDeadline))
+		tp.Control.SetReadDeadline(time.Now().Add(ConReadDeadline))
+		tp.Invite.SetReadDeadline(time.Now().Add(ConReadDeadline))
 	}
 }
 
