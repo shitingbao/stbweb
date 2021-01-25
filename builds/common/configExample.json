@@ -10,12 +10,12 @@
     "AllowOrigin": "http://124.70.156.31,http://124.70.156.31:3002,http://124.70.156.31:80",
     "AccessTokenDate": "2020-09-04 16:05:50",
     "RedisAdree": "124.70.156.31",
-    "RedisPwd": "",
+    "RedisPwd": "ihavetolove4116#",
     "Redislevel": 0,
     "RedisPort": "6379",
     "ExternalServer": true,
     
-    "MongoDriver"   :"mongodb://root:123456@124.70.156.31:27017", 
+    "MongoDriver"   :"mongodb://root:ihavetolove4116#@124.70.156.31:27017", 
     "MongoDatabase" :"stb", 
     "ChatNsqAddree":"124.70.156.31:4150"
 }

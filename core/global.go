@@ -128,7 +128,7 @@ func Initinal(chatHub, ctrlHub, cardHun *ws.Hub, roomChatHub *RoomChatHubSet) {
 func openMongodb(driver, database string) {
 	mongo, err := mongodb.OpenMongoDb(driver, database)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"ConnectString": driver, "database": database}).Panic("mongodb err")
+		logrus.WithFields(logrus.Fields{"ConnectString": driver, "database": database, "err:": err}).Panic("mongodb err")
 	}
 	logrus.WithFields(logrus.Fields{"Connect": driver + "/" + database}).Info("mongodb")
 	Mdb = mongo
