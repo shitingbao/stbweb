@@ -1,0 +1,28 @@
+
+# <type类型>(<scope提交代码影响范围>): <subject主题，概括提交的内容>
+#
+# <body>用于详细描述本次变更的内容
+#
+# <footer>提供解决问题的文章地址或者测试的链接地址
+# 例如: closes #issue fix #issue
+#
+# <type类型>
+#    feat: 添加新功能
+#    fix : 修补bug
+#    perf: 改进性能或优化代码的更改
+#    refactor: 代码重构
+#    docs: 文档或注释修改
+#    style: 不影响代码含义的变化（空白，格式化，缺少分号等）
+#    test: 添加缺失测试或更正现有测试
+#    chore: 构建过程或辅助工具的变动（范围：gulp，webpack，npm）
+#    build: 构建工具生成资源
+#    ci: 更改我们的持续集成文件和脚本（范围：Dockerfile）
+#
+# <scope提交代码影响范围。如果存在多个用、分割>
+#
+# https://segmentfault.com/a/1190000004282514
+# https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#-git-commit-guidelines
+# https://www.phodal.com/blog/how-to-write-a-better-git-commit-message/
+#
+#
+
