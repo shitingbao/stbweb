@@ -41,4 +41,5 @@ require (
 	google.golang.org/grpc/examples v0.0.0-20200806223615-7419b444ee17
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
+	gorm.io/gorm v1.21.5 // indirect
 )
