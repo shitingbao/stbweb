@@ -47,6 +47,11 @@ func getAccessToken() (accessTokenType, error) {
 		return accessTokenType{}, err
 	}
 	resp, err := client.Do(req)
+	// q := req.URL.Query() //query参数
+	// q.Add(advertiserID, aId)
+	// q.Add(siteID, sId)
+	// q.Add(timeDuration, tm)
+	// req.URL.RawQuery = q.Encode()
 	if err != nil {
 		return accessTokenType{}, err
 	}
