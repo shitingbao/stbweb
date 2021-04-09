@@ -34,6 +34,7 @@ func send(route string, v interface{}) error {
 		return err
 	}
 	// req.Header.Add("Authorization", "APPCODE "+appcode)
+	// req.Header.Add("Content-Type", "application/json")//json要加这个
 	resp, err := client.Do(req)
 	if err != nil {
 		return err

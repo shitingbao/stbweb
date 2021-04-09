@@ -12,10 +12,10 @@ func NewNsqCustomer(tcpNsqdAddrr, topic, channel string, handle interface{}) (*n
 	if err != nil {
 		return nil, err
 	}
-	// defer con.Stop()
-	hd, ok := handle.(nsq.Handler)
-	if !ok {
-		return nil, errors.New("handle type error")
+	// // defer con.Stop()
+	// hd, ok := handle.(nsq.Handler)
+	// if !ok {
+	// 	return nil, errors.New("handle type error")
 	}
 	con.AddHandler(hd)
 	err = con.ConnectToNSQD(tcpNsqdAddrr)
