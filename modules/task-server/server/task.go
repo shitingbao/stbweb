@@ -3,8 +3,8 @@ package server
 import (
 	"log"
 	"net/http"
-	"task-server/model"
-	"task-server/params"
+	"stbweb/modules/task-server/model"
+	"stbweb/modules/task-server/params"
 
 	"github.com/gin-gonic/gin"
 )

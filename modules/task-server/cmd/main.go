@@ -1,7 +1,7 @@
 package main
 
 import (
-	"task-server/server"
+	"stbweb/modules/task-server/server"
 )
 
 func main() {

@@ -8,6 +8,7 @@ require (
 	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
 	github.com/extrame/ole2 v0.0.0-20160812065207-d69429661ad7 // indirect
 	github.com/extrame/xls v0.0.1
+	github.com/gin-gonic/gin v1.7.1 // indirect
 	github.com/go-redis/redis v6.15.8+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.4.2
@@ -22,6 +23,7 @@ require (
 	github.com/panjf2000/ants v1.2.0
 	github.com/pborman/uuid v1.2.0
 	github.com/robfig/cron v1.2.0
+	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.6.0
 	github.com/tdewolff/minify v2.3.6+incompatible
@@ -41,5 +43,6 @@ require (
 	google.golang.org/grpc/examples v0.0.0-20200806223615-7419b444ee17
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
+	gorm.io/driver/mysql v1.0.5 // indirect
 	gorm.io/gorm v1.21.5 // indirect
 )
