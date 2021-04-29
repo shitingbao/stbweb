@@ -45,7 +45,7 @@ func serve() {
 	}()
 	chatHub, ctrlHub, cardHun, roomChatHub := initChatWebsocket()
 	core.Initinal(chatHub, ctrlHub, cardHun, roomChatHub)
-	clearInit()
+	// clearInit()
 	if core.WebConfig.ExternalServer {
 		go externalServer() //开启外置服务
 	}
