@@ -32,36 +32,46 @@ func forEachNode(resp *http.Response, n *html.Node) error {
 
 // 一个标签内的处理
 func nodefunc(resp *http.Response, n *html.Node) error { //页面中一个标签单次节点处理
+	if n.Data == "img" {
+		logrus.Info("", n.Attr)
+	}
 	if n.Type != html.ElementNode || (n.Data != "a" && n.Data != "img") {
 		return nil
 	}
-	isImage := false
-	fileName := ""
-	fileAdress := ""
-	for _, a := range n.Attr {
-		link, err := resp.Request.URL.Parse(a.Val)
-		if err != nil {
-			return err
-		}
-		l := link.String()
-		switch {
-		case n.Data == "a" && a.Key == "href": //这里说明是a标签，不符合直接return
-			if core.Rds.HGet(nodeSign, l).Val() != "" {
+
+	switch n.Data {
+	case "a":
+		for _, a := range n.Attr {
+			if a.Key == "href" {
+				link, err := resp.Request.URL.Parse(a.Val)
+				if err != nil {
+					return err
+				}
+				l := link.String()
+				if core.Rds.HGet(nodeSign, l).Val() != "" {
+					return nil
+				}
+				core.Rds.HSet(nodeSign, l, nodeSign)
+				SpiderLoad(l)
 				return nil
-			}
-			core.Rds.HSet(nodeSign, l, nodeSign)
-			return nil
-		case n.Data == "img" && a.Key == "src": //进入这两个说明是图片标签
-			isImage = true
-			fileAdress = l
-		case n.Data == "img" && a.Key == "alt":
-			fileName = fileNameHandle(a.Val)
+			} //这里说明是a标签，不符合直接return
 		}
-	}
-	if isImage {
-		core.WorkPool.Submit(func() {
-			createImage(fileAdress, fileName)
-		})
+	case "img":
+		fileName := ""
+		url := ""
+		for _, a := range n.Attr {
+			switch {
+			case a.Key == "src": //进入这两个说明是图片标签
+				link, err := resp.Request.URL.Parse(a.Val)
+				if err != nil {
+					return err
+				}
+				url = link.String()
+			case a.Key == "alt":
+				fileName = fileNameHandle(a.Val)
+			}
+		}
+		createImage(url, fileName)
 	}
 	return nil
 }

@@ -25,7 +25,6 @@ func fileNameHandle(n string) string {
 
 // 路径中可能带？的参数，需要处理一下
 func createImage(imageURL, fBaseName string) error {
-
 	resp, err := http.Get(imageURL)
 	if err != nil {
 		return err
@@ -63,6 +62,11 @@ func getFileName(imageURL, fBaseName string) string {
 		return ""
 	}
 	bPath := u.Query().Get("src")
+	if bPath == "" {
+		bPath = imageURL
+	}
 	p := bashPath(bPath)
-	return path.Join(p, fBaseName+path.Base(bPath))
+	suffixPath := path.Base(bPath)
+	lasPath := strings.Split(suffixPath, "?") //可能还有参数
+	return path.Join(p, fBaseName+lasPath[0])
 }
