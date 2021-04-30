@@ -3,6 +3,7 @@ package spider
 import (
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"stbweb/core"
@@ -10,21 +11,21 @@ import (
 )
 
 var (
-	img         = "https://www.pximg.com/wp-content/uploads/2020/04/cdd72379d64dd08-scaled.jpg"
-	url         = "https://www.pximg.com/meinv/39211.html"
 	baseFileDir = core.DefaultFilePath
 )
 
-func urlQueryHandle(imageURL string) string {
-	if imageURL == "" {
-		return ""
-	}
-	s := strings.Split(imageURL, "&")
-	return s[0]
+// 去除名称中一些特殊符号
+func fileNameHandle(n string) string {
+	n = strings.ReplaceAll(n, " ", "")
+	n = strings.ReplaceAll(n, "-", "_")
+	n = strings.ReplaceAll(n, ".", "_")
+	n = strings.ReplaceAll(n, "!", "_")
+	return n
 }
 
 // 路径中可能带？的参数，需要处理一下
-func createImage(imageURL string) error {
+func createImage(imageURL, fBaseName string) error {
+
 	resp, err := http.Get(imageURL)
 	if err != nil {
 		return err
@@ -37,9 +38,8 @@ func createImage(imageURL string) error {
 	if err != nil {
 		return err
 	}
-	nakedURL := urlQueryHandle(imageURL)
-	p := setGetFileDir(nakedURL)
-	fileName := path.Join(p, path.Base(nakedURL))
+	fileName := getFileName(imageURL, fBaseName)
+
 	f, err := os.Create(fileName)
 	if err != nil {
 		return err
@@ -51,8 +51,18 @@ func createImage(imageURL string) error {
 }
 
 // 每一个页面一个文件夹，取自倒数第二个目录名称,并建立目录
-func setGetFileDir(imageURL string) string {
+func bashPath(imageURL string) string {
 	p := path.Join(baseFileDir, path.Base(path.Dir(imageURL)))
 	os.MkdirAll(p, os.ModePerm)
 	return p
+}
+
+func getFileName(imageURL, fBaseName string) string {
+	u, err := url.Parse(imageURL)
+	if err != nil {
+		return ""
+	}
+	bPath := u.Query().Get("src")
+	p := bashPath(bPath)
+	return path.Join(p, fBaseName+path.Base(bPath))
 }

@@ -13,7 +13,7 @@ import (
 const (
 	//测试并行数量
 	runTime              = 100
-	defaultBenchAntsSize = 10
+	defaultBenchAntsSize = 30
 	//BenchAntsSize 同上
 	BenchAntsSize = 200000
 	//DefaultExpiredTime 测试使用默认过期时间

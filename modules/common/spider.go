@@ -24,7 +24,7 @@ func (r *spiderHand) Post(p *core.ElementHandleArgs) {
 
 func spiderLoad(param interface{}, p *core.ElementHandleArgs) error {
 	pa := param.(*spiderParam)
-	if err := spider.SpiderLoad(pa.URL); err != nil {
+	if err := spider.SpiderRun(pa.URL); err != nil {
 		core.SendJSON(p.Res, http.StatusOK, core.SendMap{"false": err.Error()})
 		return err
 	}
