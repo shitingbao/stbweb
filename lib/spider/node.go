@@ -5,7 +5,6 @@ package spider
 // 同时，前面的页面中开了一半（比如有20个新页面，但是只有10个协程），这时候就卡死了
 import (
 	"net/http"
-	"stbweb/core"
 
 	"github.com/pborman/uuid"
 	"github.com/sirupsen/logrus"
@@ -32,47 +31,47 @@ func forEachNode(resp *http.Response, n *html.Node) error {
 
 // 一个标签内的处理
 func nodefunc(resp *http.Response, n *html.Node) error { //页面中一个标签单次节点处理
-	if n.Data == "img" {
-		logrus.Info("", n.Attr)
-	}
-	if n.Type != html.ElementNode || (n.Data != "a" && n.Data != "img") {
-		return nil
-	}
+	// if n.Data == "img" {
+	// 	logrus.Info("", n.Attr)
+	// }
+	// if n.Type != html.ElementNode || (n.Data != "a" && n.Data != "img") {
+	// 	return nil
+	// }
 
-	switch n.Data {
-	case "a":
-		for _, a := range n.Attr {
-			if a.Key == "href" {
-				link, err := resp.Request.URL.Parse(a.Val)
-				if err != nil {
-					return err
-				}
-				l := link.String()
-				if core.Rds.HGet(nodeSign, l).Val() != "" {
-					return nil
-				}
-				core.Rds.HSet(nodeSign, l, nodeSign)
-				SpiderLoad(l)
-				return nil
-			} //这里说明是a标签，不符合直接return
-		}
-	case "img":
-		fileName := ""
-		url := ""
-		for _, a := range n.Attr {
-			switch {
-			case a.Key == "src": //进入这两个说明是图片标签
-				link, err := resp.Request.URL.Parse(a.Val)
-				if err != nil {
-					return err
-				}
-				url = link.String()
-			case a.Key == "alt":
-				fileName = fileNameHandle(a.Val)
-			}
-		}
-		createImage(url, fileName)
-	}
+	// switch n.Data {
+	// case "a":
+	// 	for _, a := range n.Attr {
+	// 		if a.Key == "href" {
+	// 			link, err := resp.Request.URL.Parse(a.Val)
+	// 			if err != nil {
+	// 				return err
+	// 			}
+	// 			l := link.String()
+	// 			if core.Rds.HGet(nodeSign, l).Val() != "" {
+	// 				return nil
+	// 			}
+	// 			core.Rds.HSet(nodeSign, l, nodeSign)
+	// 			SpiderLoad(l)
+	// 			return nil
+	// 		} //这里说明是a标签，不符合直接return
+	// 	}
+	// case "img":
+	// 	fileName := ""
+	// 	url := ""
+	// 	for _, a := range n.Attr {
+	// 		switch {
+	// 		case a.Key == "src": //进入这两个说明是图片标签
+	// 			link, err := resp.Request.URL.Parse(a.Val)
+	// 			if err != nil {
+	// 				return err
+	// 			}
+	// 			url = link.String()
+	// 		case a.Key == "alt":
+	// 			fileName = fileNameHandle(a.Val)
+	// 		}
+	// 	}
+	// 	createImage(url, fileName)
+	// }
 	return nil
 }
 
