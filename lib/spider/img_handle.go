@@ -37,18 +37,18 @@ func NewImgNode(resp *http.Response, n *html.Node) *imgNode {
 }
 
 func (i *imgNode) Handle() error {
-	if i.Node.Data != "img" {
+	if i.Node.Data != imgNodeSign {
 		return nil
 	}
 	for _, a := range i.Node.Attr {
 		switch {
-		case a.Key == "src": //进入这两个说明是图片标签
+		case a.Key == srcNodeSign: //进入这两个说明是图片标签
 			link, err := i.Resp.Request.URL.Parse(a.Val)
 			if err != nil {
 				return err
 			}
 			i.Src = link.String()
-		case a.Key == "alt":
+		case a.Key == altNodeSign:
 			i.fileNameHandle(a.Val)
 		}
 	}

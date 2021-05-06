@@ -12,7 +12,12 @@ import (
 )
 
 var (
-	nodeSign = "node"
+	nodeSign     = "node"
+	aNodeSign    = "a"
+	imgNodeSign  = "img"
+	hrefNodeSign = "href"
+	srcNodeSign  = "src"
+	altNodeSign  = "alt"
 )
 
 // forEachNode 便利一个node中所有的节点（就是所有标签）
@@ -31,14 +36,14 @@ func forEachNode(resp *http.Response, n *html.Node) error {
 
 // 一个标签内的处理
 func nodefunc(resp *http.Response, n *html.Node) error { //页面中一个标签单次节点处理
-	if n.Type != html.ElementNode || (n.Data != "a" && n.Data != "img") {
+	if n.Type != html.ElementNode {
 		return nil
 	}
 	switch n.Data {
-	case "a":
+	case aNodeSign:
 		a := NewANode(resp, n)
 		a.Handle()
-	case "img":
+	case imgNodeSign:
 		img := NewImgNode(resp, n)
 		img.Handle()
 	}

@@ -21,11 +21,11 @@ func NewANode(resp *http.Response, n *html.Node) *aNode {
 }
 
 func (a *aNode) Handle() error {
-	if a.Node.Data != "a" {
+	if a.Node.Data != aNodeSign {
 		return nil
 	}
 	for _, at := range a.Node.Attr {
-		if at.Key != "href" {
+		if at.Key != hrefNodeSign {
 			continue
 		}
 		link, err := a.Resp.Request.URL.Parse(at.Val)
