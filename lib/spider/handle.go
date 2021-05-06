@@ -1,5 +1,5 @@
 package spider
 
-type htmlImgNode interface {
+type htmlNode interface {
 	Handle() error
 }

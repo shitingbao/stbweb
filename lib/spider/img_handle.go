@@ -6,28 +6,41 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"stbweb/core"
 	"strings"
 
 	"golang.org/x/net/html"
 )
 
+var (
+	baseFileDir = core.DefaultFilePath
+)
+
+// imgNode img标签对象
+// Attr标签属性切片
+// Url
+// Resp该标签页面的请求对象
+// FileName要保存的文件名称
+// Src img对应的src属性内容地址，也就是图像地址
 type imgNode struct {
-	Attr     []html.Attribute
-	Url      *url.URL
-	Resp     *http.Response
 	FileName string
 	Src      string
+	Node     *html.Node
+	Resp     *http.Response
 }
 
-func NewImgNode(attr []html.Attribute, resp *http.Response) *imgNode {
+func NewImgNode(resp *http.Response, n *html.Node) *imgNode {
 	return &imgNode{
-		Attr: attr,
+		Node: n,
 		Resp: resp,
 	}
 }
 
 func (i *imgNode) Handle() error {
-	for _, a := range i.Attr {
+	if i.Node.Data != "img" {
+		return nil
+	}
+	for _, a := range i.Node.Attr {
 		switch {
 		case a.Key == "src": //进入这两个说明是图片标签
 			link, err := i.Resp.Request.URL.Parse(a.Val)
@@ -36,7 +49,7 @@ func (i *imgNode) Handle() error {
 			}
 			i.Src = link.String()
 		case a.Key == "alt":
-			i.FileName = fileNameHandle(a.Val)
+			i.fileNameHandle(a.Val)
 		}
 	}
 	return i.createImage()
@@ -87,4 +100,13 @@ func (i *imgNode) getFileName() string {
 	suffixPath := path.Base(bPath)
 	lasPath := strings.Split(suffixPath, "?") //可能还有参数
 	return path.Join(p, i.FileName+lasPath[0])
+}
+
+// 去除名称中一些特殊符号
+func (i *imgNode) fileNameHandle(n string) {
+	n = strings.ReplaceAll(n, " ", "")
+	n = strings.ReplaceAll(n, "-", "_")
+	n = strings.ReplaceAll(n, ".", "_")
+	n = strings.ReplaceAll(n, "!", "_")
+	i.FileName = n
 }

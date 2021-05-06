@@ -1,18 +1,44 @@
 package spider
 
 import (
+	"net/http"
+	"stbweb/core"
+
 	"golang.org/x/net/html"
 )
 
 type aNode struct {
-	Attr []html.Attribute
 	Src  string
+	Node *html.Node
+	Resp *http.Response
 }
 
-func NewANode(attr []html.Attribute) *aNode {
+func NewANode(resp *http.Response, n *html.Node) *aNode {
 	return &aNode{
-		Attr: attr,
+		Node: n,
+		Resp: resp,
 	}
 }
 
-func (a *aNode) Hand() {}
+func (a *aNode) Handle() error {
+	if a.Node.Data != "a" {
+		return nil
+	}
+	for _, at := range a.Node.Attr {
+		if at.Key != "href" {
+			continue
+		}
+		link, err := a.Resp.Request.URL.Parse(at.Val)
+		if err != nil {
+			return err
+		}
+		l := link.String()
+		if core.Rds.HGet(nodeSign, l).Val() != "" {
+			return nil
+		}
+		core.Rds.HSet(nodeSign, l, nodeSign)
+		SpiderLoad(l)
+		return nil
+	}
+	return nil
+}
