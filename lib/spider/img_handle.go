@@ -29,7 +29,7 @@ type imgNode struct {
 	Resp     *http.Response
 }
 
-func NewImgNode(resp *http.Response, n *html.Node) *imgNode {
+func NewImgNode(resp *http.Response, n *html.Node) htmlNode {
 	return &imgNode{
 		Node: n,
 		Resp: resp,

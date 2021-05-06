@@ -13,7 +13,7 @@ type aNode struct {
 	Resp *http.Response
 }
 
-func NewANode(resp *http.Response, n *html.Node) *aNode {
+func NewANode(resp *http.Response, n *html.Node) htmlNode {
 	return &aNode{
 		Node: n,
 		Resp: resp,

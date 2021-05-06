@@ -24,7 +24,7 @@ var (
 // 一个页面中的所有标签便利
 func forEachNode(resp *http.Response, n *html.Node) error {
 	if err := nodefunc(resp, n); err != nil {
-		logrus.WithFields(logrus.Fields{"node": n.Data}).Error("nodefunc")
+		logrus.WithFields(logrus.Fields{"node": n.Data, "err": err.Error()}).Error("nodefunc")
 	}
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
 		if err := forEachNode(resp, c); err != nil {
@@ -39,15 +39,16 @@ func nodefunc(resp *http.Response, n *html.Node) error { //页面中一个标签
 	if n.Type != html.ElementNode {
 		return nil
 	}
+	var h htmlNode
 	switch n.Data {
 	case aNodeSign:
-		a := NewANode(resp, n)
-		a.Handle()
+		h = NewANode(resp, n)
 	case imgNodeSign:
-		img := NewImgNode(resp, n)
-		img.Handle()
+		h = NewImgNode(resp, n)
+	default:
+		return nil
 	}
-	return nil
+	return h.Handle()
 }
 
 //GetURLInfomationAdress is a func get URL infomation
