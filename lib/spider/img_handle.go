@@ -1,6 +1,7 @@
 package spider
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/url"
@@ -9,6 +10,7 @@ import (
 	"stbweb/core"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"golang.org/x/net/html"
 )
 
@@ -27,6 +29,7 @@ type imgNode struct {
 	Src      string
 	Node     *html.Node
 	Resp     *http.Response
+	c        chan *imgNode
 }
 
 func NewImgNode(resp *http.Response, n *html.Node) htmlNode {
@@ -36,13 +39,14 @@ func NewImgNode(resp *http.Response, n *html.Node) htmlNode {
 	}
 }
 
-func (i *imgNode) Handle() error {
+// 进入异步准备
+func (i *imgNode) Handle(ch chan *imgNode) error {
 	if i.Node.Data != imgNodeSign {
 		return nil
 	}
 	for _, a := range i.Node.Attr {
 		switch {
-		case a.Key == srcNodeSign: //进入这两个说明是图片标签
+		case a.Key == srcNodeSign: // 进入这两个说明是图片标签
 			link, err := i.Resp.Request.URL.Parse(a.Val)
 			if err != nil {
 				return err
@@ -52,7 +56,9 @@ func (i *imgNode) Handle() error {
 			i.fileNameHandle(a.Val)
 		}
 	}
-	return i.createImage()
+	ch <- i
+	// return i.createImage()
+	return nil
 }
 
 // 路径中可能带？的参数，需要处理一下
@@ -109,4 +115,21 @@ func (i *imgNode) fileNameHandle(n string) {
 	n = strings.ReplaceAll(n, ".", "_")
 	n = strings.ReplaceAll(n, "!", "_")
 	i.FileName = n
+}
+
+func imageConsumer(ctx context.Context, ch <-chan *imgNode) {
+	for {
+		select {
+		case <-ctx.Done():
+			logrus.Info("out create")
+			return
+		case i, ok := <-ch:
+			if !ok {
+				return
+			}
+			if i != nil {
+				i.createImage()
+			}
+		}
+	}
 }

@@ -1,5 +1,5 @@
 package spider
 
 type htmlNode interface {
-	Handle() error
+	Handle(ch chan *imgNode) error
 }

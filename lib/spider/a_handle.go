@@ -20,7 +20,7 @@ func NewANode(resp *http.Response, n *html.Node) htmlNode {
 	}
 }
 
-func (a *aNode) Handle() error {
+func (a *aNode) Handle(ch chan *imgNode) error {
 	if a.Node.Data != aNodeSign {
 		return nil
 	}
@@ -37,7 +37,7 @@ func (a *aNode) Handle() error {
 			return nil
 		}
 		core.Rds.HSet(nodeSign, l, nodeSign)
-		SpiderLoad(l)
+		SpiderLoad(l, ch)
 		return nil
 	}
 	return nil
