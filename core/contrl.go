@@ -46,15 +46,22 @@ func (e *ElementHandleArgs) isAPI() bool {
 	return false
 }
 
-//NewElementHandleArgs 反馈一个工作元素类型
-func NewElementHandleArgs(w http.ResponseWriter, r *http.Request, ele *Element, usr string) *ElementHandleArgs {
-	return &ElementHandleArgs{
-		Req:     r,
-		Res:     w,
-		Element: ele,
-		Red:     Rds,
-		Usr:     usr,
-	}
+//set 反馈一个工作元素类型
+func (e *ElementHandleArgs) set(w http.ResponseWriter, r *http.Request, ele *Element, usr string) {
+	e.Req = r
+	e.Res = w
+	e.Element = ele
+	e.Red = Rds
+	e.Usr = usr
+}
+
+//Clear 清理arg
+func (e *ElementHandleArgs) clear() {
+	e.Req = nil
+	e.Res = nil
+	e.Element = nil
+	e.Red = nil
+	e.Usr = ""
 }
 
 //RegisterFun 注册一个功能,第二个参数为对应结构，应该使用new关键字新开辟对象，防止断言出错,第三个参数为是否是外部API，true为需要登录后使用

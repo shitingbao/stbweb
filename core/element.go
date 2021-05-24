@@ -4,12 +4,14 @@ import (
 	"errors"
 	"net/http"
 	"stbweb/lib/rediser"
+	"sync"
 )
 
 //Element 工作元素
 type Element struct {
-	Name    string
-	Control *Controlle
+	Name        string
+	Control     *Controlle
+	elementPool *sync.Pool
 }
 
 //Handle 执行一个工作元素
@@ -22,8 +24,8 @@ func (e *Element) Handle(p *ElementHandleArgs) {
 	e.Control.Handle(p)
 }
 
-//ElementLoad 初始化element
-func ElementLoad(elementName string) *Element {
+//elementLoad 初始化element
+func elementLoad(elementName string) *Element {
 	//这里应该使用yaml文件
 	//从yaml文件中，使用elementName去对照取出对应所有该数据元素的对象内容
 	//对象内容包括name，controllerName
@@ -32,6 +34,11 @@ func ElementLoad(elementName string) *Element {
 	return &Element{
 		Name:    elementName,
 		Control: controlles[elementName],
+		elementPool: &sync.Pool{
+			New: func() interface{} {
+				return &ElementHandleArgs{}
+			},
+		},
 	}
 }
 
@@ -43,9 +50,12 @@ func ElementHandle(w http.ResponseWriter, r *http.Request, elementName string) {
 		SendJSON(w, http.StatusOK, SendMap{"msg": err.Error()})
 		return
 	}
-	ele := ElementLoad(elementName)
-	arge := NewElementHandleArgs(w, r, ele, usr)
+	ele := elementLoad(elementName)
+	arge := ele.elementPool.Get().(*ElementHandleArgs)
+	arge.set(w, r, ele, usr)
 	ele.Handle(arge)
+	arge.clear()
+	ele.elementPool.Put(arge)
 }
 
 //isExternalCall 判断该操作元素下的api是否可以外部调用
