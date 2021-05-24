@@ -92,7 +92,7 @@ func httpProcess(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, filepath.Join(str, r.URL.String()))
 		return
 	}
-	core.ElementHandle(w, r, paths[0]) //待定，工作元素的名称获取是否来源于路由
+	core.ElementHandle(w, r, r.URL.Path[1:]) //工作元素的名称获取来源于完整路由
 }
 
 // func fileHandler(w http.ResponseWriter, r *http.Request) {
