@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"sync"
 	"syscall"
 )
 
@@ -22,6 +23,7 @@ var (
 // TcpCustomerListen监听入口
 func TcpCustomerListen() {
 	flag.Parse()
+	wg := &sync.WaitGroup{}
 	add, err := net.ResolveTCPAddr("tcp4", ":8080")
 	if err != nil {
 		log.Println("ResolveTCPAddr:", err)
@@ -46,7 +48,6 @@ func TcpCustomerListen() {
 			return
 		}
 	}
-	conCh := make(chan bool, 1)
 	go func() {
 		for {
 			con, err := listen.Accept()
@@ -54,19 +55,20 @@ func TcpCustomerListen() {
 				log.Println("Accept:", err)
 				return
 			}
-			go handle(con, conCh)
+			wg.Add(1)
+			go handle(con, wg)
 		}
 	}()
-	signalHandler(listen, conCh)
+	signalHandler(listen, wg)
 }
 
-func handle(con net.Conn, conCh chan bool) {
+func handle(con net.Conn, wg *sync.WaitGroup) {
 	for {
 		r := make([]byte, 256)
 		n, err := con.Read(r)
 
 		if err != nil {
-			conCh <- true // 这里待定，应该适应用于多个连接
+			wg.Done()
 			log.Println("Read:", err)
 			return
 		}
@@ -79,7 +81,7 @@ func handle(con net.Conn, conCh chan bool) {
 }
 
 // 信号处理
-func signalHandler(listen net.Listener, conCh chan bool) {
+func signalHandler(listen net.Listener, wg *sync.WaitGroup) {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM, syscall.SIGUSR2)
 	log.Println("into signalHandler======")
@@ -97,9 +99,7 @@ func signalHandler(listen net.Listener, conCh chan bool) {
 			if err := reload(listen); err != nil {
 				log.Fatalf("graceful restart error: %v", err)
 			}
-			select {
-			case <-conCh:
-			}
+			wg.Wait()
 			// listen.Close()
 			log.Printf("graceful reload")
 			return
