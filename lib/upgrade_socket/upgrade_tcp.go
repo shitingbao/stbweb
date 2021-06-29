@@ -5,6 +5,7 @@
 package upgrade_tcp
 
 import (
+	"encoding/json"
 	"flag"
 	"log"
 	"net"
@@ -37,6 +38,7 @@ func New(ads string) *EndlessTcp {
 		address:    defaultAddress,
 		wg:         &sync.WaitGroup{},
 		readLength: 256,
+		conflags:   make(map[string]net.Conn),
 	}
 	if ads != "" {
 		e.address = ads
@@ -54,7 +56,7 @@ func (e *EndlessTcp) EndlessTcpRegisterAndListen(u UpgradeRead) error {
 	if *argReload {
 		// 获取到cmd中的ExtraFiles内的文件信息，以它为内容启动监听
 		// ExtraFiles的内容在reload方法中放入
-		log.Println("*NewFile:", *argReload)
+		log.Println("EndlessTcpRegisterAndListen reload:", *argReload)
 		f := os.NewFile(3, "")
 		l, err := net.FileListener(f)
 		if err != nil {
@@ -75,6 +77,7 @@ func (e *EndlessTcp) EndlessTcpRegisterAndListen(u UpgradeRead) error {
 
 // 注意不能使用代理的情况连接，可能会出现RemoteAddr相同的情况，导致con连接对象覆盖
 func (e *EndlessTcp) listenAccept(u UpgradeRead) {
+	log.Println("start listen ", e.address)
 	for {
 		con, err := e.listen.Accept()
 		if err != nil {
@@ -99,6 +102,8 @@ func (e *EndlessTcp) read(con net.Conn, u UpgradeRead) {
 		n, err := con.Read(result)
 		if err != nil {
 			e.wg.Done()
+			delete(e.conflags, con.RemoteAddr().String())
+			log.Println("断开 con，当前：", len(e.conflags))
 			return
 		}
 		u.ReadMessage(&ReadMes{
@@ -106,6 +111,20 @@ func (e *EndlessTcp) read(con net.Conn, u UpgradeRead) {
 			Mes: result,
 		})
 	}
+}
+
+func (e *EndlessTcp) Write(v interface{}) error {
+	for _, con := range e.GetCons() {
+		b, err := json.Marshal(v)
+		if err != nil {
+			return err
+		}
+		_, err = con.Write(b)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (e *EndlessTcp) GetCons() conflag {
@@ -121,14 +140,13 @@ func (e *EndlessTcp) signalHandler() {
 		switch sig {
 		case syscall.SIGINT, syscall.SIGTERM:
 			signal.Stop(ch)
-			log.Printf("stop")
+			log.Printf("stop listen")
 			return
 		case syscall.SIGUSR2:
 			if err := e.reload(); err != nil {
-				log.Fatalf("graceful restart error: %v", err)
+				log.Fatalf("restart error: %v", err)
 			}
 			e.wg.Wait()
-			log.Printf("graceful reload")
 			return
 		}
 	}
