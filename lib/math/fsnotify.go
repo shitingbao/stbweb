@@ -22,6 +22,7 @@ func fsnFunotify() {
 			case ev := <-watch.Events:
 				{
 					//这是位的开关操作，Op的每一位（个位，十位，百位。。。都代表了一个开关，&（与）上自己，表示是否这一位是否是开启）
+					//注意的是，删除文件，触发的也是重命名，因为不是直接删除，涉及系统删除文件，详细查资料
 					if ev.Op&fsnotify.Create == fsnotify.Create {
 						log.Println("创建文件 : ", ev.Name)
 					}
