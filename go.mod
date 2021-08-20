@@ -8,8 +8,9 @@ require (
 	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
 	github.com/extrame/ole2 v0.0.0-20160812065207-d69429661ad7 // indirect
 	github.com/extrame/xls v0.0.1
-	github.com/gin-gonic/gin v1.7.1 // indirect
-	github.com/go-kit/kit v0.11.0 // indirect
+	github.com/fsnotify/fsnotify v1.4.9
+	github.com/gin-gonic/gin v1.7.1
+	github.com/go-kit/kit v0.11.0
 	github.com/go-redis/redis v6.15.8+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.5.2
@@ -23,7 +24,7 @@ require (
 	github.com/panjf2000/ants v1.2.0
 	github.com/pborman/uuid v1.2.0
 	github.com/robfig/cron v1.2.0
-	github.com/robfig/cron/v3 v3.0.1 // indirect
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/tdewolff/minify v2.3.6+incompatible
@@ -32,13 +33,13 @@ require (
 	github.com/tealeg/xlsx v1.0.5
 	go.mongodb.org/mongo-driver v1.4.1
 	golang.org/x/crypto v0.0.0-20210314154223-e6e6c4f2bb5b
+	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
 	golang.org/x/text v0.3.5
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/grpc v1.38.0
 	google.golang.org/grpc/examples v0.0.0-20200806223615-7419b444ee17
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
-	gorm.io/driver/mysql v1.0.5 // indirect
-	gorm.io/gorm v1.21.5 // indirect
+	gorm.io/driver/mysql v1.0.5
+	gorm.io/gorm v1.21.5
 )
