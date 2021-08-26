@@ -7,6 +7,7 @@ import (
 )
 
 //NewNsqCustomer 新建一个消费者,handle必须是实现了HandleMessage方法,内部连接，handle中接收数据
+// 注意注意注意：handleMessage 中如果超过两分钟就会异常报错，导致消息重新回到队列重新执行
 func NewNsqCustomer(tcpNsqdAddrr, topic, channel string, handle interface{}) (*nsq.Consumer, error) {
 	con, err := nsq.NewConsumer(topic, channel, nsq.NewConfig())
 	if err != nil {
