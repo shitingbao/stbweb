@@ -22,6 +22,7 @@ func (r *spiderHand) Post(p *core.ElementHandleArgs) {
 	}
 }
 
+// https://www.pximg.com/meinv/39211.html
 func spiderLoad(param interface{}, p *core.ElementHandleArgs) error {
 	pa := param.(*spiderParam)
 	if err := spider.SpiderRun(pa.URL); err != nil {
