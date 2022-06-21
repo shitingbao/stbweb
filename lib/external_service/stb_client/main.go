@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 
 	_ "google.golang.org/grpc/balancer/grpclb"
+	"google.golang.org/grpc/metadata"
 )
 
 const port = "localhost:5000"
@@ -38,11 +39,13 @@ func startConnect() {
 	// sendfile(c)
 	// sendBigFile(c)
 	sendGroupFile(c)
+
 }
 
 //普通数据传输
 func getSummoner(c stbserver.StbServerClient) {
-	character, err := c.GetSummonerInfo(context.Background(), &stbserver.Identity{
+	ctx := metadata.AppendToOutgoingContext(context.Background(), "k1", "v1")
+	character, err := c.GetSummonerInfo(ctx, &stbserver.Identity{
 		Idcard: "qwer",
 		Name:   "shitingbao",
 	})

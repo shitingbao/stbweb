@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/metadata"
 )
 
 //StbServe 外部调用结构体
@@ -16,6 +17,8 @@ type StbServe struct{}
 
 //GetSummonerInfo 信息获取
 func (s *StbServe) GetSummonerInfo(ctx context.Context, iden *stbserver.Identity) (*stbserver.Character, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	log.Println(md, ok)
 	var skillLists []*stbserver.Skill
 	var summonerLists []*stbserver.Summoner
 	skill := &stbserver.Skill{
