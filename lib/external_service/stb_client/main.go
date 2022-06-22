@@ -24,12 +24,56 @@ func main() {
 
 }
 
+// CustomerTokenAuth 拦截中间件
+type CustomerTokenAuth struct {
+}
+
+func (c *CustomerTokenAuth) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	return map[string]string{}, nil
+}
+
+func (c *CustomerTokenAuth) RequireTransportSecurity() bool {
+	return true
+}
+
+// 注意，服务器只能配置一个 UnaryInterceptor和StreamClientInterceptor，
+// 否则会报错，客户端也是，虽然不会报错，但是只有最后一个才起作用。
+// 如果你想配置多个，可以使用拦截器链，如go-grpc-middleware，或者自己实现。
+//
+// 客户端拦截器
+func Clientinterceptor(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+	start := time.Now()
+	err := invoker(ctx, method, req, reply, cc, opts...)
+	log.Printf("method == %s ; req == %v ; rep == %v ; duration == %s ; error == %v\n", method, req, reply, time.Since(start), err)
+	return err
+}
+
 func startConnect() {
-	conn, err := grpc.Dial(port, grpc.WithInsecure())
+	opts := []grpc.DialOption{}
+	//grpc.WithInsecure()这个是一定要添加的，代表开启安全的选项
+	opts = append(opts, grpc.WithInsecure())
+
+	// 自定义认证(token)，new(myCredential 的时候，由于我们实现了上述2个接口，因此new的时候，程序会执行我们实现的接口
+	opts = append(opts, grpc.WithPerRPCCredentials(new(CustomerTokenAuth)))
+
+	// 加上拦截器
+	opts = append(opts, grpc.WithUnaryInterceptor(Clientinterceptor))
+	// 还有一种如下StreamInterceptor
+	// grpc.StreamInterceptor()
+	// 还有tls认证
+	// WithTransportCredentials，客户端和服务端大同小异，都适用
+	// 	服务端的拦截器
+	// UnaryServerInterceptor -- 单向调用的拦截器
+	// StreamServerInterceptor -- stream调用的拦截器
+	// 客户端的拦截器
+	// UnaryClientInterceptor
+	// StreamClientInterceptor
+
+	conn, err := grpc.Dial(port, opts...)
 	if err != nil {
 		panic(err)
 	}
-	defer conn.Close()
+	// defer conn.Close()
 	c := stbserver.NewStbServerClient(conn) //新建client
 
 	// getSummoner(c)
