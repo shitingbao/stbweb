@@ -9,7 +9,7 @@ require (
 	github.com/extrame/ole2 v0.0.0-20160812065207-d69429661ad7 // indirect
 	github.com/extrame/xls v0.0.1
 	github.com/fsnotify/fsnotify v1.4.9
-	github.com/gin-gonic/gin v1.7.1
+	github.com/gin-gonic/gin v1.7.7
 	github.com/go-kit/kit v0.11.0
 	github.com/go-redis/redis v6.15.8+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
