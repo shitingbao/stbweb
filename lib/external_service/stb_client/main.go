@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 
 	_ "google.golang.org/grpc/balancer/grpclb"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -51,11 +52,12 @@ func Clientinterceptor(ctx context.Context, method string, req, reply interface{
 func startConnect() {
 	opts := []grpc.DialOption{}
 	//grpc.WithInsecure()这个是一定要添加的，代表开启安全的选项
-	opts = append(opts, grpc.WithInsecure())
+	// opts = append(opts, grpc.WithInsecure()) // 该方法已经弃用
 
 	// 自定义认证(token)，new(myCredential 的时候，由于我们实现了上述2个接口，因此new的时候，程序会执行我们实现的接口
-	opts = append(opts, grpc.WithPerRPCCredentials(new(CustomerTokenAuth)))
+	// opts = append(opts, grpc.WithPerRPCCredentials(new(CustomerTokenAuth)))
 
+	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials())) // 或者使用证书 pem 文件来验证
 	// 加上拦截器
 	opts = append(opts, grpc.WithUnaryInterceptor(Clientinterceptor))
 	// 还有一种如下StreamInterceptor
@@ -86,7 +88,7 @@ func startConnect() {
 
 }
 
-//普通数据传输
+// 普通数据传输
 func getSummoner(c stbserver.StbServerClient) {
 	ctx := metadata.AppendToOutgoingContext(context.Background(), "k1", "v1")
 	character, err := c.GetSummonerInfo(ctx, &stbserver.Identity{
@@ -99,7 +101,7 @@ func getSummoner(c stbserver.StbServerClient) {
 	log.Println("character:", character)
 }
 
-//单向流，接受值
+// 单向流，接受值
 func getAllSummoner(c stbserver.StbServerClient) {
 	req, err := c.GetAllSummonerInfo(context.Background(), &stbserver.Identity{
 		Idcard: "qwer",
@@ -119,7 +121,7 @@ func getAllSummoner(c stbserver.StbServerClient) {
 	}
 }
 
-//单向流，发送值
+// 单向流，发送值
 func putSummoner(c stbserver.StbServerClient) {
 	res, err := c.PutSummonerInfo(context.Background())
 	if err != nil {
@@ -144,7 +146,7 @@ func putSummoner(c stbserver.StbServerClient) {
 	}
 }
 
-//双向流
+// 双向流
 func shareSummoner(c stbserver.StbServerClient) {
 	cli, err := c.ShareSummonerInfo(context.Background())
 	if err != nil {
