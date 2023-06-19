@@ -5,8 +5,8 @@ import (
 	"io"
 	"log"
 	"os"
-	"stbweb/lib/external_service/stbserver"
 	"strconv"
+	"test/external_service/stbserver"
 	"time"
 
 	"github.com/pborman/uuid"
@@ -18,23 +18,11 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-const port = "localhost:5000"
+const port = "localhost:4399"
 
 func main() {
 	startConnect()
 
-}
-
-// CustomerTokenAuth 拦截中间件
-type CustomerTokenAuth struct {
-}
-
-func (c *CustomerTokenAuth) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	return map[string]string{}, nil
-}
-
-func (c *CustomerTokenAuth) RequireTransportSecurity() bool {
-	return true
 }
 
 // 注意，服务器只能配置一个 UnaryInterceptor和StreamClientInterceptor，
@@ -51,13 +39,7 @@ func Clientinterceptor(ctx context.Context, method string, req, reply interface{
 
 func startConnect() {
 	opts := []grpc.DialOption{}
-	//grpc.WithInsecure()这个是一定要添加的，代表开启安全的选项
-	// opts = append(opts, grpc.WithInsecure()) // 该方法已经弃用
 
-	// 自定义认证(token)，new(myCredential 的时候，由于我们实现了上述2个接口，因此new的时候，程序会执行我们实现的接口
-	// opts = append(opts, grpc.WithPerRPCCredentials(new(CustomerTokenAuth)))
-
-	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials())) // 或者使用证书 pem 文件来验证
 	// 加上拦截器
 	opts = append(opts, grpc.WithUnaryInterceptor(Clientinterceptor))
 	// 还有一种如下StreamInterceptor
@@ -71,6 +53,13 @@ func startConnect() {
 	// UnaryClientInterceptor
 	// StreamClientInterceptor
 
+	// creds, err := credentials.NewClientTLSFromFile("/Users/shitingbao/.ssh/id_rsa.pub", "")// 需要验证
+	// if err != nil {
+	// 	panic(err)
+	// 	// log.Fatalf("failed to load TLS certificates: %v", err)
+	// }
+	// opts = append(opts, grpc.WithTransportCredentials(creds))
+	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials())) // 另一种简单操作
 	conn, err := grpc.Dial(port, opts...)
 	if err != nil {
 		panic(err)
@@ -84,8 +73,11 @@ func startConnect() {
 	// shareSummoner(c)
 	// sendfile(c)
 	// sendBigFile(c)
-	sendGroupFile(c)
-
+	// sendGroupFile(c)
+	if err := startHeartBeat(c); err != nil {
+		log.Println("startHeartBeat:", err)
+		return
+	}
 }
 
 // 普通数据传输
@@ -319,4 +311,24 @@ func sendGroupFile(c stbserver.StbServerClient) {
 		i++
 	}
 	time.Sleep(time.Second * 2)
+}
+
+func startHeartBeat(c stbserver.StbServerClient) error {
+	cli, err := c.HeartBeat(context.Background())
+	if err != nil {
+		return err
+	}
+	tm := time.NewTicker(time.Second * 5)
+	defer tm.Stop()
+	for {
+		select {
+		case <-tm.C:
+			if err := cli.Send(&stbserver.Heart{
+				Id: "1",
+			}); err != nil {
+				return err
+			}
+		}
+	}
+
 }

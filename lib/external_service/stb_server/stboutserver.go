@@ -5,17 +5,19 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"stbweb/lib/external_service/stbserver"
 	"sync"
+	"test/external_service/core"
+	"test/external_service/stbserver"
 
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/metadata"
 )
 
-//StbServe 外部调用结构体
-type StbServe struct{}
+// StbServe 外部调用结构体
+type StbServe struct {
+	*stbserver.UnimplementedStbServerServer
+}
 
-//GetSummonerInfo 信息获取
+// GetSummonerInfo 信息获取
 func (s *StbServe) GetSummonerInfo(ctx context.Context, iden *stbserver.Identity) (*stbserver.Character, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	log.Println(md, ok)
@@ -44,7 +46,7 @@ func (s *StbServe) GetSummonerInfo(ctx context.Context, iden *stbserver.Identity
 	}, nil
 }
 
-//PutSummonerInfo 实时信息发送
+// PutSummonerInfo 实时信息发送
 func (s *StbServe) PutSummonerInfo(cli stbserver.StbServer_PutSummonerInfoServer) error {
 	for {
 		// if i > 3 {
@@ -59,7 +61,7 @@ func (s *StbServe) PutSummonerInfo(cli stbserver.StbServer_PutSummonerInfoServer
 	}
 }
 
-//GetAllSummonerInfo 实时信息反馈
+// GetAllSummonerInfo 实时信息反馈
 func (s *StbServe) GetAllSummonerInfo(iden *stbserver.Identity, req stbserver.StbServer_GetAllSummonerInfoServer) error {
 	var skillLists []*stbserver.Skill
 	var summonerLists []*stbserver.Summoner
@@ -95,7 +97,7 @@ func (s *StbServe) GetAllSummonerInfo(iden *stbserver.Identity, req stbserver.St
 	}
 }
 
-//ShareSummonerInfo 信息共享
+// ShareSummonerInfo 信息共享
 func (s *StbServe) ShareSummonerInfo(cli stbserver.StbServer_ShareSummonerInfoServer) error {
 	wg := sync.WaitGroup{}
 	wg.Add(2)
@@ -154,7 +156,7 @@ func (s *StbServe) ShareSummonerInfo(cli stbserver.StbServer_ShareSummonerInfoSe
 	return nil
 }
 
-//SendFile 文件传输
+// SendFile 文件传输
 func (s *StbServe) SendFile(cli stbserver.StbServer_SendFileServer) error {
 
 	fDir, err := os.Executable()
@@ -181,7 +183,7 @@ func (s *StbServe) SendFile(cli stbserver.StbServer_SendFileServer) error {
 	return nil
 }
 
-//SendGroupFile 用户分组文件传输
+// SendGroupFile 用户分组文件传输
 func (s *StbServe) SendGroupFile(cli stbserver.StbServer_SendGroupFileServer) error {
 	var sf *os.File
 	for {
@@ -219,7 +221,21 @@ func mkdir(url string) {
 		return
 	}
 	if os.IsNotExist(err) {
-		logrus.WithFields(logrus.Fields{"创建目录": url}).Info("stboutserver")
+		// logrus.WithFields(logrus.Fields{"创建目录": url}).Info("stboutserver")
 		os.MkdirAll(url, os.ModePerm)
+	}
+}
+
+func (s *StbServe) HeartBeat(cli stbserver.StbServer_HeartBeatServer) error {
+	sid := ""
+	for {
+		res, err := cli.Recv()
+		if err != nil {
+			core.UserHub.DeleteData(sid)
+			return err
+		}
+		sid = res.Id
+		core.UserHub.PutData(sid)
+		log.Println(res.Id)
 	}
 }

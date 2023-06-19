@@ -2,6 +2,8 @@ syntax="proto3";
 
 package stbserver;
 
+option go_package = "test/external_service/stbserver;stbserver";
+
 message Character{
     int64 xaxis=1;
     int64 yaxis=2;
@@ -46,6 +48,14 @@ message FileResult{
     bool iscarry=2;
 }
 
+message Heart {
+    string id = 1;
+}
+
+message Result {
+    string content = 1;
+}
+
 service StbServer{
     //rpc ServerTest()returns(){}不能使用参数或者返回值为空的服务
     rpc GetSummonerInfo(Identity)returns(Character){}
@@ -54,6 +64,7 @@ service StbServer{
     rpc ShareSummonerInfo(stream Identity)returns(stream Character){}
     rpc SendFile(stream FileMessage)returns(FileResult){}
     rpc SendGroupFile(stream FileMessage)returns(FileResult){}
+    rpc HeartBeat(stream Heart)returns(Result){}
 }
 
 
