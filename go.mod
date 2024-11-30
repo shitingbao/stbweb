@@ -32,9 +32,9 @@ require (
 	github.com/tdewolff/test v1.0.6 // indirect
 	github.com/tealeg/xlsx v1.0.5
 	go.mongodb.org/mongo-driver v1.4.1
-	golang.org/x/crypto v0.0.0-20210314154223-e6e6c4f2bb5b
-	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
-	golang.org/x/text v0.3.5
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
+	golang.org/x/net v0.0.0-20220722155237-a158d28d115b
+	golang.org/x/text v0.3.8
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	google.golang.org/grpc v1.38.0
 	google.golang.org/grpc/examples v0.0.0-20200806223615-7419b444ee17
