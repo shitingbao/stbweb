@@ -9,7 +9,7 @@ require (
 	github.com/extrame/ole2 v0.0.0-20160812065207-d69429661ad7 // indirect
 	github.com/extrame/xls v0.0.1
 	github.com/fsnotify/fsnotify v1.4.9
-	github.com/gin-gonic/gin v1.7.1
+	github.com/gin-gonic/gin v1.9.0
 	github.com/go-kit/kit v0.11.0
 	github.com/go-redis/redis v6.15.8+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
@@ -32,13 +32,13 @@ require (
 	github.com/tdewolff/test v1.0.6 // indirect
 	github.com/tealeg/xlsx v1.0.5
 	go.mongodb.org/mongo-driver v1.4.1
-	golang.org/x/crypto v0.0.0-20210314154223-e6e6c4f2bb5b
-	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
-	golang.org/x/text v0.3.5
+	golang.org/x/crypto v0.5.0
+	golang.org/x/net v0.7.0
+	golang.org/x/text v0.7.0
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	google.golang.org/grpc v1.38.0
 	google.golang.org/grpc/examples v0.0.0-20200806223615-7419b444ee17
-	google.golang.org/protobuf v1.27.1
+	google.golang.org/protobuf v1.28.1
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 	gorm.io/driver/mysql v1.0.5
 	gorm.io/gorm v1.21.5
